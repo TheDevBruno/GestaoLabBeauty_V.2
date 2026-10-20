@@ -169,13 +169,28 @@ Regra nova ou alterada deve ser registrada aqui com a origem.
 
 ### RN-017 — Endereço único e reservado
 
-| Dado        | Quando                   | Então                                                                                          |
-| ----------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
-| Uma empresa | Escolhe o slug do portal | O slug deve ser único e não pode ser `app`, `admin`, `api`, `assets` nem outra rota do sistema |
+| Dado                         | Quando                                                                      | Então                                   |
+| ---------------------------- | --------------------------------------------------------------------------- | --------------------------------------- |
+| Uma empresa escolhendo slug  | O slug tem só letras minúsculas `a-z`, números e hífen (ex.: `studio-ana1`) | É aceito                                |
+| Uma empresa escolhendo slug  | O slug tem maiúscula, espaço, acento, `_`, `.` ou outro símbolo             | É recusado (formato)                    |
+| Uma empresa escolhendo slug  | O slug começa ou termina com hífen                                          | É recusado (formato)                    |
+| Uma empresa escolhendo slug  | O slug tem dois hífens seguidos (`ana--bela`)                               | É recusado (formato)                    |
+| Uma empresa escolhendo slug  | O slug tem menos de 3 caracteres                                            | É recusado (curto demais)               |
+| Uma empresa escolhendo slug  | O slug tem mais de 30 caracteres                                            | É recusado (longo demais)               |
+| Uma empresa escolhendo slug  | O slug tem 3 ou 30 caracteres                                               | É aceito (limites inclusivos)           |
+| Uma empresa escolhendo slug  | O slug está na lista de reservados                                          | É recusado (reservado)                  |
+| Uma empresa escolhendo slug  | O slug só contém um reservado (`app-ana`, `minha-api`)                      | É aceito                                |
+| Um slug já usado por empresa | Outra empresa escolhe o mesmo slug                                          | É recusado (único; verificado no banco) |
 
-- **Origem:** ADR-004 §1 e §2; plano §7.
-- **Status:** a confirmar.
-- **Dúvida:** lista completa de slugs reservados e formato permitido.
+- **Reservados:** `app`, `admin`, `api`, `assets`, `auth`, `login`, `logout`, `signup`, `cadastro`,
+  `entrar`, `sair`, `convite`, `onboarding`, `www`, `static`, `public`, `docs`, `help`, `ajuda`,
+  `suporte`, `status`, `settings`, `conta`, `labbeautypro`. Rota nova do sistema entra nesta lista.
+- **Normalização:** o validador não converte. Sugerir `studio-ana` a partir de "Studio Ana" é papel da
+  interface.
+- **Origem:** ADR-004 §1 e §2; plano §7. Tamanho, hífen e lista de reservados definidos pelo usuário em
+  2026-10-19.
+- **Status:** confirmada. A unicidade fica a cargo do banco (`tenants.slug` único, Sprint 1.2); o
+  validador cobre formato, tamanho e reservados.
 
 ### RN-018 — Contraste mínimo do tema
 

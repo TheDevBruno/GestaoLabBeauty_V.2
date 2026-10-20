@@ -37,7 +37,7 @@ npm run typecheck      # tsc -b
 npm run lint           # eslint .
 npm run format         # prettier --write .
 npm run format:check   # prettier --check .
-npm test               # vitest run --passWithNoTests
+npm test               # vitest run
 npm run test:watch     # vitest
 npm run check          # typecheck + lint + format:check + test + build (mesma ordem do CI)
 ```
