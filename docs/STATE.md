@@ -17,7 +17,8 @@ liberação de recursos por plano.
   [sprint-1.1.md](roadmap/sprint-1.1.md).
 - Ainda não há banco, autenticação nem funcionalidade de negócio.
 - Adiantado da Sprint 1.3, com autorização, na branch `feat/slug-portal`: validador de slug do portal
-  (`src/shared/slug.ts`, RN-017) com testes Vitest.
+  (`src/shared/slug.ts`, RN-017) com 50 testes Vitest. `npm test` deixou de usar `--passWithNoTests`.
+  `npm run check` com exit 0 em 2026-10-19. Push, PR e merge autorizados pelo usuário (D3).
 
 ## Pendências
 
