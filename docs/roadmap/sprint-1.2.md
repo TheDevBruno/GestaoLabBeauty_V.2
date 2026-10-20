@@ -1,7 +1,7 @@
 # Sprint 1.2 — Schema base, RLS e pgTAP
 
 - **Início:** 2026-10-19
-- **Status:** em andamento (passo 1 de 10 concluído)
+- **Status:** em andamento (passos 1 e 2 de 10 concluídos)
 - **Branch:** `feat/sprint-1.2-banco`
 
 ## Objetivo
@@ -31,7 +31,7 @@ homologação ou produção ([ADR-005](../decisions/ADR-005-ambientes.md)).
 | #   | Passo                                    | Status    |
 | --- | ---------------------------------------- | --------- |
 | 1   | Supabase local (CLI e projeto)           | concluído |
-| 2   | Schema `private` e primeiro teste pgTAP  | pendente  |
+| 2   | Schema `private` e primeiro teste pgTAP  | concluído |
 | 3   | Tabelas de tenancy                       | pendente  |
 | 4   | Funções auxiliares em `private`          | pendente  |
 | 5a  | Políticas de `tenants` e `profiles`      | pendente  |
@@ -90,3 +90,35 @@ Observações:
 - `supabase start` avisa `no files matched pattern: supabase/seed.sql`. O seed entra no passo 7.
 - As chaves impressas por `supabase start` são as padrão do ambiente local, públicas e iguais em todas
   as máquinas. Não valem fora do Docker local e não vão para `.env`.
+
+### Passo 2 — Schema `private` e primeiro teste pgTAP (2026-10-20)
+
+Entregue:
+
+- Migration `supabase/migrations/20261020025820_private_schema_and_default_privileges.sql`: cria o
+  schema `private` (sem acesso para `PUBLIC`) e revoga os privilégios padrão do Supabase em `public`
+  para `anon` e `authenticated`, além do `EXECUTE` padrão de `PUBLIC` em funções. Decisão registrada na
+  [ADR-008](../decisions/ADR-008-privilegios-explicitos.md).
+- `supabase/tests/000-setup-tests.sql`: extensão `pgtap` e schema `tests` com `tests.create_user`,
+  `tests.authenticate_as`, `tests.authenticate_as_anon` e `tests.clear_authentication`. Sem rollback,
+  idempotente e fora de migrations.
+- Testes: `helpers.test.sql` (6), `default_privileges.test.sql` (12) e `rls_coverage.test.sql` (1).
+
+Verificações:
+
+| Verificação                                                 | Resultado                                                 |
+| ----------------------------------------------------------- | --------------------------------------------------------- |
+| `npm run db:reset`                                          | migration aplicada do zero                                |
+| `npm run db:test`                                           | `Files=4, Tests=20`, `Result: PASS`                       |
+| `npm run db:test` duas vezes seguidas após o reset          | PASS nas duas (setup idempotente)                         |
+| Prova de detecção: tabela sem RLS + `GRANT` padrão a `anon` | FAIL esperado: `have: {sem_rls}` e teste 4 de privilégios |
+| `npx supabase db lint`                                      | `No schema errors found`                                  |
+| `npm run check`                                             | exit 0                                                    |
+
+Observações:
+
+- O `supabase test db` roda todos os arquivos `.sql` de `supabase/tests/` em ordem alfabética, inclusive
+  os sem sufixo `.test`. O CLI já cria a extensão `pgtap`; o `create extension if not exists` fica no
+  setup para o arquivo também funcionar sozinho.
+- A prova de detecção alterou o banco local; ele foi recriado com `npm run db:reset` antes das
+  verificações finais.

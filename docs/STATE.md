@@ -1,6 +1,6 @@
 # Estado do projeto
 
-- **Atualizado em:** 2026-10-19
+- **Atualizado em:** 2026-10-20
 
 ## Objetivo
 
@@ -13,10 +13,14 @@ liberação de recursos por plano.
 
 - **Fase 1 — Fundação.** Sprint 1.1 (repositório, tooling, CI e ADRs) **concluída** em 2026-10-19,
   com CI verde no GitHub. Detalhes em [sprint-1.1.md](roadmap/sprint-1.1.md).
-- **Sprint 1.2 em andamento** na branch `feat/sprint-1.2-banco`. Passo 1 de 10 concluído: Supabase CLI
-  2.119.0 instalado e projeto local criado (`supabase/config.toml`, scripts `db:*`). Plano e registro em
-  [sprint-1.2.md](roadmap/sprint-1.2.md).
-- Ainda não há schema, autenticação nem funcionalidade de negócio.
+- **Sprint 1.2 em andamento** na branch `feat/sprint-1.2-banco`. Passos 1 e 2 de 10 concluídos:
+  - Passo 1: Supabase CLI 2.119.0 e projeto local (`supabase/config.toml`, scripts `db:*`).
+  - Passo 2: primeira migration (schema `private` e privilégios padrão revogados —
+    [ADR-008](decisions/ADR-008-privilegios-explicitos.md)); helpers pgTAP e 20 asserções verdes.
+
+  Plano e registro em [sprint-1.2.md](roadmap/sprint-1.2.md).
+
+- Ainda não há tabelas de negócio, autenticação nem funcionalidade de negócio.
 - Adiantado da Sprint 1.3, com autorização: validador de slug do portal (`src/shared/slug.ts`, RN-017)
   com 50 testes Vitest, integrado na `main` pelo PR #7. `npm test` deixou de usar `--passWithNoTests`.
 
@@ -30,13 +34,13 @@ liberação de recursos por plano.
 
 ## Próximo passo
 
-**Sprint 1.2, passo 2 — schema `private` e primeiro teste pgTAP** (ver
-[sprint-1.2.md](roadmap/sprint-1.2.md)):
+**Sprint 1.2, passo 3 — tabelas de tenancy** (ver [sprint-1.2.md](roadmap/sprint-1.2.md)):
 
-- Primeira migration: schema `private` e revogação de privilégios padrão.
-- `supabase/tests/000-setup-tests.sql` com os helpers de teste (sem rollback, nunca em migration).
-- Teste pgTAP "tabelas de `public` sem RLS = 0".
-- Explicar migration e pgTAP ao usuário antes de escrever o código.
+- `tenants` (slug com `CHECK` alinhado à RN-017), `profiles`, `memberships`, `platform_admins` e
+  `roles_permissions`, com `UNIQUE (tenant_id, id)`.
+- Trigger que impede alterar `tenant_id`.
+- RLS ligada sem políticas (nega tudo) e `GRANT` explícitos conforme a ADR-008.
+- Explicar RLS ao usuário antes de escrever o código.
 
 Requisito local: Docker em execução e `npm run db:start`.
 

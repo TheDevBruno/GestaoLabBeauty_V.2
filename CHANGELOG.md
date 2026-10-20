@@ -15,6 +15,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   reservados, com testes Vitest. Adiantada da Sprint 1.3 com autorização do usuário.
 - Sprint 1.2, passo 1: Supabase CLI 2.119.0 (devDependency), projeto local em `supabase/` e scripts
   `db:start`, `db:stop`, `db:reset` e `db:test`.
+- Sprint 1.2, passo 2: primeira migration (schema `private` e revogação dos privilégios padrão de
+  `anon` e `authenticated` — ADR-008), helpers de teste pgTAP e testes de privilégios padrão e de
+  cobertura de RLS.
 
 ### Alterado
 

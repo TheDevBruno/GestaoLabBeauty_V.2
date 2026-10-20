@@ -78,6 +78,7 @@ Ler nesta ordem antes de começar uma tarefa:
    - [ADR-005](docs/decisions/ADR-005-ambientes.md) — ambientes
    - [ADR-006](docs/decisions/ADR-006-jobs-pg-cron-pg-net.md) — jobs com `pg_cron` + `pg_net`
    - [ADR-007](docs/decisions/ADR-007-protecao-portal-publico.md) — proteção do portal público
+   - [ADR-008](docs/decisions/ADR-008-privilegios-explicitos.md) — privilégios explícitos no banco
 5. [CHANGELOG.md](CHANGELOG.md) — histórico de mudanças.
 
 Ao concluir uma sprint, atualizar `docs/STATE.md` e o registro da sprint em `docs/roadmap/`.
