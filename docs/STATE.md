@@ -16,13 +16,16 @@ liberação de recursos por plano.
 - `npm run check` executado com exit 0 (Windows 11, Node 24.20, npm 11.19). Detalhes em
   [sprint-1.1.md](roadmap/sprint-1.1.md).
 - Ainda não há banco, autenticação nem funcionalidade de negócio.
+- Adiantado da Sprint 1.3, com autorização, na branch `feat/slug-portal`: validador de slug do portal
+  (`src/shared/slug.ts`, RN-017) com 50 testes Vitest. `npm test` deixou de usar `--passWithNoTests`.
+  `npm run check` com exit 0 em 2026-10-19. Push, PR e merge autorizados pelo usuário (D3).
 
 ## Pendências
 
 - [ ] Primeiro push para `TheDevBruno/GestaoLabBeauty_V.2` — exige autorização (D3).
 - [ ] CI nunca executado no GitHub (depende do push).
 - [ ] Dependabot inativo até o push.
-- [ ] Remover `--passWithNoTests` do script `test` quando existirem testes (Sprint 1.2).
+- [x] Removido `--passWithNoTests` do script `test` (primeiros testes em `src/shared/slug.test.ts`).
 - [ ] Fixar GitHub Actions por SHA em vez de tag major (Fase 8).
 - [ ] Validar comercialmente o nome LabBeautyPro antes de registro de marca.
 - [ ] Confirmar as regras marcadas "a confirmar" em [REGRAS-DE-NEGOCIO.md](REGRAS-DE-NEGOCIO.md).
