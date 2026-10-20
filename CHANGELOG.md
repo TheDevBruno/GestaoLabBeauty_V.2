@@ -19,3 +19,5 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - RN-017 confirmada com formato, tamanho e lista de slugs reservados.
 - Script `test` sem `--passWithNoTests`: `npm test` agora falha se nenhum teste for encontrado
   (`AGENTS.md` e `docs/STATE.md` atualizados).
+- Sprint 1.1 encerrada: CI e Dependabot confirmados no GitHub; `docs/STATE.md` e
+  `docs/roadmap/sprint-1.1.md` atualizados.
