@@ -1,0 +1,24 @@
+# Dependências e build
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Segredos e configuração local (nunca versionar)
+.env
+.env.*
+!.env.example
+*.local
+
+# Ferramentas
+.vercel/
+supabase/.temp/
+supabase/.branches/
+playwright-report/
+test-results/
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+*.log
+.idea/
