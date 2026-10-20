@@ -18,8 +18,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 1.2, passo 2: primeira migration (schema `private` e revogação dos privilégios padrão de
   `anon` e `authenticated` — ADR-008), helpers de teste pgTAP e testes de privilégios padrão e de
   cobertura de RLS.
+- Sprint 1.2, passo 3: tabelas `tenants` (slug com `CHECK` da RN-017), `profiles`, `memberships`,
+  `platform_admins` e `roles_permissions`, enum `member_role`, trigger que impede trocar `tenant_id`,
+  RLS ligada sem políticas e `GRANT` mínimos para `authenticated` (nenhum para `anon`), com 49
+  asserções pgTAP.
 
 ### Alterado
+
+- ADR-008 complementada (autorizado pelo usuário): `FOR ROLE postgres` explícito e testes que
+  confirmam que `service_role` mantém os privilégios padrão em `public`.
 
 - RN-017 confirmada com formato, tamanho e lista de slugs reservados.
 - Script `test` sem `--passWithNoTests`: `npm test` agora falha se nenhum teste for encontrado

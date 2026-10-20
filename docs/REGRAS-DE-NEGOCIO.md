@@ -190,7 +190,9 @@ Regra nova ou alterada deve ser registrada aqui com a origem.
 - **Origem:** ADR-004 §1 e §2; plano §7. Tamanho, hífen e lista de reservados definidos pelo usuário em
   2026-10-19.
 - **Status:** confirmada. A unicidade fica a cargo do banco (`tenants.slug` único, Sprint 1.2); o
-  validador cobre formato, tamanho e reservados.
+  validador cobre formato, tamanho e reservados. O banco repete formato, tamanho e reservados em
+  `CHECK` de `tenants` (migration `20261020031300_tenancy_tables.sql`); as duas listas precisam
+  ficar iguais.
 
 ### RN-018 — Contraste mínimo do tema
 
