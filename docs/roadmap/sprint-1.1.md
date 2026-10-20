@@ -1,7 +1,7 @@
 # Sprint 1.1 — Repositório, tooling, CI e ADRs
 
 - **Período:** 2026-10-19
-- **Status:** concluída localmente; aguardando aprovação para o primeiro push.
+- **Status:** concluída. Push autorizado e CI verde no GitHub (ver "Encerramento").
 
 ## Escopo entregue
 
@@ -36,6 +36,18 @@
 - Dependabot só passa a funcionar após o push.
 - `react-router` e `zod` estão instalados, mas só serão usados a partir da Sprint 1.3.
 - Actions referenciadas por tag major (`@v7`), não por SHA (previsto para a Fase 8).
+
+## Encerramento (2026-10-19, horário de Brasília)
+
+Limitações resolvidas depois do registro acima:
+
+| Limitação                          | Situação                                                                          |
+| ---------------------------------- | --------------------------------------------------------------------------------- |
+| CI não executado no GitHub         | Workflow `CI` verde em `push` na `main` e em todos os PRs (#5, #6, #7)            |
+| Dependabot inativo                 | Ativo: "Dependabot Updates" verde; abriu os PRs #1 a #5 (#5 integrado)            |
+| `npm test` com `--passWithNoTests` | Flag removida no PR #7, junto com os primeiros testes (`src/shared/slug.test.ts`) |
+
+Continuam valendo: Actions por tag major (Fase 8). `react-router` segue sem uso até a Sprint 1.3.
 
 ## Próxima sprint
 
