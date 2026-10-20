@@ -1,7 +1,7 @@
 # Sprint 1.2 — Schema base, RLS e pgTAP
 
 - **Início:** 2026-10-19
-- **Status:** em andamento (passos 1 e 2 de 10 concluídos)
+- **Status:** em andamento (passos 1 a 3 de 10 concluídos)
 - **Branch:** `feat/sprint-1.2-banco`
 
 ## Objetivo
@@ -32,7 +32,7 @@ homologação ou produção ([ADR-005](../decisions/ADR-005-ambientes.md)).
 | --- | ---------------------------------------- | --------- |
 | 1   | Supabase local (CLI e projeto)           | concluído |
 | 2   | Schema `private` e primeiro teste pgTAP  | concluído |
-| 3   | Tabelas de tenancy                       | pendente  |
+| 3   | Tabelas de tenancy                       | concluído |
 | 4   | Funções auxiliares em `private`          | pendente  |
 | 5a  | Políticas de `tenants` e `profiles`      | pendente  |
 | 5b  | Políticas de `memberships` e regra owner | pendente  |
@@ -122,3 +122,59 @@ Observações:
   setup para o arquivo também funcionar sozinho.
 - A prova de detecção alterou o banco local; ele foi recriado com `npm run db:reset` antes das
   verificações finais.
+
+### Antes do passo 3 — confirmação da ADR-008 (2026-10-20)
+
+Pedido do usuário: confirmar que `service_role` mantém os privilégios em `public` e que o
+`ALTER DEFAULT PRIVILEGES` usa `FOR ROLE postgres`.
+
+- `pg_default_acl` no banco local: regras do `postgres` em `public` citam só `postgres` e
+  `service_role` (`arwdDxtm` em tabelas, `rwU` em sequências, `X` em funções). As quatro instruções da
+  migration já tinham `FOR ROLE postgres`.
+- `default_privileges.test.sql` passou de 12 para 18 asserções: `service_role` com escrita em tabela,
+  sequência e `EXECUTE` em função de `public`; `anon`/`authenticated` sem acesso a sequência; conteúdo
+  do `pg_default_acl` da role `postgres` (em `public` e global).
+- ADR-008 complementada nos itens 1 e 5, com autorização do usuário; a decisão não mudou.
+
+### Passo 3 — Tabelas de tenancy (2026-10-20)
+
+Entregue — migration `supabase/migrations/20261020031300_tenancy_tables.sql`:
+
+- Enum `member_role` (`owner`, `admin`, `manager`, `specialist`, `receptionist`, `financial`), com
+  `USAGE` revogado de `PUBLIC` e concedido a `authenticated` e `service_role`.
+- `tenants` (`id`, `name`, `slug`, `created_at`): slug único e `CHECK` de formato, tamanho e reservados
+  igual à RN-017; nome não vazio. Status, segmento e fuso entram com as funcionalidades que os usam.
+- `profiles` (um por usuário de `auth.users`), `memberships` (`UNIQUE (user_id, tenant_id)` e
+  `UNIQUE (tenant_id, id)`), `platform_admins` e `roles_permissions` (global, chave `(role, permission)`;
+  a matriz é carregada no passo 4).
+- `private.prevent_tenant_id_change()` e trigger em `memberships`.
+- RLS ligada nas 5 tabelas, sem políticas.
+- `GRANT` só para `authenticated` e só nas operações que as políticas vão liberar:
+
+  | Tabela              | `authenticated`                       |
+  | ------------------- | ------------------------------------- |
+  | `tenants`           | `SELECT`; `UPDATE (name)`             |
+  | `profiles`          | `SELECT`; `UPDATE (full_name)`        |
+  | `memberships`       | `SELECT`, `DELETE`; `UPDATE (role)`   |
+  | `platform_admins`   | nenhum (servidor e função do passo 4) |
+  | `roles_permissions` | `SELECT`                              |
+
+  `INSERT` em `tenants`, `profiles` e `memberships` fica com funções do servidor (onboarding e
+  convites). `anon` não recebe nada.
+
+Verificações:
+
+| Verificação                                           | Resultado                                   |
+| ----------------------------------------------------- | ------------------------------------------- |
+| `npm run db:reset`                                    | 2 migrations aplicadas do zero              |
+| `npm run db:test`                                     | `Files=5, Tests=75`, `Result: PASS`         |
+| `npm run db:test` duas vezes seguidas                 | PASS nas duas                               |
+| Prova de detecção: `GRANT INSERT` a `anon` + política | FAIL esperado nos testes 10, 11 e 47; reset |
+| `npx supabase db lint`                                | `No schema errors found`                    |
+| `npm run check`                                       | exit 0                                      |
+
+Observações:
+
+- A lista de slugs reservados existe em `src/shared/slug.ts` e no `CHECK` de `tenants`. Rota nova na
+  raiz exige mudar as duas (comentário no código e RN-017).
+- `memberships.user_id` referencia `auth.users`; `profiles.id` é o mesmo id, então o join é direto.

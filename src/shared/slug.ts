@@ -5,7 +5,8 @@ import { z } from 'zod';
 export const SLUG_MIN_LENGTH = 3;
 export const SLUG_MAX_LENGTH = 30;
 
-// Toda rota nova do sistema na raiz precisa entrar nesta lista e na RN-017.
+// Toda rota nova do sistema na raiz precisa entrar nesta lista, na RN-017 e no CHECK
+// tenants_slug_not_reserved (migration nova em supabase/migrations/).
 export const RESERVED_SLUGS = [
   'app',
   'admin',
