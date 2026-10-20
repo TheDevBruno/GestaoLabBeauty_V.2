@@ -32,6 +32,10 @@ npm run dev
 | `npm run format:check` | Verifica formatação                         |
 | `npm test`             | Testes (Vitest)                             |
 | `npm run check`        | Todas as verificações acima, na ordem do CI |
+| `npm run db:start`     | Sobe o Supabase local (Docker)              |
+| `npm run db:stop`      | Para o Supabase local                       |
+| `npm run db:reset`     | Recria o banco local e aplica as migrations |
+| `npm run db:test`      | Testes de banco (pgTAP)                     |
 
 ## Documentação
 
