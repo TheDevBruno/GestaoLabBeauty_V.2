@@ -1,7 +1,7 @@
 # Sprint 1.2 — Schema base, RLS e pgTAP
 
 - **Início:** 2026-10-19
-- **Status:** em andamento (passos 1 a 3 de 10 concluídos)
+- **Status:** em andamento (passos 1 a 4 de 10 concluídos)
 - **Branch:** `feat/sprint-1.2-banco`
 
 ## Objetivo
@@ -33,7 +33,7 @@ homologação ou produção ([ADR-005](../decisions/ADR-005-ambientes.md)).
 | 1   | Supabase local (CLI e projeto)           | concluído |
 | 2   | Schema `private` e primeiro teste pgTAP  | concluído |
 | 3   | Tabelas de tenancy                       | concluído |
-| 4   | Funções auxiliares em `private`          | pendente  |
+| 4   | Funções auxiliares em `private`          | concluído |
 | 5a  | Políticas de `tenants` e `profiles`      | pendente  |
 | 5b  | Políticas de `memberships` e regra owner | pendente  |
 | 6   | FKs compostas e regra do `specialist`    | pendente  |
@@ -178,3 +178,44 @@ Observações:
 - A lista de slugs reservados existe em `src/shared/slug.ts` e no `CHECK` de `tenants`. Rota nova na
   raiz exige mudar as duas (comentário no código e RN-017).
 - `memberships.user_id` referencia `auth.users`; `profiles.id` é o mesmo id, então o join é direto.
+
+### Passo 4 — Funções auxiliares em `private` (2026-10-20)
+
+Entregue — migration `supabase/migrations/20261020120000_private_auth_helpers.sql`:
+
+- `private.is_member(tenant_id)`, `private.has_permission(tenant_id, permission)` e
+  `private.is_platform_admin()`: `language sql`, `STABLE`, `security definer`, `set search_path = ''`,
+  consultando `memberships`/`platform_admins` a partir de `(select auth.uid())`. O papel nunca vem do JWT,
+  então troca ou remoção de membership vale na hora.
+- `GRANT USAGE` no schema `private` e `GRANT EXECUTE` nas três funções só para `authenticated`;
+  `REVOKE EXECUTE` explícito de `PUBLIC` e `anon`. `private` continua fora de `[api] schemas`
+  (`config.toml` não mudou).
+- Matriz do plano §8 carregada em `roles_permissions` (57 linhas). Linhas com duas permissões viraram duas
+  (`tenant.settings`/`tenant.branding`, `clients.read`/`clients.write`, `finance.read`/`finance.write`);
+  "ler" virou só a permissão `.read`; "próprio" do `specialist` entra como permissão comum e o recorte por
+  registro fica nas políticas do passo 6 (`private.specialist_can_see_client`, ADR-003 §9).
+- `private.is_platform_admin()` não dá acesso a dados de tenant: admin da plataforma sem membership não é
+  membro nem tem permissão (ADR-003 §6).
+
+Testes — `private_helpers.test.sql` (40): estrutura (definer, `STABLE`, `search_path`), privilégios,
+matriz completa escrita por linha da tabela do plano (a migration agrupa por papel), owner × specialist em
+dois tenants, admin da plataforma, usuário sem vínculo, argumentos nulos, revogação imediata e `anon` com
+`permission denied`. `default_privileges.test.sql`: a asserção do `USAGE` de `authenticated` em `private`
+passou a esperar acesso.
+
+Verificações:
+
+| Verificação                                                     | Resultado                                   |
+| --------------------------------------------------------------- | ------------------------------------------- |
+| `npm run db:reset`                                              | 3 migrations aplicadas do zero              |
+| `npm run db:test`                                               | `Files=6, Tests=115`, `Result: PASS`        |
+| `npm run db:test` duas vezes seguidas                           | PASS nas duas                               |
+| Prova de detecção: matriz alterada + `USAGE`/`EXECUTE` a `anon` | FAIL esperado nos testes 2, 12, 16, 20 e 39 |
+| `npx supabase db lint`                                          | `No schema errors found`                    |
+| `npm run check`                                                 | exit 0                                      |
+
+Observações:
+
+- No primeiro `db:reset` da sessão o container do banco reiniciou logo depois e voltou sem as migrations
+  (`DbConnectError` no `db:test`). Esperar o container ficar `healthy` e repetir o reset resolveu.
+- O CLI avisa que existe a 2.121.0; a atualização segue a janela de 14 dias da ADR-001.

@@ -13,7 +13,7 @@ liberação de recursos por plano.
 
 - **Fase 1 — Fundação.** Sprint 1.1 (repositório, tooling, CI e ADRs) **concluída** em 2026-10-19,
   com CI verde no GitHub. Detalhes em [sprint-1.1.md](roadmap/sprint-1.1.md).
-- **Sprint 1.2 em andamento** na branch `feat/sprint-1.2-banco`. Passos 1 a 3 de 10 concluídos:
+- **Sprint 1.2 em andamento** na branch `feat/sprint-1.2-banco`. Passos 1 a 4 de 10 concluídos:
   - Passo 1: Supabase CLI 2.119.0 e projeto local (`supabase/config.toml`, scripts `db:*`).
   - Passo 2: primeira migration (schema `private` e privilégios padrão revogados —
     [ADR-008](decisions/ADR-008-privilegios-explicitos.md)); helpers pgTAP. ADR-008 complementada
@@ -21,6 +21,9 @@ liberação de recursos por plano.
   - Passo 3: `tenants`, `profiles`, `memberships`, `platform_admins`, `roles_permissions` e enum
     `member_role`; RLS ligada sem políticas (nega tudo); `GRANT` mínimos só para `authenticated`.
     75 asserções pgTAP verdes.
+  - Passo 4: `private.is_member`, `private.has_permission` e `private.is_platform_admin`
+    (`security definer`, `STABLE`, `search_path` vazio, `EXECUTE` só para `authenticated`) e matriz do
+    plano §8 em `roles_permissions`. 115 asserções pgTAP verdes.
 
   Plano e registro em [sprint-1.2.md](roadmap/sprint-1.2.md).
 
@@ -39,12 +42,10 @@ liberação de recursos por plano.
 
 ## Próximo passo
 
-**Sprint 1.2, passo 4 — funções auxiliares em `private`** (ver [sprint-1.2.md](roadmap/sprint-1.2.md)):
+**Sprint 1.2, passo 5a — políticas de `tenants` e `profiles`** (ver [sprint-1.2.md](roadmap/sprint-1.2.md)):
 
-- `private.is_member`, `private.has_permission` e `private.is_platform_admin`, com `security definer`,
-  `set search_path = ''`, `STABLE` e `GRANT EXECUTE` explícito só para `authenticated`.
-- `GRANT USAGE` no schema `private` para `authenticated`; `private` continua fora de `[api] schemas`.
-- Carga da matriz do plano §8 em `roles_permissions`.
+- Uma política por operação, usando `(select private.is_member(...))` e `private.has_permission`.
+- Testes gerados a partir de uma tabela de casos (2 tenants × 6 papéis × operações).
 
 Requisito local: Docker em execução e `npm run db:start`.
 
