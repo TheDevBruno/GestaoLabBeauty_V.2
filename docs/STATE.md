@@ -13,7 +13,7 @@ liberação de recursos por plano.
 
 - **Fase 1 — Fundação.** Sprint 1.1 (repositório, tooling, CI e ADRs) **concluída** em 2026-10-19,
   com CI verde no GitHub. Detalhes em [sprint-1.1.md](roadmap/sprint-1.1.md).
-- **Sprint 1.2 em andamento** na branch `feat/sprint-1.2-banco`. Passos 1 a 4 de 10 concluídos:
+- **Sprint 1.2 em andamento** na branch `feat/sprint-1.2-banco`. Passos 1 a 5b de 10 concluídos:
   - Passo 1: Supabase CLI 2.119.0 e projeto local (`supabase/config.toml`, scripts `db:*`).
   - Passo 2: primeira migration (schema `private` e privilégios padrão revogados —
     [ADR-008](decisions/ADR-008-privilegios-explicitos.md)); helpers pgTAP. ADR-008 complementada
@@ -24,11 +24,18 @@ liberação de recursos por plano.
   - Passo 4: `private.is_member`, `private.has_permission` e `private.is_platform_admin`
     (`security definer`, `STABLE`, `search_path` vazio, `EXECUTE` só para `authenticated`) e matriz do
     plano §8 em `roles_permissions`. 115 asserções pgTAP verdes.
+  - Passo 5a: políticas de `tenants` (SELECT para membro, UPDATE com `tenant.settings`) e `profiles`
+    (só o próprio perfil). 366 asserções pgTAP verdes.
+  - Passo 5b: políticas de `memberships` (troca de papel e remoção com `members.manage`, sem alterar o
+    próprio papel, só owner mexe em owner) e leitura de `roles_permissions`; trigger que mantém ao
+    menos um owner por empresa (RN-023). Equipe e saída da empresa com `members.manage` (RN-034).
+    538 asserções pgTAP verdes.
 
   Plano e registro em [sprint-1.2.md](roadmap/sprint-1.2.md).
 
-- Tabelas de tenancy existem, mas nenhuma política: nenhum usuário lê ou altera dados ainda. Sem
-  autenticação nem funcionalidade de negócio.
+- Membros já leem a própria empresa, o próprio perfil e a própria membership; quem tem
+  `members.manage` lê a equipe. `platform_admins` segue sem política (nega tudo). Sem autenticação nem
+  funcionalidade de negócio.
 - Adiantado da Sprint 1.3, com autorização: validador de slug do portal (`src/shared/slug.ts`, RN-017)
   com 50 testes Vitest, integrado na `main` pelo PR #7. `npm test` deixou de usar `--passWithNoTests`.
 
@@ -42,10 +49,12 @@ liberação de recursos por plano.
 
 ## Próximo passo
 
-**Sprint 1.2, passo 5a — políticas de `tenants` e `profiles`** (ver [sprint-1.2.md](roadmap/sprint-1.2.md)):
+**Sprint 1.2, passo 6 — FKs compostas e regra do `specialist`** (ver
+[sprint-1.2.md](roadmap/sprint-1.2.md)):
 
-- Uma política por operação, usando `(select private.is_member(...))` e `private.has_permission`.
-- Testes gerados a partir de uma tabela de casos (2 tenants × 6 papéis × operações).
+- Tabelas mínimas `professionals`, `clients` e `appointments` com `tenant_id`, FKs compostas e
+  `professional_id` (decisão do usuário em 2026-10-19).
+- `private.specialist_can_see_client` com teste pgTAP positivo e negativo (ADR-003 §9).
 
 Requisito local: Docker em execução e `npm run db:start`.
 

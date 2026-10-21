@@ -1,0 +1,53 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push origin feat/*)",
+      "Bash(git push -u origin feat/*)",
+      "Bash(git push origin fix/*)",
+      "Bash(git push -u origin fix/*)",
+      "Bash(git push origin chore/*)",
+      "Bash(git push -u origin chore/*)",
+      "Bash(git push origin docs/*)",
+      "Bash(git push -u origin docs/*)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr checks *)",
+      "PowerShell(git add *)",
+      "PowerShell(git commit *)",
+      "PowerShell(git push origin feat/*)",
+      "PowerShell(git push -u origin feat/*)",
+      "PowerShell(git push origin fix/*)",
+      "PowerShell(git push -u origin fix/*)",
+      "PowerShell(git push origin chore/*)",
+      "PowerShell(git push -u origin chore/*)",
+      "PowerShell(git push origin docs/*)",
+      "PowerShell(git push -u origin docs/*)",
+      "PowerShell(gh pr create *)",
+      "PowerShell(gh pr view *)",
+      "PowerShell(gh pr checks *)"
+    ],
+    "ask": ["Bash(gh pr merge *)", "PowerShell(gh pr merge *)"],
+    "deny": [
+      "Bash(git push * main)",
+      "Bash(git push * main:*)",
+      "Bash(git push * HEAD:main*)",
+      "Bash(git push *--force*)",
+      "Bash(git push * -f*)",
+      "Bash(git push * +*)",
+      "Bash(git push --mirror*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean *)",
+      "PowerShell(git push * main)",
+      "PowerShell(git push * main:*)",
+      "PowerShell(git push * HEAD:main*)",
+      "PowerShell(git push *--force*)",
+      "PowerShell(git push * -f*)",
+      "PowerShell(git push * +*)",
+      "PowerShell(git push --mirror*)",
+      "PowerShell(git reset --hard*)",
+      "PowerShell(git clean *)"
+    ]
+  }
+}

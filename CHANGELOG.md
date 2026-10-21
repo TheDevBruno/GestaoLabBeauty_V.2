@@ -26,9 +26,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   `private.is_platform_admin` (`security definer`, `STABLE`, `search_path` vazio, `EXECUTE` só para
   `authenticated`), `USAGE` em `private` para `authenticated` e matriz de permissões do plano §8 em
   `roles_permissions` (57 linhas), com 40 asserções pgTAP.
+- Sprint 1.2, passo 5a: políticas RLS de `tenants` (membro lê; `tenant.settings` altera o nome) e de
+  `profiles` (cada usuário lê e altera só o próprio perfil), com 251 asserções pgTAP geradas a partir
+  de uma tabela de casos (2 empresas × 6 papéis × 4 operações).
+- Sprint 1.2, passo 5b: políticas RLS de `memberships` (SELECT; UPDATE de `role` com `members.manage`,
+  sem alterar o próprio papel e só owner mexendo em owner; DELETE), política de leitura de
+  `roles_permissions` e trigger que exige ao menos um owner por empresa (RN-021 a RN-023); equipe e
+  saída da empresa com `members.manage` (RN-034). 173 asserções pgTAP em tabela de casos e prova de detecção.
 
 ### Alterado
 
+- `.claude/settings.json` libera commit, push das branches de trabalho e `gh pr create` para o
+  Claude Code; bloqueia push na `main`, force push, `reset --hard` e `clean`; merge pede confirmação.
+  AGENTS.md ganha a exceção correspondente ao item D3.
 - ADR-008 complementada (autorizado pelo usuário): `FOR ROLE postgres` explícito e testes que
   confirmam que `service_role` mantém os privilégios padrão em `public`.
 

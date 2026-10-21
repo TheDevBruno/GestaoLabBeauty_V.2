@@ -116,7 +116,10 @@ Regras completas em [SECURITY.md](SECURITY.md). Resumo:
 
 ## Proibido sem autorização
 
-- `git push` ou qualquer publicação no GitHub (D3).
+- `git push` ou qualquer publicação no GitHub (D3). Exceção autorizada pelo usuário em 2026-10-20: push
+  de branches `feat/`, `fix/`, `chore/` e `docs/` ao fim de cada passo, com `npm run check` verde, e
+  `gh pr create`. Push na `main`, force push e merge continuam com o usuário (regras em
+  `.claude/settings.json`).
 - Aplicar migrations ou alterar dados em homologação ou produção
   ([ADR-005](docs/decisions/ADR-005-ambientes.md)).
 - Instalar, remover ou atualizar dependências fora da política da

@@ -1,7 +1,7 @@
 # Sprint 1.2 — Schema base, RLS e pgTAP
 
 - **Início:** 2026-10-19
-- **Status:** em andamento (passos 1 a 4 de 10 concluídos)
+- **Status:** em andamento (passos 1 a 5b de 10 concluídos)
 - **Branch:** `feat/sprint-1.2-banco`
 
 ## Objetivo
@@ -34,8 +34,8 @@ homologação ou produção ([ADR-005](../decisions/ADR-005-ambientes.md)).
 | 2   | Schema `private` e primeiro teste pgTAP  | concluído |
 | 3   | Tabelas de tenancy                       | concluído |
 | 4   | Funções auxiliares em `private`          | concluído |
-| 5a  | Políticas de `tenants` e `profiles`      | pendente  |
-| 5b  | Políticas de `memberships` e regra owner | pendente  |
+| 5a  | Políticas de `tenants` e `profiles`      | concluído |
+| 5b  | Políticas de `memberships` e regra owner | concluído |
 | 6   | FKs compostas e regra do `specialist`    | pendente  |
 | 7   | Seed sintético                           | pendente  |
 | 8   | Job de banco no CI                       | pendente  |
@@ -219,3 +219,88 @@ Observações:
 - No primeiro `db:reset` da sessão o container do banco reiniciou logo depois e voltou sem as migrations
   (`DbConnectError` no `db:test`). Esperar o container ficar `healthy` e repetir o reset resolveu.
 - O CLI avisa que existe a 2.121.0; a atualização segue a janela de 14 dias da ADR-001.
+- A migration e os testes deste passo ficaram fora do commit `e89b912`, que levou só a documentação.
+  Entraram no commit seguinte, `a4a5099`.
+
+### Passo 5a — Políticas de `tenants` e `profiles` (2026-10-20)
+
+Entregue — migration `supabase/migrations/20261021020000_rls_tenants_profiles.sql`:
+
+| Tabela     | Política                  | Operação | Regra                                                                              |
+| ---------- | ------------------------- | -------- | ---------------------------------------------------------------------------------- |
+| `tenants`  | `tenants_select_member`   | SELECT   | `(select private.is_member(id))`                                                   |
+| `tenants`  | `tenants_update_settings` | UPDATE   | `(select private.has_permission(id, 'tenant.settings'))` em `USING` e `WITH CHECK` |
+| `profiles` | `profiles_select_own`     | SELECT   | `id = (select auth.uid())`                                                         |
+| `profiles` | `profiles_update_own`     | UPDATE   | `id = (select auth.uid())` em `USING` e `WITH CHECK`                               |
+
+- Todas `PERMISSIVE` e só `to authenticated`. INSERT e DELETE não têm `GRANT` nessas tabelas (passo 3),
+  então não têm política: a tentativa termina em `permission denied`.
+- Nenhuma política usa `private.is_platform_admin()` (ADR-003 §6).
+- `profiles`: decisão padrão desta sessão, cada usuário vê só o próprio perfil. Ver o perfil de colegas
+  da mesma empresa fica para quando a tela de equipe existir, com função própria em `private`.
+
+Testes — `rls_tenants_profiles.test.sql` (251): tabela de casos com operação, alvo, papéis que conseguem
+e resultado esperado, executada para os 12 usuários (6 papéis × 2 empresas). Alvos: a própria empresa e a
+outra; o próprio perfil, o de um colega e o de alguém da outra empresa. Somam-se estrutura das políticas,
+listagem sem filtro, usuário sem vínculo, admin da plataforma sem membership, revogação imediata
+(RN-024), renomeação gravada pelo owner e `anon` com `permission denied`. `tenancy_tables.test.sql`: a
+asserção "nenhuma política" passou a cobrir só as três tabelas do passo 5b, e a leitura sem política
+passou a usar `roles_permissions`.
+
+Verificações:
+
+| Verificação                                                 | Resultado                                                         |
+| ----------------------------------------------------------- | ----------------------------------------------------------------- |
+| `npm run db:reset`                                          | 4 migrations aplicadas do zero                                    |
+| `npm run db:test`                                           | `Files=7, Tests=366`, `Result: PASS`                              |
+| `npm run db:test` duas vezes seguidas                       | PASS nas duas                                                     |
+| Prova de detecção: `SELECT using (true)` + `DROP` do UPDATE | FAIL esperado nos testes 1, 50-61, 230-242, 244, 246 e 249; reset |
+| `npx supabase db lint`                                      | sem erros (`"results":[]`)                                        |
+| `npm run check`                                             | exit 0                                                            |
+
+### Passo 5b — Políticas de `memberships`, `roles_permissions` e regra do owner (2026-10-21)
+
+Entregue — migration `supabase/migrations/20261021030000_rls_memberships.sql`:
+
+| Tabela              | Política                       | Operação | Regra                                                                                           |
+| ------------------- | ------------------------------ | -------- | ----------------------------------------------------------------------------------------------- |
+| `memberships`       | `memberships_select_member`    | SELECT   | `user_id = auth.uid()` ou `members.manage` na empresa (RN-034)                                  |
+| `memberships`       | `memberships_update_role`      | UPDATE   | `members.manage`, `user_id <> auth.uid()` (RN-021) e linha/valor `owner` só para owner (RN-022) |
+| `memberships`       | `memberships_delete_manage`    | DELETE   | `members.manage` e membership `owner` só para owner                                             |
+| `roles_permissions` | `roles_permissions_select_all` | SELECT   | `using (true)`: matriz global, igual para todas as empresas                                     |
+
+- `private.is_owner(tenant_id)`: `security definer`, `STABLE`, `search_path` vazio; `EXECUTE` só para
+  `authenticated`. Helper novo além dos três da ADR-003 §3, usado só pelas políticas deste passo.
+- RN-023: trigger `private.ensure_tenant_has_owner` (`AFTER UPDATE OF role OR DELETE`, por linha). Roda
+  ao fim do comando, então a troca de owner dentro de um mesmo comando vale pelo estado final. Quando a
+  própria empresa é apagada, o cascade passa sem erro.
+- `platform_admins` segue sem GRANT e sem política (ADR-003 §6).
+- INSERT segue sem GRANT: criação de membership fica com o servidor (convites).
+
+Testes:
+
+- `rls_memberships.test.sql` (171 na primeira versão): tabela de casos com 2 empresas × 6 papéis; alvos na própria e na
+  outra empresa, com papel do executor, `owner` e `receptionist`; mais estrutura das políticas, leitura
+  da matriz por todos os usuários, usuário sem vínculo, promoção a owner em savepoint, remoção, último
+  owner (com `postgres` e com `authenticated`) e cascade ao apagar a empresa.
+- `tenancy_tables.test.sql`: a asserção "sem política" passou a cobrir só `platform_admins`; o teste de
+  trigger troca `set role` por `set created_at` (o único owner da empresa não pode ser rebaixado).
+- `private_helpers.test.sql`: ganha um segundo owner em A, porque o último owner não sai (RN-023).
+
+Verificações:
+
+| Verificação                                         | Resultado                                                           |
+| --------------------------------------------------- | ------------------------------------------------------------------- |
+| `npm run db:reset`                                  | 5 migrations aplicadas do zero                                      |
+| `npm run db:test`                                   | `Files=8, Tests=536`, `Result: PASS`                                |
+| Prova de detecção: `user_id <> auth.uid()` removido | FAIL esperado nos testes 110, 116, 122, 123, 128 e 129; reset, PASS |
+| `npx supabase db lint`                              | `{"results":[]}`                                                    |
+| `npm run check`                                     | exit 0 (50 testes Vitest, build)                                    |
+
+Decisão do usuário (2026-10-21), registrada como RN-034 — `members.manage` governa:
+
+- Equipe: sem `members.manage`, o membro vê só a própria membership. A primeira versão da política
+  usava `private.is_member` (todo membro via a equipe) e foi trocada antes do merge.
+- Sair da empresa: quem tem `members.manage` remove a própria membership; os demais não. O owner único
+  continua sem sair (RN-023).
+- `rls_memberships.test.sql` passou a 173 asserções; `npm run db:test`: `Files=8, Tests=538`, PASS.
