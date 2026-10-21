@@ -139,7 +139,11 @@ select ok(
 );
 select tests.clear_authentication();
 
--- Revogação vale na hora: o papel vem de memberships, não do JWT
+-- Revogação vale na hora: o papel vem de memberships, não do JWT.
+-- Um segundo owner em A: o último owner não pode sair (RN-023, passo 5b).
+select tests.create_user('co-owner-a@example.test') as co_owner_a \gset
+insert into public.memberships (tenant_id, user_id, role)
+  values ('00000000-0000-0000-0000-00000000000a', :'co_owner_a', 'owner');
 select tests.authenticate_as(:'owner_a');
 select ok(private.is_member('00000000-0000-0000-0000-00000000000a'), 'antes da remoção: membro');
 select tests.clear_authentication();

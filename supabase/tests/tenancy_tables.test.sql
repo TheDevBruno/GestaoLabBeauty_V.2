@@ -1,6 +1,6 @@
 -- Passo 3: tabelas de tenancy com RLS ligada, sem políticas e com GRANT mínimo (ADR-003, ADR-008).
 begin;
-select plan(49);
+select plan(48);
 
 -- Estrutura
 select has_table('public', t, format('tabela %s existe', t))
@@ -22,10 +22,9 @@ select ok(
   'RLS ligada nas 5 tabelas'
 );
 select is(
-  (select count(*) from pg_policies where schemaname = 'public'
-    and tablename in ('memberships', 'platform_admins', 'roles_permissions')),
+  (select count(*) from pg_policies where schemaname = 'public' and tablename = 'platform_admins'),
   0::bigint,
-  'memberships, platform_admins e roles_permissions ainda sem política (tenants e profiles: passo 5a)'
+  'platform_admins sem política (ADR-003 §6; tenants e profiles: passo 5a; memberships e roles_permissions: passo 5b)'
 );
 
 -- GRANT: anon sem nada; authenticated só o necessário
@@ -101,12 +100,11 @@ select throws_ok(
   $$update public.memberships set tenant_id = '00000000-0000-0000-0000-00000000000b'$$,
   '23514', null, 'trigger impede trocar tenant_id'
 );
-select lives_ok($$update public.memberships set role = 'admin'$$, 'trigger permite alterar outras colunas');
+select lives_ok($$update public.memberships set created_at = created_at$$, 'trigger permite alterar outras colunas');
 
--- Sem políticas, a RLS nega tudo a authenticated, mesmo com GRANT e membership
+-- Sem GRANT, platform_admins nem chega à RLS
 select tests.authenticate_as(:'user_id');
-select is_empty('select 1 from public.roles_permissions', 'authenticated não vê roles_permissions sem política');
-select is_empty('select 1 from public.memberships', 'authenticated não vê a própria membership sem política');
+select throws_ok('select 1 from public.platform_admins', '42501', null, 'authenticated sem acesso a platform_admins');
 select tests.clear_authentication();
 
 -- anon nem chega à RLS: permission denied

@@ -29,6 +29,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 1.2, passo 5a: políticas RLS de `tenants` (membro lê; `tenant.settings` altera o nome) e de
   `profiles` (cada usuário lê e altera só o próprio perfil), com 251 asserções pgTAP geradas a partir
   de uma tabela de casos (2 empresas × 6 papéis × 4 operações).
+- Sprint 1.2, passo 5b: políticas RLS de `memberships` (SELECT; UPDATE de `role` com `members.manage`,
+  sem alterar o próprio papel e só owner mexendo em owner; DELETE), política de leitura de
+  `roles_permissions` e trigger que exige ao menos um owner por empresa (RN-021 a RN-023), com 171
+  asserções pgTAP em tabela de casos e prova de detecção.
 
 ### Alterado
 

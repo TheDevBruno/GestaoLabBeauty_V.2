@@ -1,7 +1,7 @@
 # Sprint 1.2 — Schema base, RLS e pgTAP
 
 - **Início:** 2026-10-19
-- **Status:** em andamento (passos 1 a 5a de 10 concluídos)
+- **Status:** em andamento (passos 1 a 5b de 10 concluídos)
 - **Branch:** `feat/sprint-1.2-banco`
 
 ## Objetivo
@@ -35,7 +35,7 @@ homologação ou produção ([ADR-005](../decisions/ADR-005-ambientes.md)).
 | 3   | Tabelas de tenancy                       | concluído |
 | 4   | Funções auxiliares em `private`          | concluído |
 | 5a  | Políticas de `tenants` e `profiles`      | concluído |
-| 5b  | Políticas de `memberships` e regra owner | pendente  |
+| 5b  | Políticas de `memberships` e regra owner | concluído |
 | 6   | FKs compostas e regra do `specialist`    | pendente  |
 | 7   | Seed sintético                           | pendente  |
 | 8   | Job de banco no CI                       | pendente  |
@@ -257,3 +257,48 @@ Verificações:
 | Prova de detecção: `SELECT using (true)` + `DROP` do UPDATE | FAIL esperado nos testes 1, 50-61, 230-242, 244, 246 e 249; reset |
 | `npx supabase db lint`                                      | sem erros (`"results":[]`)                                        |
 | `npm run check`                                             | exit 0                                                            |
+
+### Passo 5b — Políticas de `memberships`, `roles_permissions` e regra do owner (2026-10-21)
+
+Entregue — migration `supabase/migrations/20261021030000_rls_memberships.sql`:
+
+| Tabela              | Política                    | Operação | Regra                                                                                                   |
+| ------------------- | --------------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `memberships`       | `memberships_select_member` | SELECT   | `user_id = auth.uid()` ou `private.is_member(tenant_id)`                                                |
+| `memberships`       | `memberships_update_role`   | UPDATE   | `members.manage`, `user_id <> auth.uid()` (RN-021) e linha/valor `owner` só para owner (RN-022)         |
+| `memberships`       | `memberships_delete_manage` | DELETE   | `members.manage` e membership `owner` só para owner                                                     |
+| `roles_permissions` | `roles_permissions_select_all` | SELECT | `using (true)`: matriz global, igual para todas as empresas                                            |
+
+- `private.is_owner(tenant_id)`: `security definer`, `STABLE`, `search_path` vazio; `EXECUTE` só para
+  `authenticated`. Helper novo além dos três da ADR-003 §3, usado só pelas políticas deste passo.
+- RN-023: trigger `private.ensure_tenant_has_owner` (`AFTER UPDATE OF role OR DELETE`, por linha). Roda
+  ao fim do comando, então a troca de owner dentro de um mesmo comando vale pelo estado final. Quando a
+  própria empresa é apagada, o cascade passa sem erro.
+- `platform_admins` segue sem GRANT e sem política (ADR-003 §6).
+- INSERT segue sem GRANT: criação de membership fica com o servidor (convites).
+
+Testes:
+
+- `rls_memberships.test.sql` (171): tabela de casos com 2 empresas × 6 papéis; alvos na própria e na
+  outra empresa, com papel do executor, `owner` e `receptionist`; mais estrutura das políticas, leitura
+  da matriz por todos os usuários, usuário sem vínculo, promoção a owner em savepoint, remoção, último
+  owner (com `postgres` e com `authenticated`) e cascade ao apagar a empresa.
+- `tenancy_tables.test.sql`: a asserção "sem política" passou a cobrir só `platform_admins`; o teste de
+  trigger troca `set role` por `set created_at` (o único owner da empresa não pode ser rebaixado).
+- `private_helpers.test.sql`: ganha um segundo owner em A, porque o último owner não sai (RN-023).
+
+Verificações:
+
+| Verificação                                              | Resultado                                                              |
+| -------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `npm run db:reset`                                       | 5 migrations aplicadas do zero                                         |
+| `npm run db:test`                                        | `Files=8, Tests=536`, `Result: PASS`                                   |
+| Prova de detecção: `user_id <> auth.uid()` removido      | FAIL esperado nos testes 110, 116, 122, 123, 128 e 129; reset, PASS    |
+| `npx supabase db lint`                                   | `{"results":[]}`                                                       |
+| `npm run check`                                          | exit 0 (50 testes Vitest, build)                                       |
+
+Decisões em aberto (não cobertas pelas regras):
+
+- Sair da empresa (apagar a própria membership): a política de DELETE não tem exceção para o próprio
+  usuário. Quem tem `members.manage` pode se remover; o owner único não consegue (RN-023).
+- Tela de equipe: qualquer membro lê as memberships da própria empresa, sem exigir permissão específica.
