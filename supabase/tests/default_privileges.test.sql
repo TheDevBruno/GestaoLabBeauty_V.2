@@ -5,8 +5,8 @@ select plan(18);
 select has_schema('private', 'schema private existe');
 select ok(not has_schema_privilege('anon', 'private', 'usage'), 'anon não usa o schema private');
 select ok(
-  not has_schema_privilege('authenticated', 'private', 'usage'),
-  'authenticated ainda não usa o schema private (concedido no passo 4)'
+  has_schema_privilege('authenticated', 'private', 'usage'),
+  'authenticated usa o schema private (concedido no passo 4)'
 );
 
 -- Objetos sonda, criados pelo postgres como faria uma migration.
