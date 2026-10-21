@@ -309,6 +309,20 @@ Regra nova ou alterada deve ser registrada aqui com a origem.
 - **Status:** a confirmar.
 - **Dúvida:** se "nota ligada a ele" é a nota escrita por ele ou toda nota de cliente que ele pode ver.
 
+### RN-036 — Specialist não amplia o próprio recorte
+
+| Dado                   | Quando                                          | Então                                                                     |
+| ---------------------- | ----------------------------------------------- | ------------------------------------------------------------------------- |
+| Um membro `specialist` | Tenta cadastrar um cliente novo                 | A ação é negada; o cadastro fica com quem tem `clients.write` sem recorte |
+| Um membro `specialist` | Altera um cliente                               | Só consegue nos clientes que vê (RN-028)                                  |
+| Um membro `specialist` | Cria ou altera um agendamento                   | Só para o profissional ligado a ele e para clientes que já vê             |
+| Um membro `specialist` | Tenta passar o agendamento a outro profissional | A ação é negada                                                           |
+
+- **Origem:** decisão do usuário em 2026-10-20 (Sprint 1.2, passo 6). Sem esta regra, agendar um
+  cliente qualquer daria ao specialist acesso a ele (RN-028).
+- **Status:** confirmada. O primeiro agendamento de um cliente com o specialist é feito pela recepção
+  ou pela gestão.
+
 ## Administração global
 
 ### RN-030 — Admin global fora dos papéis da empresa
@@ -330,6 +344,28 @@ Regra nova ou alterada deve ser registrada aqui com a origem.
 
 - **Origem:** decisão do usuário em 2026-10-21 (Sprint 1.2, passo 5b).
 - **Status:** confirmada.
+
+### RN-035 — Profissionais: membro lê, `services.manage` altera
+
+| Dado      | Quando                                                        | Então                             |
+| --------- | ------------------------------------------------------------- | --------------------------------- |
+| Um membro | Consulta os profissionais da empresa                          | Vê todos                          |
+| Um membro | Cria, altera, liga a uma membership ou remove um profissional | Só consegue com `services.manage` |
+
+- **Origem:** decisão do usuário em 2026-10-20 (Sprint 1.2, passo 6). A matriz do plano §8 não tem
+  permissão própria para profissionais.
+- **Status:** confirmada. Uma membership atende como no máximo um profissional; se a membership sai, o
+  profissional fica sem ligação.
+
+### RN-037 — Clientes e agendamentos não são excluídos pelo app
+
+| Dado      | Quando                                     | Então           |
+| --------- | ------------------------------------------ | --------------- |
+| Um membro | Tenta excluir um cliente ou um agendamento | A ação é negada |
+
+- **Origem:** decisão do usuário em 2026-10-20 (Sprint 1.2, passo 6).
+- **Status:** confirmada para a Sprint 1.2. Cancelamento vira status na Sprint 2; remoção de cliente
+  terá regra própria.
 
 ## Financeiro e valores
 

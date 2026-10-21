@@ -1,7 +1,7 @@
 # Sprint 1.2 — Schema base, RLS e pgTAP
 
 - **Início:** 2026-10-19
-- **Status:** em andamento (passos 1 a 5b de 10 concluídos)
+- **Status:** em andamento (passos 1 a 6 de 10 concluídos)
 - **Branch:** `feat/sprint-1.2-banco`
 
 ## Objetivo
@@ -36,7 +36,7 @@ homologação ou produção ([ADR-005](../decisions/ADR-005-ambientes.md)).
 | 4   | Funções auxiliares em `private`          | concluído |
 | 5a  | Políticas de `tenants` e `profiles`      | concluído |
 | 5b  | Políticas de `memberships` e regra owner | concluído |
-| 6   | FKs compostas e regra do `specialist`    | pendente  |
+| 6   | FKs compostas e regra do `specialist`    | concluído |
 | 7   | Seed sintético                           | pendente  |
 | 8   | Job de banco no CI                       | pendente  |
 | 9   | Encerramento da sprint                   | pendente  |
@@ -304,3 +304,69 @@ Decisão do usuário (2026-10-21), registrada como RN-034 — `members.manage` g
 - Sair da empresa: quem tem `members.manage` remove a própria membership; os demais não. O owner único
   continua sem sair (RN-023).
 - `rls_memberships.test.sql` passou a 173 asserções; `npm run db:test`: `Files=8, Tests=538`, PASS.
+
+### Passo 6 — FKs compostas e regra do `specialist` (2026-10-20)
+
+Decisões do usuário nesta sessão (registradas como RN-035 a RN-037):
+
+- `professionals`: todo membro lê; `services.manage` cria, altera e remove (RN-035).
+- O specialist não cadastra cliente novo e só altera os clientes que vê; agenda só para o profissional
+  ligado a ele e só clientes que já vê, sem passar o agendamento a outro profissional (RN-036).
+- Sem `DELETE` em `clients` e `appointments` por enquanto (RN-037).
+
+Entregue — migration `supabase/migrations/20261021040000_specialist_scope.sql`:
+
+- Tabelas mínimas, todas com `tenant_id NOT NULL`, `UNIQUE (tenant_id, id)`, trigger
+  `private.prevent_tenant_id_change` e cascade a partir de `tenants`:
+  - `professionals` (`membership_id` opcional; `UNIQUE (tenant_id, membership_id)`; FK composta
+    `(tenant_id, membership_id) → memberships (tenant_id, id)` com `on delete set null (membership_id)`);
+  - `clients` (`full_name`, única coluna editável, sem a qual não haveria UPDATE a proteger);
+  - `appointments` (FKs compostas para `clients` e `professionals`, com índice em cada uma). Ainda sem
+    status: a regra do specialist não filtra por status, então "qualquer status" (RN-028) já vale.
+- Funções em `private` (`security definer`, `STABLE`, `search_path` vazio, `EXECUTE` só para
+  `authenticated`):
+  - `private.is_specialist(tenant_id)`: o papel do usuário na empresa é `specialist`;
+  - `private.is_own_professional(tenant_id, professional_id)`: o profissional está ligado à membership
+    do usuário;
+  - `private.specialist_can_see_client(tenant_id, client_id)`: o usuário é specialist e o cliente tem ao
+    menos um agendamento com o profissional ligado a ele. Devolve `false` para os outros papéis.
+- RLS ligada, `GRANT` só para `authenticated`, uma política por operação:
+
+  | Tabela          | SELECT                                 | INSERT                                                   | UPDATE                   | DELETE            |
+  | --------------- | -------------------------------------- | -------------------------------------------------------- | ------------------------ | ----------------- |
+  | `professionals` | membro                                 | `services.manage`                                        | `services.manage`        | `services.manage` |
+  | `clients`       | `clients.read`; specialist: com agend. | `clients.write`, não specialist                          | `clients.write`; recorte | sem GRANT         |
+  | `appointments`  | `appointments.read`; specialist: dele  | `appointments.write`; specialist: dele e cliente visível | igual ao INSERT          | sem GRANT         |
+
+  Colunas com `GRANT`: INSERT `professionals (tenant_id, membership_id)`, `clients (tenant_id,
+full_name)`, `appointments (tenant_id, client_id, professional_id)`; UPDATE
+  `professionals (membership_id)`, `clients (full_name)`, `appointments (client_id, professional_id)`.
+
+Testes — `supabase/tests/rls_specialist.test.sql` (410): tabela de 29 casos × 12 usuários (348
+asserções), com alvos em cada empresa: profissional do specialist, outro profissional e um sem
+agendamentos; cliente com agendamento com o specialist, cliente só com outro profissional e cliente sem
+agendamento. Somam-se estrutura (RLS, chaves, FKs, políticas, `GRANT` por coluna, funções), positivo e
+negativos de `private.specialist_can_see_client`, listagem sem filtro, specialist sem profissional
+ligado, troca de profissional ou de cliente pelo specialist, desligamento imediato (RN-024), remoção da
+membership, FKs compostas recusando vínculo entre empresas (também para `authenticated`), `tenant_id`
+imutável, `anon` sem leitura e cascade ao apagar a empresa. Cada caso roda e é desfeito, então nenhum
+altera o estado dos seguintes. Nenhum teste antigo mudou; `rls_coverage` segue em zero.
+
+Verificações:
+
+| Verificação                                                                                                                    | Resultado                                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| Ponto de partida (`db:reset` + `db:test`)                                                                                      | `Files=8, Tests=538`, `Result: PASS`                                             |
+| `npm run db:reset`                                                                                                             | 6 migrations aplicadas do zero                                                   |
+| `npm run db:test`                                                                                                              | `Files=9, Tests=948`, `Result: PASS`                                             |
+| `npm run db:test` duas vezes seguidas                                                                                          | PASS nas duas                                                                    |
+| Prova de detecção: recorte tirado de `clients_select_read` e `specialist_can_see_client` tirado de `appointments_insert_write` | FAIL esperado nos testes 68, 74, 224, 230, 236, 242, 383, 388 e 395; reset, PASS |
+| `npx supabase db lint`                                                                                                         | `No schema errors found` (`"results":[]`)                                        |
+| `npm run check`                                                                                                                | exit 0                                                                           |
+
+Observações:
+
+- A função lê o estado do início do comando: o agendamento sendo gravado não libera o próprio cliente.
+  Por isso o specialist não ganha acesso a cliente novo agendando-o (RN-036).
+- Papéis com recorte são só `specialist`. Owner, admin, manager, receptionist e financial seguem a
+  matriz sem filtro por registro, mesmo que estejam ligados a um profissional.

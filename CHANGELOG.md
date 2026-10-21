@@ -33,6 +33,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   sem alterar o próprio papel e só owner mexendo em owner; DELETE), política de leitura de
   `roles_permissions` e trigger que exige ao menos um owner por empresa (RN-021 a RN-023); equipe e
   saída da empresa com `members.manage` (RN-034). 173 asserções pgTAP em tabela de casos e prova de detecção.
+- Sprint 1.2, passo 6: tabelas mínimas `professionals`, `clients` e `appointments` com FKs compostas
+  (`appointments → clients`, `appointments → professionals`, `professionals → memberships`), RLS e uma
+  política por operação; funções `private.is_specialist`, `private.is_own_professional` e
+  `private.specialist_can_see_client` para o recorte do `specialist` (RN-027, RN-028, RN-035 a RN-037).
+  410 asserções pgTAP em tabela de casos e prova de detecção.
 
 ### Alterado
 
