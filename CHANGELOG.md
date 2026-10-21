@@ -22,6 +22,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   `platform_admins` e `roles_permissions`, enum `member_role`, trigger que impede trocar `tenant_id`,
   RLS ligada sem políticas e `GRANT` mínimos para `authenticated` (nenhum para `anon`), com 49
   asserções pgTAP.
+- Sprint 1.2, passo 4: funções `private.is_member`, `private.has_permission` e
+  `private.is_platform_admin` (`security definer`, `STABLE`, `search_path` vazio, `EXECUTE` só para
+  `authenticated`), `USAGE` em `private` para `authenticated` e matriz de permissões do plano §8 em
+  `roles_permissions` (57 linhas), com 40 asserções pgTAP.
 
 ### Alterado
 
