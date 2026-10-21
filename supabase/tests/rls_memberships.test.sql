@@ -48,9 +48,10 @@ create temporary table cases (
 insert into cases (op, alvo_empresa, alvo_papel, permitidos, sim, nao, sql) values
   ('select', 'própria', 'próprio', '{owner,admin,manager,specialist,receptionist,financial}', '1', '0',
    'select 1 from public.memberships where tenant_id = %1$L and user_id = %2$L'),
-  ('select', 'própria', 'owner', '{owner,admin,manager,specialist,receptionist,financial}', '1', '0',
+  ('select', 'própria', 'owner', '{owner,admin}', '1', '0',
    'select 1 from public.memberships where tenant_id = %1$L and user_id = %2$L'),
-  ('select', 'própria', 'receptionist', '{owner,admin,manager,specialist,receptionist,financial}', '1', '0',
+  -- receptionist entra porque, para ele, o alvo é a própria membership
+  ('select', 'própria', 'receptionist', '{owner,admin,receptionist}', '1', '0',
    'select 1 from public.memberships where tenant_id = %1$L and user_id = %2$L'),
   ('select', 'outra', 'owner', '{}', '1', '0',
    'select 1 from public.memberships where tenant_id = %1$L and user_id = %2$L'),
@@ -94,7 +95,7 @@ select user_id as manager_a from members where tenant = 'A' and role = 'manager'
 select user_id as receptionist_a from members where tenant = 'A' and role = 'receptionist' \gset
 select user_id as receptionist_b from members where tenant = 'B' and role = 'receptionist' \gset
 
-select plan((select count(*)::int from runs) + 27);
+select plan((select count(*)::int from runs) + 29);
 
 -- Estrutura: uma política por operação liberada, só para authenticated
 select set_eq(
@@ -167,6 +168,16 @@ select is(
   '1', 'owner de A remove admin de A'
 );
 rollback to savepoint remocao;
+savepoint saida;
+select is(
+  pg_temp.try_as(:'admin_a', format($$delete from public.memberships where user_id = %L$$, :'admin_a')),
+  '1', 'admin de A sai da empresa (RN-034)'
+);
+select is(
+  pg_temp.try_as(:'manager_a', format($$delete from public.memberships where user_id = %L$$, :'manager_a')),
+  '0', 'manager de A não sai sozinho (sem members.manage, RN-034)'
+);
+rollback to savepoint saida;
 
 -- O único owner não sai da própria empresa (RN-023), mesmo com members.manage
 select tests.authenticate_as(:'owner_a');

@@ -56,15 +56,15 @@ create trigger memberships_ensure_tenant_has_owner
   after update of role or delete on public.memberships
   for each row execute function private.ensure_tenant_has_owner();
 
--- Leitura: a própria membership (lista de empresas da RN-025) e as memberships das empresas em que o
--- usuário é membro (tela de equipe). Quem não tem membership não vê nada.
+-- Leitura: a própria membership (lista de empresas da RN-025) e, com members.manage, as memberships da
+-- empresa (tela de equipe, RN-034). Quem não tem membership não vê nada.
 create policy memberships_select_member
   on public.memberships
   for select
   to authenticated
   using (
     user_id = (select auth.uid())
-    or (select private.is_member(tenant_id))
+    or (select private.has_permission(tenant_id, 'members.manage'))
   );
 
 -- Troca de papel: exige members.manage (plano §8) e nunca vale para a própria membership (RN-021).
@@ -85,8 +85,9 @@ create policy memberships_update_role
     and (role <> 'owner' or (select private.is_owner(tenant_id)))
   );
 
--- Remoção: exige members.manage; membership de owner só o owner remove. A regra de último owner
--- (RN-023) fica no trigger, que vale também para o servidor.
+-- Remoção: exige members.manage; membership de owner só o owner remove. Quem tem members.manage pode
+-- remover a própria membership (RN-034). A regra de último owner (RN-023) fica no trigger, que vale
+-- também para o servidor.
 create policy memberships_delete_manage
   on public.memberships
   for delete

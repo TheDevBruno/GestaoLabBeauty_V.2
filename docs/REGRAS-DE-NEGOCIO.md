@@ -321,6 +321,16 @@ Regra nova ou alterada deve ser registrada aqui com a origem.
 - **Status:** a confirmar.
 - **Dúvida:** prazo do acesso de suporte e quem o autoriza (Fase 5).
 
+### RN-034 — Equipe e saída da empresa com `members.manage`
+
+| Dado      | Quando                             | Então                                                          |
+| --------- | ---------------------------------- | -------------------------------------------------------------- |
+| Um membro | Consulta as memberships da empresa | Vê só a própria, salvo se tiver `members.manage`               |
+| Um membro | Tenta remover a própria membership | Só consegue com `members.manage` (owner único não sai, RN-023) |
+
+- **Origem:** decisão do usuário em 2026-10-21 (Sprint 1.2, passo 5b).
+- **Status:** confirmada.
+
 ## Financeiro e valores
 
 ### RN-031 — Agendado separado do recebido

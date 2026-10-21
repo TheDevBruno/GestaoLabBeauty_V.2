@@ -28,12 +28,14 @@ liberação de recursos por plano.
     (só o próprio perfil). 366 asserções pgTAP verdes.
   - Passo 5b: políticas de `memberships` (troca de papel e remoção com `members.manage`, sem alterar o
     próprio papel, só owner mexe em owner) e leitura de `roles_permissions`; trigger que mantém ao
-    menos um owner por empresa (RN-023). 536 asserções pgTAP verdes.
+    menos um owner por empresa (RN-023). Equipe e saída da empresa com `members.manage` (RN-034).
+    538 asserções pgTAP verdes.
 
   Plano e registro em [sprint-1.2.md](roadmap/sprint-1.2.md).
 
-- Membros já leem a própria empresa, o próprio perfil e as memberships da empresa. `platform_admins`
-  segue sem política (nega tudo). Sem autenticação nem funcionalidade de negócio.
+- Membros já leem a própria empresa, o próprio perfil e a própria membership; quem tem
+  `members.manage` lê a equipe. `platform_admins` segue sem política (nega tudo). Sem autenticação nem
+  funcionalidade de negócio.
 - Adiantado da Sprint 1.3, com autorização: validador de slug do portal (`src/shared/slug.ts`, RN-017)
   com 50 testes Vitest, integrado na `main` pelo PR #7. `npm test` deixou de usar `--passWithNoTests`.
 
@@ -55,9 +57,5 @@ liberação de recursos por plano.
 - `private.specialist_can_see_client` com teste pgTAP positivo e negativo (ADR-003 §9).
 
 Requisito local: Docker em execução e `npm run db:start`.
-
-Em aberto para o usuário, antes ou depois do passo 9: "sair da empresa" (hoje quem tem `members.manage`
-pode apagar a própria membership) e a visibilidade da equipe (hoje todo membro lê as memberships da
-empresa). Ver o registro do passo 5b.
 
 O fim da Sprint 1.2 é ponto de aprovação obrigatória.

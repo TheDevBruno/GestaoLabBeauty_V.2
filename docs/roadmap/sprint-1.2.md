@@ -262,12 +262,12 @@ Verificações:
 
 Entregue — migration `supabase/migrations/20261021030000_rls_memberships.sql`:
 
-| Tabela              | Política                    | Operação | Regra                                                                                                   |
-| ------------------- | --------------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
-| `memberships`       | `memberships_select_member` | SELECT   | `user_id = auth.uid()` ou `private.is_member(tenant_id)`                                                |
-| `memberships`       | `memberships_update_role`   | UPDATE   | `members.manage`, `user_id <> auth.uid()` (RN-021) e linha/valor `owner` só para owner (RN-022)         |
-| `memberships`       | `memberships_delete_manage` | DELETE   | `members.manage` e membership `owner` só para owner                                                     |
-| `roles_permissions` | `roles_permissions_select_all` | SELECT | `using (true)`: matriz global, igual para todas as empresas                                            |
+| Tabela              | Política                       | Operação | Regra                                                                                           |
+| ------------------- | ------------------------------ | -------- | ----------------------------------------------------------------------------------------------- |
+| `memberships`       | `memberships_select_member`    | SELECT   | `user_id = auth.uid()` ou `members.manage` na empresa (RN-034)                                  |
+| `memberships`       | `memberships_update_role`      | UPDATE   | `members.manage`, `user_id <> auth.uid()` (RN-021) e linha/valor `owner` só para owner (RN-022) |
+| `memberships`       | `memberships_delete_manage`    | DELETE   | `members.manage` e membership `owner` só para owner                                             |
+| `roles_permissions` | `roles_permissions_select_all` | SELECT   | `using (true)`: matriz global, igual para todas as empresas                                     |
 
 - `private.is_owner(tenant_id)`: `security definer`, `STABLE`, `search_path` vazio; `EXECUTE` só para
   `authenticated`. Helper novo além dos três da ADR-003 §3, usado só pelas políticas deste passo.
@@ -279,7 +279,7 @@ Entregue — migration `supabase/migrations/20261021030000_rls_memberships.sql`:
 
 Testes:
 
-- `rls_memberships.test.sql` (171): tabela de casos com 2 empresas × 6 papéis; alvos na própria e na
+- `rls_memberships.test.sql` (171 na primeira versão): tabela de casos com 2 empresas × 6 papéis; alvos na própria e na
   outra empresa, com papel do executor, `owner` e `receptionist`; mais estrutura das políticas, leitura
   da matriz por todos os usuários, usuário sem vínculo, promoção a owner em savepoint, remoção, último
   owner (com `postgres` e com `authenticated`) e cascade ao apagar a empresa.
@@ -289,16 +289,18 @@ Testes:
 
 Verificações:
 
-| Verificação                                              | Resultado                                                              |
-| -------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `npm run db:reset`                                       | 5 migrations aplicadas do zero                                         |
-| `npm run db:test`                                        | `Files=8, Tests=536`, `Result: PASS`                                   |
-| Prova de detecção: `user_id <> auth.uid()` removido      | FAIL esperado nos testes 110, 116, 122, 123, 128 e 129; reset, PASS    |
-| `npx supabase db lint`                                   | `{"results":[]}`                                                       |
-| `npm run check`                                          | exit 0 (50 testes Vitest, build)                                       |
+| Verificação                                         | Resultado                                                           |
+| --------------------------------------------------- | ------------------------------------------------------------------- |
+| `npm run db:reset`                                  | 5 migrations aplicadas do zero                                      |
+| `npm run db:test`                                   | `Files=8, Tests=536`, `Result: PASS`                                |
+| Prova de detecção: `user_id <> auth.uid()` removido | FAIL esperado nos testes 110, 116, 122, 123, 128 e 129; reset, PASS |
+| `npx supabase db lint`                              | `{"results":[]}`                                                    |
+| `npm run check`                                     | exit 0 (50 testes Vitest, build)                                    |
 
-Decisões em aberto (não cobertas pelas regras):
+Decisão do usuário (2026-10-21), registrada como RN-034 — `members.manage` governa:
 
-- Sair da empresa (apagar a própria membership): a política de DELETE não tem exceção para o próprio
-  usuário. Quem tem `members.manage` pode se remover; o owner único não consegue (RN-023).
-- Tela de equipe: qualquer membro lê as memberships da própria empresa, sem exigir permissão específica.
+- Equipe: sem `members.manage`, o membro vê só a própria membership. A primeira versão da política
+  usava `private.is_member` (todo membro via a equipe) e foi trocada antes do merge.
+- Sair da empresa: quem tem `members.manage` remove a própria membership; os demais não. O owner único
+  continua sem sair (RN-023).
+- `rls_memberships.test.sql` passou a 173 asserções; `npm run db:test`: `Files=8, Tests=538`, PASS.

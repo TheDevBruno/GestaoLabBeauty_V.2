@@ -31,8 +31,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   de uma tabela de casos (2 empresas × 6 papéis × 4 operações).
 - Sprint 1.2, passo 5b: políticas RLS de `memberships` (SELECT; UPDATE de `role` com `members.manage`,
   sem alterar o próprio papel e só owner mexendo em owner; DELETE), política de leitura de
-  `roles_permissions` e trigger que exige ao menos um owner por empresa (RN-021 a RN-023), com 171
-  asserções pgTAP em tabela de casos e prova de detecção.
+  `roles_permissions` e trigger que exige ao menos um owner por empresa (RN-021 a RN-023); equipe e
+  saída da empresa com `members.manage` (RN-034). 173 asserções pgTAP em tabela de casos e prova de detecção.
 
 ### Alterado
 
