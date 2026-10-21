@@ -13,7 +13,7 @@ liberação de recursos por plano.
 
 - **Fase 1 — Fundação.** Sprint 1.1 (repositório, tooling, CI e ADRs) **concluída** em 2026-10-19,
   com CI verde no GitHub. Detalhes em [sprint-1.1.md](roadmap/sprint-1.1.md).
-- **Sprint 1.2 em andamento** na branch `feat/sprint-1.2-banco`. Passos 1 a 5b de 10 concluídos:
+- **Sprint 1.2 em andamento** na branch `feat/sprint-1.2-banco`. Passos 1 a 6 de 10 concluídos:
   - Passo 1: Supabase CLI 2.119.0 e projeto local (`supabase/config.toml`, scripts `db:*`).
   - Passo 2: primeira migration (schema `private` e privilégios padrão revogados —
     [ADR-008](decisions/ADR-008-privilegios-explicitos.md)); helpers pgTAP. ADR-008 complementada
@@ -30,11 +30,17 @@ liberação de recursos por plano.
     próprio papel, só owner mexe em owner) e leitura de `roles_permissions`; trigger que mantém ao
     menos um owner por empresa (RN-023). Equipe e saída da empresa com `members.manage` (RN-034).
     538 asserções pgTAP verdes.
+  - Passo 6: versões mínimas de `professionals`, `clients` e `appointments` com `UNIQUE (tenant_id, id)`,
+    FKs compostas (inclusive `professionals → memberships`) e políticas por operação; recorte do
+    `specialist` com `private.is_specialist`, `private.is_own_professional` e
+    `private.specialist_can_see_client` (RN-027, RN-028). Decisões do usuário: RN-035 a RN-037.
+    948 asserções pgTAP verdes.
 
   Plano e registro em [sprint-1.2.md](roadmap/sprint-1.2.md).
 
 - Membros já leem a própria empresa, o próprio perfil e a própria membership; quem tem
-  `members.manage` lê a equipe. `platform_admins` segue sem política (nega tudo). Sem autenticação nem
+  `members.manage` lê a equipe. Profissionais, clientes e agendamentos existem só com chaves e FKs; a
+  Sprint 2 completa as colunas. `platform_admins` segue sem política (nega tudo). Sem autenticação nem
   funcionalidade de negócio.
 - Adiantado da Sprint 1.3, com autorização: validador de slug do portal (`src/shared/slug.ts`, RN-017)
   com 50 testes Vitest, integrado na `main` pelo PR #7. `npm test` deixou de usar `--passWithNoTests`.
@@ -49,12 +55,9 @@ liberação de recursos por plano.
 
 ## Próximo passo
 
-**Sprint 1.2, passo 6 — FKs compostas e regra do `specialist`** (ver
-[sprint-1.2.md](roadmap/sprint-1.2.md)):
+**Sprint 1.2, passo 7 — Seed sintético** (ver [sprint-1.2.md](roadmap/sprint-1.2.md)):
 
-- Tabelas mínimas `professionals`, `clients` e `appointments` com `tenant_id`, FKs compostas e
-  `professional_id` (decisão do usuário em 2026-10-19).
-- `private.specialist_can_see_client` com teste pgTAP positivo e negativo (ADR-003 §9).
+- `supabase/seed.sql` com dados sintéticos; os testes não dependem dele.
 
 Requisito local: Docker em execução e `npm run db:start`.
 
