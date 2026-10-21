@@ -1,7 +1,7 @@
 # Sprint 1.2 — Schema base, RLS e pgTAP
 
 - **Início:** 2026-10-19
-- **Status:** em andamento (passos 1 a 4 de 10 concluídos)
+- **Status:** em andamento (passos 1 a 5a de 10 concluídos)
 - **Branch:** `feat/sprint-1.2-banco`
 
 ## Objetivo
@@ -34,7 +34,7 @@ homologação ou produção ([ADR-005](../decisions/ADR-005-ambientes.md)).
 | 2   | Schema `private` e primeiro teste pgTAP  | concluído |
 | 3   | Tabelas de tenancy                       | concluído |
 | 4   | Funções auxiliares em `private`          | concluído |
-| 5a  | Políticas de `tenants` e `profiles`      | pendente  |
+| 5a  | Políticas de `tenants` e `profiles`      | concluído |
 | 5b  | Políticas de `memberships` e regra owner | pendente  |
 | 6   | FKs compostas e regra do `specialist`    | pendente  |
 | 7   | Seed sintético                           | pendente  |
@@ -219,3 +219,41 @@ Observações:
 - No primeiro `db:reset` da sessão o container do banco reiniciou logo depois e voltou sem as migrations
   (`DbConnectError` no `db:test`). Esperar o container ficar `healthy` e repetir o reset resolveu.
 - O CLI avisa que existe a 2.121.0; a atualização segue a janela de 14 dias da ADR-001.
+- A migration e os testes deste passo ficaram fora do commit `e89b912`, que levou só a documentação.
+  Entraram no commit seguinte, `a4a5099`.
+
+### Passo 5a — Políticas de `tenants` e `profiles` (2026-10-20)
+
+Entregue — migration `supabase/migrations/20261021020000_rls_tenants_profiles.sql`:
+
+| Tabela     | Política                  | Operação | Regra                                                                              |
+| ---------- | ------------------------- | -------- | ---------------------------------------------------------------------------------- |
+| `tenants`  | `tenants_select_member`   | SELECT   | `(select private.is_member(id))`                                                   |
+| `tenants`  | `tenants_update_settings` | UPDATE   | `(select private.has_permission(id, 'tenant.settings'))` em `USING` e `WITH CHECK` |
+| `profiles` | `profiles_select_own`     | SELECT   | `id = (select auth.uid())`                                                         |
+| `profiles` | `profiles_update_own`     | UPDATE   | `id = (select auth.uid())` em `USING` e `WITH CHECK`                               |
+
+- Todas `PERMISSIVE` e só `to authenticated`. INSERT e DELETE não têm `GRANT` nessas tabelas (passo 3),
+  então não têm política: a tentativa termina em `permission denied`.
+- Nenhuma política usa `private.is_platform_admin()` (ADR-003 §6).
+- `profiles`: decisão padrão desta sessão, cada usuário vê só o próprio perfil. Ver o perfil de colegas
+  da mesma empresa fica para quando a tela de equipe existir, com função própria em `private`.
+
+Testes — `rls_tenants_profiles.test.sql` (251): tabela de casos com operação, alvo, papéis que conseguem
+e resultado esperado, executada para os 12 usuários (6 papéis × 2 empresas). Alvos: a própria empresa e a
+outra; o próprio perfil, o de um colega e o de alguém da outra empresa. Somam-se estrutura das políticas,
+listagem sem filtro, usuário sem vínculo, admin da plataforma sem membership, revogação imediata
+(RN-024), renomeação gravada pelo owner e `anon` com `permission denied`. `tenancy_tables.test.sql`: a
+asserção "nenhuma política" passou a cobrir só as três tabelas do passo 5b, e a leitura sem política
+passou a usar `roles_permissions`.
+
+Verificações:
+
+| Verificação                                                 | Resultado                                                         |
+| ----------------------------------------------------------- | ----------------------------------------------------------------- |
+| `npm run db:reset`                                          | 4 migrations aplicadas do zero                                    |
+| `npm run db:test`                                           | `Files=7, Tests=366`, `Result: PASS`                              |
+| `npm run db:test` duas vezes seguidas                       | PASS nas duas                                                     |
+| Prova de detecção: `SELECT using (true)` + `DROP` do UPDATE | FAIL esperado nos testes 1, 50-61, 230-242, 244, 246 e 249; reset |
+| `npx supabase db lint`                                      | sem erros (`"results":[]`)                                        |
+| `npm run check`                                             | exit 0                                                            |

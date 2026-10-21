@@ -26,6 +26,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   `private.is_platform_admin` (`security definer`, `STABLE`, `search_path` vazio, `EXECUTE` só para
   `authenticated`), `USAGE` em `private` para `authenticated` e matriz de permissões do plano §8 em
   `roles_permissions` (57 linhas), com 40 asserções pgTAP.
+- Sprint 1.2, passo 5a: políticas RLS de `tenants` (membro lê; `tenant.settings` altera o nome) e de
+  `profiles` (cada usuário lê e altera só o próprio perfil), com 251 asserções pgTAP geradas a partir
+  de uma tabela de casos (2 empresas × 6 papéis × 4 operações).
 
 ### Alterado
 

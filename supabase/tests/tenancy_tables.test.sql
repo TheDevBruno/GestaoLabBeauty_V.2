@@ -23,9 +23,9 @@ select ok(
 );
 select is(
   (select count(*) from pg_policies where schemaname = 'public'
-    and tablename in ('tenants', 'profiles', 'memberships', 'platform_admins', 'roles_permissions')),
+    and tablename in ('memberships', 'platform_admins', 'roles_permissions')),
   0::bigint,
-  'nenhuma política ainda (passos 5a/5b)'
+  'memberships, platform_admins e roles_permissions ainda sem política (tenants e profiles: passo 5a)'
 );
 
 -- GRANT: anon sem nada; authenticated só o necessário
@@ -105,7 +105,7 @@ select lives_ok($$update public.memberships set role = 'admin'$$, 'trigger permi
 
 -- Sem políticas, a RLS nega tudo a authenticated, mesmo com GRANT e membership
 select tests.authenticate_as(:'user_id');
-select is_empty('select 1 from public.tenants', 'authenticated não vê tenants sem política');
+select is_empty('select 1 from public.roles_permissions', 'authenticated não vê roles_permissions sem política');
 select is_empty('select 1 from public.memberships', 'authenticated não vê a própria membership sem política');
 select tests.clear_authentication();
 
