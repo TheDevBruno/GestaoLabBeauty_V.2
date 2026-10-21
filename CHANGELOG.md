@@ -32,6 +32,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 
 ### Alterado
 
+- `.claude/settings.json` libera commit, push das branches de trabalho e `gh pr create` para o
+  Claude Code; bloqueia push na `main`, force push, `reset --hard` e `clean`; merge pede confirmação.
+  AGENTS.md ganha a exceção correspondente ao item D3.
 - ADR-008 complementada (autorizado pelo usuário): `FOR ROLE postgres` explícito e testes que
   confirmam que `service_role` mantém os privilégios padrão em `public`.
 
