@@ -1,7 +1,7 @@
 # Sprint 1.2 — Schema base, RLS e pgTAP
 
 - **Início:** 2026-10-19
-- **Status:** em andamento (passos 1 a 6 de 10 concluídos)
+- **Status:** em andamento (passos 1 a 7 de 10 concluídos)
 - **Branch:** `feat/sprint-1.2-banco`
 
 ## Objetivo
@@ -37,7 +37,7 @@ homologação ou produção ([ADR-005](../decisions/ADR-005-ambientes.md)).
 | 5a  | Políticas de `tenants` e `profiles`      | concluído |
 | 5b  | Políticas de `memberships` e regra owner | concluído |
 | 6   | FKs compostas e regra do `specialist`    | concluído |
-| 7   | Seed sintético                           | pendente  |
+| 7   | Seed sintético                           | concluído |
 | 8   | Job de banco no CI                       | pendente  |
 | 9   | Encerramento da sprint                   | pendente  |
 
@@ -370,3 +370,49 @@ Observações:
   Por isso o specialist não ganha acesso a cliente novo agendando-o (RN-036).
 - Papéis com recorte são só `specialist`. Owner, admin, manager, receptionist e financial seguem a
   matriz sem filtro por registro, mesmo que estejam ligados a um profissional.
+
+### Passo 7 — Seed sintético (2026-10-22)
+
+Entregue:
+
+- `supabase/seed.sql`, aplicado pelo `supabase db reset` (`[db.seed]` já ativo em `config.toml`; nenhuma
+  mudança de configuração). Ids começam em `5eed0000-…` para não colidir com os dos testes.
+- Duas empresas: `studio-ana` e `clinica-bela` (slugs válidos pela RN-017).
+- Em cada empresa, um usuário por papel (6): `auth.users` com login local, `auth.identities` (provider
+  `email`), `profiles` e `memberships`. E-mails `<nome>.<papel>@example.test`, nomes fictícios.
+- Em cada empresa: 2 profissionais (um ligado ao `specialist`, um sem ligação), 3 clientes (um com
+  agendamento com o `specialist`, um só com o outro profissional, um sem agendamento) e 2 agendamentos.
+  Total: 12 usuários, 12 identidades, 4 profissionais, 6 clientes, 4 agendamentos.
+- Senha de teste, só local: `senha-teste-labbeautypro`. Fica documentada aqui e no `seed.sql`; não vai
+  para `.env` nem para homologação ou produção (ADR-005). Login verificado: senha certa responde 200 pelo
+  Auth local, senha errada responde 400.
+- `supabase/tests/seed_rls.test.sql` (3 asserções): `rls_coverage` em zero; cada usuário do seed vê só a
+  própria empresa, nenhuma linha de outra empresa e só o próprio perfil; o seed está completo (12) ou
+  ausente, nunca pela metade. Sem seed, a lista de usuários existentes fica vazia e o teste passa sem
+  comparar nada.
+- Nenhuma regra de negócio nova; nenhuma ADR (o seed não é decisão arquitetural).
+
+Verificações:
+
+| Verificação                                                                  | Resultado                                                      |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Pré-condição: PR #15 mesclado na `main` (2026-10-21)                         | confirmado; branch atualizada por fast-forward                 |
+| Baseline antes do seed (`db:reset` + `db:test`)                              | `Files=9, Tests=948`, `Result: PASS`                           |
+| `npm run db:reset` com seed                                                  | seed aplicado; `Finished supabase db reset`                    |
+| `npm run db:test` com seed                                                   | `Files=10, Tests=951`, `Result: PASS`                          |
+| `npx supabase db reset --no-seed` + `npm run db:test` (sem seed)             | `Files=10, Tests=951`, `Result: PASS`                          |
+| Prova de detecção: política `using (true)` em `tenants` + `db:test` com seed | `seed_rls` falha no teste 2 (`seed: cada usuário ... `); reset |
+| Login local (`/auth/v1/token`): senha certa e errada                         | 200 e 400                                                      |
+| `npx supabase db lint`                                                       | `No schema errors found` (`"results":[]`)                      |
+| `npm run check`                                                              | exit 0 (50 testes Vitest, build)                               |
+
+Observações:
+
+- O GoTrue local falha (500, "converting NULL to string") se as colunas de token de `auth.users` forem
+  `NULL`. O seed grava `''` nelas.
+- `auth.identities.email` é coluna gerada nesta versão: o seed não a informa.
+- Após cada `db reset` o container do banco reinicia e o `db:test` pode dar `DbConnectError` por alguns
+  segundos. Repetir depois de o container ficar `healthy` resolveu (mesmo caso do passo 4).
+- O CLI avisa que existe a 2.121.0; a atualização segue a janela de 14 dias da ADR-001.
+- `.claude/settings.json` tinha uma alteração local do usuário (`remoteControlEnabled`) antes do passo;
+  ficou fora do commit deste passo.

@@ -38,6 +38,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   política por operação; funções `private.is_specialist`, `private.is_own_professional` e
   `private.specialist_can_see_client` para o recorte do `specialist` (RN-027, RN-028, RN-035 a RN-037).
   410 asserções pgTAP em tabela de casos e prova de detecção.
+- Sprint 1.2, passo 7: seed sintético (`supabase/seed.sql`): 2 empresas, um usuário por papel em cada
+  uma (com login local de teste), profissionais, clientes e agendamentos cobrindo a regra do
+  `specialist`. Teste pgTAP `seed_rls.test.sql` prova que o seed não vaza dados entre empresas; a suíte
+  passa com e sem o seed.
 
 ### Alterado
 
