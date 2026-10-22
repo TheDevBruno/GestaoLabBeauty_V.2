@@ -1,7 +1,7 @@
 # Sprint 1.2 — Schema base, RLS e pgTAP
 
 - **Início:** 2026-10-19
-- **Status:** em andamento (passos 1 a 8 de 10 concluídos)
+- **Status:** concluída em 2026-10-22 (10 de 10 passos), aguardando aprovação do usuário
 - **Branch:** `feat/sprint-1.2-banco`
 
 ## Objetivo
@@ -39,7 +39,7 @@ homologação ou produção ([ADR-005](../decisions/ADR-005-ambientes.md)).
 | 6   | FKs compostas e regra do `specialist`    | concluído |
 | 7   | Seed sintético                           | concluído |
 | 8   | Job de banco no CI                       | concluído |
-| 9   | Encerramento da sprint                   | pendente  |
+| 9   | Encerramento da sprint                   | concluído |
 
 Detalhes por passo:
 
@@ -447,3 +447,39 @@ Observações:
 - Os demais serviços continuam no `config.toml`; só não sobem no CI.
 - Prova de detecção no CI (política `using (true)` em `tenants` deve falhar o job) ainda não feita; o
   `seed_rls` já foi provado localmente no passo 7.
+
+### Passo 9 — Encerramento da sprint (2026-10-22)
+
+Conferência dos passos: os 10 passos da tabela (1, 2, 3, 4, 5a, 5b, 6, 7, 8 e 9) estão concluídos e
+registrados acima. Nenhuma migration, teste ou configuração mudou neste passo; só documentação.
+
+Entregue pela sprint:
+
+- 6 migrations em `supabase/migrations/`: schema `private` e privilégios padrão (ADR-008), tabelas de
+  tenancy, funções auxiliares, políticas de `tenants`/`profiles`, de `memberships`/`roles_permissions` e
+  recorte do `specialist`.
+- 8 tabelas em `public`, todas com RLS e `GRANT` mínimos só para `authenticated`; `anon` sem acesso.
+- 10 arquivos pgTAP (951 asserções) cobrindo os testes obrigatórios da
+  [ADR-003](../decisions/ADR-003-multi-tenancy-rls.md): 2 empresas × 6 papéis × operações, negativos
+  entre empresas, FKs compostas, ninguém promove o próprio papel e `rls_coverage` em zero.
+- Seed sintético e job `database` no CI.
+- Nada foi aplicado em homologação ou produção ([ADR-005](../decisions/ADR-005-ambientes.md)).
+
+Verificações finais (branch `feat/sprint-1.2-ci-banco` atualizada por fast-forward com a `main` em
+`e6f709f`, merge do PR #17):
+
+| Verificação                                                  | Resultado                                                                            |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| Pré-condição: PR #17 mesclado na `main`                      | confirmado (2026-10-22)                                                              |
+| `npx supabase db reset`                                      | 6 migrations e seed aplicados do zero                                                |
+| `npm run db:test`                                            | `Files=10, Tests=951`, `Result: PASS`                                                |
+| `npx supabase db lint`                                       | `{"results":[]}`                                                                     |
+| `npm run check`: typecheck, lint, test e build               | exit 0 (50 testes Vitest)                                                            |
+| `npm run check`: `format:check`                              | falha só em `.claude/settings.local.json`, ignorado pelo git (mesmo caso do passo 8) |
+| `prettier --check --ignore-unknown` nos arquivos versionados | `All matched files use Prettier code style!`                                         |
+| CI da `main` após o merge do PR #17                          | success (run 39833578720)                                                            |
+
+Pendências que seguem para depois da sprint (em [STATE.md](../STATE.md)): prova de detecção no CI e
+atualização do Supabase CLI conforme a ADR-001.
+
+O fim da Sprint 1.2 é ponto de aprovação obrigatória: a Sprint 1.3 só começa com aprovação do usuário.
