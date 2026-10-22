@@ -13,7 +13,7 @@ liberação de recursos por plano.
 
 - **Fase 1 — Fundação.** Sprint 1.1 (repositório, tooling, CI e ADRs) **concluída** em 2026-10-19,
   com CI verde no GitHub. Detalhes em [sprint-1.1.md](roadmap/sprint-1.1.md).
-- **Sprint 1.2 em andamento** na branch `feat/sprint-1.2-banco`. Passos 1 a 7 de 10 concluídos:
+- **Sprint 1.2 em andamento** na branch `feat/sprint-1.2-banco`. Passos 1 a 8 de 10 concluídos:
   - Passo 1: Supabase CLI 2.119.0 e projeto local (`supabase/config.toml`, scripts `db:*`).
   - Passo 2: primeira migration (schema `private` e privilégios padrão revogados —
     [ADR-008](decisions/ADR-008-privilegios-explicitos.md)); helpers pgTAP. ADR-008 complementada
@@ -58,7 +58,7 @@ liberação de recursos por plano.
 
 ## Próximo passo
 
-**Sprint 1.2, passo 8 — Job de banco no CI** (ver [sprint-1.2.md](roadmap/sprint-1.2.md)).
+**Sprint 1.2, passo 9 — Encerramento da sprint** (ver [sprint-1.2.md](roadmap/sprint-1.2.md)). Ponto de aprovação obrigatória: não avançar sem o usuário.
 
 Requisito local: Docker em execução e `npm run db:start`. Senha de teste dos usuários do seed:
 [sprint-1.2.md](roadmap/sprint-1.2.md#passo-7--seed-sintético-2026-10-22) (só local).
