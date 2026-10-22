@@ -31,3 +31,32 @@ jobs:
       - run: npm run format:check
       - run: npm test
       - run: npm run build
+
+  database:
+    name: 'Banco: pgTAP e lint'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # Só o Postgres sobe: pgTAP e db lint não usam os demais serviços do Supabase local.
+      - name: Sobe o Supabase local (só postgres)
+        run: >-
+          npx supabase start -x
+          gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+
+      # Reset aplica migrations e seed de forma determinística antes dos testes.
+      - run: npx supabase db reset
+      - run: npm run db:test
+      - run: npx supabase db lint
+
+      - name: Para o Supabase local
+        if: always()
+        run: npx supabase stop --no-backup

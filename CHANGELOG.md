@@ -42,6 +42,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   uma (com login local de teste), profissionais, clientes e agendamentos cobrindo a regra do
   `specialist`. Teste pgTAP `seed_rls.test.sql` prova que o seed não vaza dados entre empresas; a suíte
   passa com e sem o seed.
+- Sprint 1.2, passo 8: job `database` no CI com Supabase local só com Postgres (`supabase start -x`),
+  `supabase db reset`, `supabase test db` e `supabase db lint`.
 
 ### Alterado
 

@@ -1,7 +1,7 @@
 # Sprint 1.2 — Schema base, RLS e pgTAP
 
 - **Início:** 2026-10-19
-- **Status:** em andamento (passos 1 a 7 de 10 concluídos)
+- **Status:** em andamento (passos 1 a 8 de 10 concluídos)
 - **Branch:** `feat/sprint-1.2-banco`
 
 ## Objetivo
@@ -38,7 +38,7 @@ homologação ou produção ([ADR-005](../decisions/ADR-005-ambientes.md)).
 | 5b  | Políticas de `memberships` e regra owner | concluído |
 | 6   | FKs compostas e regra do `specialist`    | concluído |
 | 7   | Seed sintético                           | concluído |
-| 8   | Job de banco no CI                       | pendente  |
+| 8   | Job de banco no CI                       | concluído |
 | 9   | Encerramento da sprint                   | pendente  |
 
 Detalhes por passo:
@@ -416,3 +416,34 @@ Observações:
 - O CLI avisa que existe a 2.121.0; a atualização segue a janela de 14 dias da ADR-001.
 - `.claude/settings.json` tinha uma alteração local do usuário (`remoteControlEnabled`) antes do passo;
   ficou fora do commit deste passo.
+
+### Passo 8 — Job de banco no CI (2026-10-22)
+
+Entregue — `.github/workflows/ci.yml`, job `database` ao lado de `quality`:
+
+- Mesmos triggers (`push` em `main`, `pull_request`), `permissions: contents: read`, sem secrets,
+  sem `pull_request_target`, sem Actions novas (`actions/checkout@v7`, `actions/setup-node@v7`).
+- `npm ci` (CLI `supabase@2.119.0` já exato no `package.json`).
+- `npx supabase start -x gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor`:
+  só o Postgres sobe. pgTAP e `db lint` não usam os demais serviços. Lista conferida com
+  `npx supabase start --help`.
+- `npx supabase db reset` (migrations e seed), `npm run db:test`, `npx supabase db lint`,
+  `npx supabase stop --no-backup` com `if: always()`.
+- Timeout 20 min.
+
+Verificações:
+
+| Verificação                                         | Resultado                                                                                                                                                     |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sequência do job, local, só com `postgres`          | `Files=10, Tests=951`, `Result: PASS`                                                                                                                         |
+| `npx supabase db lint` (local, só `postgres`)       | `No schema errors found`                                                                                                                                      |
+| CI do PR #17, job `Banco: pgTAP e lint`             | pass, 3m41s (run 39832238856)                                                                                                                                 |
+| CI do PR #17, job `Typecheck, lint, testes e build` | pass, 23s                                                                                                                                                     |
+| `npm run check` local                               | typecheck, lint, test (50), build: exit 0. `format:check` falha só em `.claude/settings.local.json`, arquivo local ignorado pelo git e ausente no clone da CI |
+
+Observações:
+
+- O `name` do job com `: ` precisa de aspas no YAML (`name: 'Banco: pgTAP e lint'`); sem elas o YAML falha.
+- Os demais serviços continuam no `config.toml`; só não sobem no CI.
+- Prova de detecção no CI (política `using (true)` em `tenants` deve falhar o job) ainda não feita; o
+  `seed_rls` já foi provado localmente no passo 7.
