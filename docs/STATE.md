@@ -13,7 +13,9 @@ liberação de recursos por plano.
 
 - **Fase 1 — Fundação.** Sprint 1.1 (repositório, tooling, CI e ADRs) **concluída** em 2026-10-19,
   com CI verde no GitHub. Detalhes em [sprint-1.1.md](roadmap/sprint-1.1.md).
-- **Sprint 1.2 em andamento** na branch `feat/sprint-1.2-banco`. Passos 1 a 8 de 10 concluídos:
+- **Sprint 1.2 (schema base, RLS e pgTAP) concluída** em 2026-10-22, aguardando aprovação do usuário
+  (ponto de aprovação obrigatória). Os 10 passos foram concluídos; suíte final com 951 asserções pgTAP,
+  `db lint` sem erros e CI da `main` verde nos jobs de qualidade e de banco:
   - Passo 1: Supabase CLI 2.119.0 e projeto local (`supabase/config.toml`, scripts `db:*`).
   - Passo 2: primeira migration (schema `private` e privilégios padrão revogados —
     [ADR-008](decisions/ADR-008-privilegios-explicitos.md)); helpers pgTAP. ADR-008 complementada
@@ -38,6 +40,9 @@ liberação de recursos por plano.
   - Passo 7: `supabase/seed.sql` sintético (2 empresas, um usuário por papel em cada uma com login local
     de teste, profissionais, clientes e agendamentos) e teste `seed_rls.test.sql`. 951 asserções pgTAP
     verdes, com e sem seed.
+  - Passo 8: job `database` no CI (Supabase só com Postgres, `db reset`, `test db`, `db lint`), verde
+    no PR #17 e na `main`.
+  - Passo 9: encerramento — verificações finais e documentação.
 
   Plano e registro em [sprint-1.2.md](roadmap/sprint-1.2.md).
 
@@ -55,12 +60,15 @@ liberação de recursos por plano.
 - [ ] Fixar GitHub Actions por SHA em vez de tag major (Fase 8).
 - [ ] Validar comercialmente o nome LabBeautyPro antes de registro de marca.
 - [ ] Confirmar as regras marcadas "a confirmar" em [REGRAS-DE-NEGOCIO.md](REGRAS-DE-NEGOCIO.md).
+- [ ] Prova de detecção no CI: uma política `using (true)` em `tenants` deve falhar o job `database`
+      (provada só localmente no passo 7).
+- [ ] Atualizar o Supabase CLI (2.121.0 disponível) quando sair da janela de 14 dias da ADR-001.
 
 ## Próximo passo
 
-**Sprint 1.2, passo 9 — Encerramento da sprint** (ver [sprint-1.2.md](roadmap/sprint-1.2.md)). Ponto de aprovação obrigatória: não avançar sem o usuário.
+**Aprovação do usuário para o fim da Sprint 1.2** (ponto de aprovação obrigatória): revisar e mesclar o
+PR do passo 9. Só depois, **Sprint 1.3 — auth, convites e guards** (tabela de fases do
+[plano da Fase 0](roadmap/fase-0-plano.md)), com plano próprio em `docs/roadmap/sprint-1.3.md`.
 
 Requisito local: Docker em execução e `npm run db:start`. Senha de teste dos usuários do seed:
 [sprint-1.2.md](roadmap/sprint-1.2.md#passo-7--seed-sintético-2026-10-22) (só local).
-
-O fim da Sprint 1.2 é ponto de aprovação obrigatória.

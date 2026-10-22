@@ -44,6 +44,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   passa com e sem o seed.
 - Sprint 1.2, passo 8: job `database` no CI com Supabase local só com Postgres (`supabase start -x`),
   `supabase db reset`, `supabase test db` e `supabase db lint`.
+- Sprint 1.2 encerrada (passo 9): 951 asserções pgTAP, `db lint` sem erros e CI verde;
+  `docs/STATE.md` e `docs/roadmap/sprint-1.2.md` atualizados. Aguarda aprovação do usuário.
 
 ### Alterado
 
