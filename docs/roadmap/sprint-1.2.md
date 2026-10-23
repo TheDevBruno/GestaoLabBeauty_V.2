@@ -1,7 +1,7 @@
 # Sprint 1.2 — Schema base, RLS e pgTAP
 
 - **Início:** 2026-10-19
-- **Status:** concluída em 2026-10-22 (10 de 10 passos), aguardando aprovação do usuário
+- **Status:** concluída em 2026-10-22 (10 de 10 passos) e aprovada pelo usuário em 2026-10-23
 - **Branch:** `feat/sprint-1.2-banco`
 
 ## Objetivo
