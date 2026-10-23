@@ -51,6 +51,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 1.3, passo 2: trigger que cria o `profiles` junto com a conta; tabela `invitations` (token só
   como hash, validade de 7 dias, trigger que valida quem convida), RLS de leitura e revogação e função
   `public.accept_invitation`; 88 asserções pgTAP novas (1039 no total).
+- Sprint 1.3, passo 3: `@supabase/supabase-js` 2.117.3 e `@tanstack/react-query` 5.104.1; `src/lib`
+  (cliente Supabase com chave anônima, `QueryClient`, validação das variáveis `VITE_`), schemas Zod de
+  login, cadastro e convite em `src/shared`, `.env.example` e 42 testes Vitest novos (92 no total).
 
 ### Alterado
 

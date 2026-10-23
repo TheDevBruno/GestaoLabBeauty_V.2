@@ -49,7 +49,9 @@ liberação de recursos por plano.
 - **Sprint 1.3 (auth, convites e guards) em andamento**, branch `feat/sprint-1.3-auth`. Passo 1
   concluído: plano, decisões (convite de 7 dias, owner e admin convidam, onboarding na Sprint 2.5) e
   RN-026/RN-038. Passo 2 concluído: perfil criado por trigger em `auth.users`, tabela `invitations`
-  com RLS e `public.accept_invitation`; 1039 asserções pgTAP verdes. Registro em
+  com RLS e `public.accept_invitation`; 1039 asserções pgTAP verdes. Passo 3 concluído: dependências
+  `@supabase/supabase-js` 2.117.3 e `@tanstack/react-query` 5.104.1, `src/lib` (cliente Supabase,
+  `QueryClient`, validação de env), schemas Zod em `src/shared` e `.env.example`; 92 testes Vitest. Registro em
   [sprint-1.3.md](roadmap/sprint-1.3.md).
 
 - Membros já leem a própria empresa, o próprio perfil e a própria membership; quem tem
@@ -68,12 +70,14 @@ liberação de recursos por plano.
 - [ ] Confirmar as regras marcadas "a confirmar" em [REGRAS-DE-NEGOCIO.md](REGRAS-DE-NEGOCIO.md).
 - [ ] Prova de detecção no CI: uma política `using (true)` em `tenants` deve falhar o job `database`
       (provada só localmente no passo 7).
+- [ ] `npm audit`: 1 vulnerabilidade alta no `vite@8.3.2` (servidor de desenvolvimento). Atualizar para o
+      `vite@8.3.4` (publicado há mais de 14 dias) com autorização do usuário.
 - [ ] Atualizar o Supabase CLI (2.121.0 disponível) quando sair da janela de 14 dias da ADR-001.
 
 ## Próximo passo
 
-**Sprint 1.3 — auth, convites e guards**, passo 3 (base do frontend: `src/lib`, `src/shared`,
-dependências). Plano e decisões em [sprint-1.3.md](roadmap/sprint-1.3.md).
+**Sprint 1.3 — auth, convites e guards**, passo 4 (auth e rotas: login, cadastro, saída e roteamento com
+`react-router`). Plano e decisões em [sprint-1.3.md](roadmap/sprint-1.3.md).
 
 Requisito local: Docker em execução e `npm run db:start`. Senha de teste dos usuários do seed:
 [sprint-1.2.md](roadmap/sprint-1.2.md#passo-7--seed-sintético-2026-10-22) (só local).

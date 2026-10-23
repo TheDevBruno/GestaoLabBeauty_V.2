@@ -41,7 +41,7 @@ Um passo por vez. Cada passo termina com `npm run check` verde, `npm run db:test
 | --- | ------------------------------------------ | --------- |
 | 1   | Plano e regras (RN-026, RN-038)            | concluído |
 | 2   | Banco: perfil automático e `invitations`   | concluído |
-| 3   | Base do frontend (`src/lib`, `src/shared`) | pendente  |
+| 3   | Base do frontend (`src/lib`, `src/shared`) | concluído |
 | 4   | Auth e rotas                               | pendente  |
 | 5   | Guards (sessão, empresa ativa, permissão)  | pendente  |
 | 6   | API de convites (`server/`, Hono)          | pendente  |
@@ -83,3 +83,31 @@ direto sob RLS.
 Testes: `profile_on_signup.test.sql` (8) e `invitations.test.sql` (80). Dois testes da 1.2
 (`rls_tenants_profiles`) passaram a atualizar o perfil em vez de inserir, porque o perfil agora nasce
 com a conta. Suíte: 1039 asserções pgTAP verdes; `db lint` sem erros.
+
+### Passo 3 — Base do frontend (2026-10-23)
+
+Dependências (versão exata, publicadas há 14 dias ou mais em 2026-10-23, [ADR-001](../decisions/ADR-001-stack-e-versoes.md)):
+
+| Pacote                  | Versão  | Publicada  | `latest` na data      |
+| ----------------------- | ------- | ---------- | --------------------- |
+| `@supabase/supabase-js` | 2.117.3 | 2026-10-07 | 2.118.0 (10-15, nova) |
+| `@tanstack/react-query` | 5.104.1 | 2026-10-02 | 5.104.5 (10-19, nova) |
+
+O Hono (4.13.13, de 2026-10-04) entra no passo 6. `vite.config.ts` e `eslint.config.js` não mudaram.
+
+Entregue:
+
+- `src/lib/env.ts`: valida `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` com Zod; o erro cita o nome da
+  variável e nunca o valor. `src/lib/supabase.ts`: cliente do navegador (chave anônima, sessão
+  persistida). `src/lib/query-client.ts`: `QueryClient` sem retry em erro 4xx e até 2 tentativas nos demais.
+- `src/shared/roles.ts` (papéis, iguais ao enum `member_role`), `auth.ts` (login e cadastro; e-mail aparado
+  e em minúsculas; senha de 6 a 72 caracteres no cadastro, qualquer senha não vazia no login) e
+  `invitation.ts` (criação de convite e formato do token: 43 caracteres base64url).
+- `.env.example` só com as duas variáveis `VITE_`.
+- 42 testes Vitest novos (92 no total). O teste de `env.ts` achou um defeito de mensagem (variável ausente
+  não era citada) e foi corrigido.
+
+Observação: `npm audit` aponta 1 vulnerabilidade alta no `vite@8.3.2` (servidor de desenvolvimento),
+instalado na Sprint 1.1 e sem relação com este passo. Fica como pendência para decisão do usuário
+(o `npm audit` atinge só o `vite` 8.3.0 a 8.3.2; o `vite@8.3.4`, de 2026-10-08, está dentro da política de
+14 dias, e o `8.3.5`, de 2026-10-21, ainda não).
