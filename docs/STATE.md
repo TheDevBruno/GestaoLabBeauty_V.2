@@ -1,6 +1,6 @@
 # Estado do projeto
 
-- **Atualizado em:** 2026-10-22
+- **Atualizado em:** 2026-10-23
 
 ## Objetivo
 
@@ -13,8 +13,8 @@ liberação de recursos por plano.
 
 - **Fase 1 — Fundação.** Sprint 1.1 (repositório, tooling, CI e ADRs) **concluída** em 2026-10-19,
   com CI verde no GitHub. Detalhes em [sprint-1.1.md](roadmap/sprint-1.1.md).
-- **Sprint 1.2 (schema base, RLS e pgTAP) concluída** em 2026-10-22, aguardando aprovação do usuário
-  (ponto de aprovação obrigatória). Os 10 passos foram concluídos; suíte final com 951 asserções pgTAP,
+- **Sprint 1.2 (schema base, RLS e pgTAP) concluída** em 2026-10-22 e **aprovada pelo usuário em
+  2026-10-23** (ponto de aprovação obrigatória). Os 10 passos foram concluídos; suíte final com 951 asserções pgTAP,
   `db lint` sem erros e CI da `main` verde nos jobs de qualidade e de banco:
   - Passo 1: Supabase CLI 2.119.0 e projeto local (`supabase/config.toml`, scripts `db:*`).
   - Passo 2: primeira migration (schema `private` e privilégios padrão revogados —
@@ -66,9 +66,9 @@ liberação de recursos por plano.
 
 ## Próximo passo
 
-**Aprovação do usuário para o fim da Sprint 1.2** (ponto de aprovação obrigatória): revisar e mesclar o
-PR do passo 9. Só depois, **Sprint 1.3 — auth, convites e guards** (tabela de fases do
-[plano da Fase 0](roadmap/fase-0-plano.md)), com plano próprio em `docs/roadmap/sprint-1.3.md`.
+**Sprint 1.3 — auth, convites e guards** (tabela de fases do
+[plano da Fase 0](roadmap/fase-0-plano.md)), com plano próprio em `docs/roadmap/sprint-1.3.md`,
+apresentado ao usuário e aprovado antes de qualquer implementação.
 
 Requisito local: Docker em execução e `npm run db:start`. Senha de teste dos usuários do seed:
 [sprint-1.2.md](roadmap/sprint-1.2.md#passo-7--seed-sintético-2026-10-22) (só local).
