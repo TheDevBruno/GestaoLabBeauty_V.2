@@ -271,13 +271,28 @@ Regra nova ou alterada deve ser registrada aqui com a origem.
 
 ### RN-026 — Convite com token protegido
 
-| Dado            | Quando           | Então                         |
-| --------------- | ---------------- | ----------------------------- |
-| Um convite novo | O token é gerado | Só o hash do token é guardado |
+| Dado                                            | Quando                      | Então                                            |
+| ----------------------------------------------- | --------------------------- | ------------------------------------------------ |
+| Um convite novo                                 | O token é gerado            | Só o hash do token é guardado                    |
+| Um convite                                      | Passam 7 dias               | Expira e não pode mais ser aceito                |
+| Um membro com `members.manage` (owner ou admin) | Cria um convite             | Pode convidar para qualquer papel, menos `owner` |
+| Um membro que não é owner                       | Tenta convidar para `owner` | A ação é negada (RN-022)                         |
 
-- **Origem:** plano §7 (`invitations`).
+- **Origem:** plano §7 (`invitations`); decisão do usuário em 2026-10-23 (Sprint 1.3).
+- **Status:** confirmada.
+
+### RN-038 — Aceite do convite
+
+| Dado                            | Quando                          | Então                                        |
+| ------------------------------- | ------------------------------- | -------------------------------------------- |
+| Um convite válido e não usado   | Um usuário autenticado o aceita | A membership é criada com o papel do convite |
+| Um convite aceito               | Alguém tenta aceitá-lo de novo  | A ação é negada (uso único)                  |
+| Um convite expirado ou revogado | Alguém tenta aceitá-lo          | A ação é negada                              |
+| Um convite para um e-mail       | Outro e-mail tenta aceitá-lo    | A ação é negada                              |
+
+- **Origem:** proposta do plano da Sprint 1.3, derivada de RN-026 e ADR-003.
 - **Status:** a confirmar.
-- **Dúvida:** prazo de expiração e quem pode convidar para cada papel.
+- **Dúvida:** o aceite exige que o e-mail da conta seja igual ao e-mail convidado?
 
 ## Specialist ("próprio")
 

@@ -45,7 +45,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 1.2, passo 8: job `database` no CI com Supabase local só com Postgres (`supabase start -x`),
   `supabase db reset`, `supabase test db` e `supabase db lint`.
 - Sprint 1.2 encerrada (passo 9): 951 asserções pgTAP, `db lint` sem erros e CI verde;
-  `docs/STATE.md` e `docs/roadmap/sprint-1.2.md` atualizados. Aguarda aprovação do usuário.
+  `docs/STATE.md` e `docs/roadmap/sprint-1.2.md` atualizados. Aprovada pelo usuário em 2026-10-23.
+- Sprint 1.3, passo 1: plano em `docs/roadmap/sprint-1.3.md`; RN-026 confirmada (convite de 7 dias,
+  owner e admin convidam) e RN-038 (aceite do convite) a confirmar.
 
 ### Alterado
 

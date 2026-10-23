@@ -46,6 +46,10 @@ liberação de recursos por plano.
 
   Plano e registro em [sprint-1.2.md](roadmap/sprint-1.2.md).
 
+- **Sprint 1.3 (auth, convites e guards) em andamento**, branch `feat/sprint-1.3-auth`. Passo 1
+  concluído: plano, decisões (convite de 7 dias, owner e admin convidam, onboarding na Sprint 2.5) e
+  RN-026/RN-038. Registro em [sprint-1.3.md](roadmap/sprint-1.3.md).
+
 - Membros já leem a própria empresa, o próprio perfil e a própria membership; quem tem
   `members.manage` lê a equipe. Profissionais, clientes e agendamentos existem só com chaves e FKs; a
   Sprint 2 completa as colunas. `platform_admins` segue sem política (nega tudo). Sem autenticação nem
@@ -66,9 +70,8 @@ liberação de recursos por plano.
 
 ## Próximo passo
 
-**Sprint 1.3 — auth, convites e guards** (tabela de fases do
-[plano da Fase 0](roadmap/fase-0-plano.md)), com plano próprio em `docs/roadmap/sprint-1.3.md`,
-apresentado ao usuário e aprovado antes de qualquer implementação.
+**Sprint 1.3 — auth, convites e guards**, passo 2 (banco: perfil automático e `invitations`). Plano e
+decisões em [sprint-1.3.md](roadmap/sprint-1.3.md).
 
 Requisito local: Docker em execução e `npm run db:start`. Senha de teste dos usuários do seed:
 [sprint-1.2.md](roadmap/sprint-1.2.md#passo-7--seed-sintético-2026-10-22) (só local).
