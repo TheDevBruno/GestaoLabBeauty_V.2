@@ -1,7 +1,7 @@
 # Sprint 1.3 — Auth, convites e guards
 
 - **Início:** 2026-10-23
-- **Status:** em andamento
+- **Status:** concluída em 2026-10-23; aguardando aprovação do usuário (ponto de aprovação obrigatória)
 - **Branch:** `feat/sprint-1.3-auth`
 
 ## Objetivo
@@ -51,7 +51,7 @@ Um passo por vez. Cada passo termina com `npm run check` verde, `npm run db:test
 | 5   | Guards (sessão, empresa ativa, permissão)  | concluído |
 | 6   | API de convites (`server/`, Hono)          | concluído |
 | 7   | Testes                                     | concluído |
-| 8   | Encerramento da sprint                     | pendente  |
+| 8   | Encerramento da sprint                     | concluído |
 
 ## Registro
 
@@ -300,3 +300,40 @@ Depois das provas: `npm run db:reset`, `npm run db:test` → `Files=12, Tests=10
 
 Pendente (fora deste passo): prova de detecção no CI (job `database`) continua só local; rodar a
 integração no CI exige mudar o workflow, o que depende de autorização.
+
+### Passo 8 — Encerramento (2026-10-23)
+
+Verificação final (Supabase local completo, dados sintéticos):
+
+| Comando                                          | Resultado                                                                                                       |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `npm ci`                                         | instalado a partir do lock (com o `npm run dev` parado: no Windows o servidor trava arquivos do `node_modules`) |
+| `npm run check`                                  | typecheck, lint, Prettier, `Tests 261 passed \| 7 skipped`, build                                               |
+| `npm run db:reset` + `npm run db:test`           | `Files=12, Tests=1039`, `Result: PASS`                                                                          |
+| `npx supabase db lint`                           | `"results":[]`                                                                                                  |
+| `npm run test:integration`                       | 7 passed                                                                                                        |
+| `npm audit`                                      | 1 alta: `zod` < 4.6.6 (pendência abaixo)                                                                        |
+| Busca em `dist/`                                 | service role (valor), `SUPABASE_SERVICE_ROLE_KEY`, `service_role`, `server/`: 0                                 |
+| `npm run db:reset` + `npm run db:test` (limpeza) | `Result: PASS`                                                                                                  |
+
+Resultado da sprint:
+
+- Contas por e-mail e senha (`/entrar`, `/cadastro`), sessão no `AuthProvider`, perfil criado por trigger.
+- Convites: tabela `invitations` com RLS, token de 32 bytes só no link (fragmento) e sha-256 no banco,
+  validade de 7 dias, um pendente por e-mail e empresa, criação pela API Hono com service role só no
+  servidor, listagem e revogação sob RLS, aceite atômico em `public.accept_invitation` (RN-026, RN-038).
+- Guards de sessão, empresa ativa (RN-025) e permissão; revogação de papel sem novo login (RN-024); só
+  owner convida para owner (RN-022), garantido no banco.
+- Testes: 1039 asserções pgTAP, 261 testes Vitest e 7 de integração; provas de detecção nos passos 4, 5 e 7.
+
+Pendências para a aprovação e as próximas sprints:
+
+- **RN-038 "a confirmar":** o aceite já exige o e-mail da conta igual ao do convite e confirmado.
+  Confirmar a regra ou pedir mudança.
+- `npm audit`: `zod` < 4.6.6 (GHSA-mrhx-c7xc-m3w5); o 4.6.6 entra na janela da ADR-001 em 2026-10-25.
+  Atualizar só com autorização. Mitigação: schemas da API sem coleções e corpo limitado a 16 KiB.
+- Bundle de 678 kB (aviso de 500 kB): divisão de código por rota na Sprint 1.4.
+- `vercel.json` com rewrite do SPA no primeiro deploy.
+- Convidar quem já é membro só falha no aceite.
+- Integração e prova de detecção no CI dependem de autorização para mudar o workflow.
+- Supabase CLI 2.122.0 disponível (ADR-001) e PRs do Dependabot em aberto.

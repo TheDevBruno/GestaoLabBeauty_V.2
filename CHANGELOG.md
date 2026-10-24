@@ -74,6 +74,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 1.3, passo 7: teste de integração da API de convites com o Supabase local
   (`server/invitations.integration.test.ts`, script `npm run test:integration`, 7 testes, do convite ao
   aceite e RLS de listar e revogar) e seis provas de detecção registradas em `sprint-1.3.md`.
+- Sprint 1.3, passo 8: encerramento com verificação final registrada; sprint concluída e aguardando
+  aprovação do usuário.
 
 ### Alterado
 
