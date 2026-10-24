@@ -91,7 +91,7 @@ celular e já atende).
 | #   | Passo                                                                      | Status    |
 | --- | -------------------------------------------------------------------------- | --------- |
 | 1   | Plano (este documento) e OK do usuário                                     | concluído |
-| 2   | Dependências, `components.json`, `cn` e tokens (3 camadas)                 | pendente  |
+| 2   | Dependências, `components.json`, `cn` e tokens (3 camadas)                 | concluído |
 | 3   | Componentes base em `src/components/ui/` e migração das telas              | pendente  |
 | 4   | App shell em `/app/*`                                                      | pendente  |
 | 5   | Divisão de código por rota                                                 | pendente  |
@@ -196,3 +196,47 @@ Um passo por vez. Cada passo termina com `npm run check` verde, `npm run db:test
 
 - Este documento. Branch criada a partir da `main` em `c90e5cb` (merge do PR #21).
 - Plano aprovado pelo usuário com as cinco decisões acima.
+
+### Passo 2 — Fundação (2026-10-23)
+
+Dependências instaladas com `--save-exact`, nas versões autorizadas: `radix-ui` 1.7.0,
+`class-variance-authority` 0.7.1, `clsx` 2.1.1, `tailwind-merge` 3.7.0, `lucide-react` 1.54.0,
+`@fontsource-variable/inter` 5.3.0 e `tw-animate-css` 1.4.0 (dev). `npm audit`: 0 vulnerabilidades.
+
+Configuração:
+
+- `components.json` escrito à mão (estilo `new-york`, Radix, `baseColor` `stone`, CSS em
+  `src/styles/index.css`, aliases `@/components/ui`, `@/lib/utils`). O `shadcn init` não foi usado porque
+  reescreve o CSS e instala dependências sem versão exata.
+- `tsconfig.json` (raiz) ganhou `compilerOptions.paths` `@/*` (autorizado): sem ele,
+  `npx shadcn@4.21.4 add button --dry-run` criaria o arquivo numa pasta literal `@` na raiz; com ele, em
+  `src/components/ui/button.tsx`.
+- `vite.config.ts`, `tsconfig.app.json`, `tsconfig.node.json` e `eslint.config.js` não mudaram.
+
+Entregue:
+
+- `src/styles/index.css` em três camadas: **primitivos** `--lb-*` em OKLCH (paleta neutra `stone`, azul
+  do foco, vermelho e verde de estado, raios, 44 px); **semânticos** com os nomes do shadcn
+  (`--background`, `--foreground`, `--card`, `--primary`, `--muted-foreground`, `--destructive`,
+  `--success`, `--border`, `--input`, `--ring`…) expostos ao Tailwind por `@theme inline`; **componente**
+  (`--control-height` → classe `min-h-control`, `--control-radius` → `rounded-control`). Inter variável
+  auto-hospedada como `font-sans`; corpo com 16 px e `line-height` 1,5. Um comentário marca onde o
+  escopo `[data-theme-scope="tenant"]` entra na Sprint 3.1. `prefers-reduced-motion` mantido.
+- `--border` (separador, decorativo) e `--input` (borda de controle) separados: a borda dos campos passou
+  de `stone-400` (abaixo de 3:1) para `stone-500`, que atende a WCAG 1.4.11.
+- Nomes provisórios trocados em todo o `src/` (`ink` → `foreground`, `canvas` → `background`,
+  `surface` → `card`, `muted` → `muted-foreground`, `line` → `input`/`border`, `action` → `primary`,
+  `danger` → `destructive`, `focus` → `ring`). Telas e textos não mudaram.
+- `src/lib/utils.ts` com `cn()` (`clsx` + `tailwind-merge`) e 4 testes.
+- `src/shared/color-contrast.ts`: leitura de `oklch()`, luminância e razão de contraste WCAG, para
+  reaproveitar na RN-018 (Sprint 3.1); 5 testes, com o valor de referência de `#767676` (4,54:1).
+- `src/styles/tokens.test.ts`: lê o `index.css` e exige 4,5:1 em 15 pares de texto e 3:1 em 5 pares de
+  componente (borda de campo, anel de foco, primário). O Vitest devolve CSS vazio mesmo com `?raw`, então
+  o teste lê o arquivo com `process.getBuiltinModule('node:fs')`, tipado localmente, sem incluir os
+  tipos do Node no `src/`.
+- Prova de detecção: `--input` em `stone-300` fez falhar os dois testes de borda de campo.
+
+Verificação: `npm run check` verde (294 testes Vitest; 8 de integração ignorados), `npm run db:test`
+1047 PASS. Navegador (`/entrar`): Inter carregada, cores dos tokens aplicadas, campos e botão com 44 px,
+anel de foco azul de 3 px, sem rolagem horizontal em 375 px. O bundle segue em 679 kB (passo 5). A
+fonte gera um `woff2` por subconjunto, e o navegador baixa só os que a página usa (`unicode-range`).

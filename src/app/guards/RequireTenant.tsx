@@ -17,7 +17,7 @@ export function RequireTenant({ title, children }: { title: string; children: Re
     case 'error':
       return (
         <AuthLayout title={title}>
-          <p role="alert" className="text-base text-danger">
+          <p role="alert" className="text-base text-destructive">
             Não foi possível carregar suas empresas.
           </p>
           <Button className="mt-6 w-full" onClick={state.retry}>
@@ -28,7 +28,7 @@ export function RequireTenant({ title, children }: { title: string; children: Re
     case 'none':
       return (
         <AuthLayout title="Nenhuma empresa">
-          <p className="text-base text-ink">
+          <p className="text-base text-foreground">
             Sua conta ainda não faz parte de nenhuma empresa. Peça a quem administra a empresa um
             convite para o seu e-mail e abra o link recebido.
           </p>

@@ -99,7 +99,10 @@ liberação de recursos por plano.
 **Sprint 1.4 — design system e app shell** (`feat/sprint-1.4-design-system`, a partir da `main` com o
 PR #21 mesclado). Passo 1 concluído: plano em [sprint-1.4.md](roadmap/sprint-1.4.md) aprovado pelo
 usuário em 2026-10-23 (dependências, `components.json`, Inter auto-hospedada, dark mode fora e remoção
-dos componentes provisórios). Em curso: passo 2 (dependências, `cn` e tokens em três camadas).
+dos componentes provisórios). Passo 2 concluído: dependências do design system, `components.json`,
+`cn()`, tokens em três camadas (primitivo, semântico, componente), Inter auto-hospedada e teste de
+contraste dos tokens; 294 testes Vitest, pgTAP 1047 PASS. Próximo: passo 3 (componentes base em
+`src/components/ui/` e migração das telas).
 
 Requisito local: Docker em execução e `npm run db:start`. O `.env.local` precisa também de
 `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` (valores em `npx supabase status`) para

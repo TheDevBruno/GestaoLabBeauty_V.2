@@ -27,10 +27,10 @@ function ActiveTenantSummary() {
   return (
     <AuthLayout title={membership.tenantName}>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-base">
-        <dt className="text-muted">Conta</dt>
-        <dd className="break-all text-ink">{auth.session.email ?? 'sem e-mail'}</dd>
-        <dt className="text-muted">Papel</dt>
-        <dd className="text-ink">{memberRoleLabels[membership.role]}</dd>
+        <dt className="text-muted-foreground">Conta</dt>
+        <dd className="break-all text-foreground">{auth.session.email ?? 'sem e-mail'}</dd>
+        <dt className="text-muted-foreground">Papel</dt>
+        <dd className="text-foreground">{memberRoleLabels[membership.role]}</dd>
       </dl>
       {canManageMembers ? (
         <p className="mt-6 text-base">

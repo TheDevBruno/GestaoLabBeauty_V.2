@@ -77,7 +77,7 @@ export function LoginPage() {
           error={errors.password}
         />
         {formError ? (
-          <p role="alert" className="text-sm font-medium text-danger">
+          <p role="alert" className="text-sm font-medium text-destructive">
             {formError}
           </p>
         ) : null}
@@ -85,7 +85,7 @@ export function LoginPage() {
           Entrar
         </Button>
       </form>
-      <p className="mt-6 text-base text-muted">
+      <p className="mt-6 text-base text-muted-foreground">
         Não tem conta?{' '}
         <Link to={signupPath(rawNext ? next : undefined)} className={linkClass}>
           Criar conta

@@ -60,7 +60,7 @@ export function SignupPage() {
   if (confirmationSentTo) {
     return (
       <AuthLayout title="Confirme seu e-mail">
-        <p role="status" className="text-base text-ink">
+        <p role="status" className="text-base text-foreground">
           Enviamos um link de confirmação para <strong>{confirmationSentTo}</strong>. Depois de
           confirmar, entre com seu e-mail e senha.
         </p>
@@ -108,7 +108,7 @@ export function SignupPage() {
           error={errors.password}
         />
         {formError ? (
-          <p role="alert" className="text-sm font-medium text-danger">
+          <p role="alert" className="text-sm font-medium text-destructive">
             {formError}
           </p>
         ) : null}
@@ -116,7 +116,7 @@ export function SignupPage() {
           Criar conta
         </Button>
       </form>
-      <p className="mt-6 text-base text-muted">
+      <p className="mt-6 text-base text-muted-foreground">
         Já tem conta?{' '}
         <Link to={loginPath(rawNext ? next : undefined)} className={linkClass}>
           Entrar

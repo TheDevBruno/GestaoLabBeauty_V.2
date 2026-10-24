@@ -20,7 +20,7 @@ export function RequirePermission({
   if (result === 'denied') {
     return (
       <AuthLayout title="Acesso não permitido">
-        <p role="alert" className="text-base text-ink">
+        <p role="alert" className="text-base text-foreground">
           Seu papel nesta empresa não permite abrir esta página.
         </p>
         <p className="mt-6 text-base">

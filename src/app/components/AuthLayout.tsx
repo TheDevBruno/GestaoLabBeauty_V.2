@@ -12,12 +12,12 @@ export function AuthLayout({
   children: ReactNode;
 }) {
   return (
-    <main className="flex min-h-dvh items-start justify-center bg-canvas px-4 py-12 text-ink sm:items-center">
+    <main className="flex min-h-dvh items-start justify-center bg-background px-4 py-12 text-foreground sm:items-center">
       <title>{`${title} · LabBeautyPro`}</title>
       <div
-        className={`w-full ${wide ? 'max-w-xl' : 'max-w-sm'} rounded-lg bg-surface p-6 shadow-sm sm:p-8`}
+        className={`w-full ${wide ? 'max-w-xl' : 'max-w-sm'} rounded-lg bg-card p-6 shadow-sm sm:p-8`}
       >
-        <p className="text-sm font-semibold tracking-wide text-muted">LabBeautyPro</p>
+        <p className="text-sm font-semibold tracking-wide text-muted-foreground">LabBeautyPro</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">{title}</h1>
         <div className="mt-6">{children}</div>
       </div>
@@ -26,4 +26,4 @@ export function AuthLayout({
 }
 
 export const linkClass =
-  'rounded-sm font-medium text-ink underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-focus';
+  'rounded-sm font-medium text-foreground underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring';

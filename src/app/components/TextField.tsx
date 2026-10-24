@@ -17,11 +17,11 @@ export function TextField({ name, label, hint, error, ...inputProps }: TextField
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-base font-medium text-ink">
+      <label htmlFor={id} className="text-base font-medium text-foreground">
         {label}
       </label>
       {hint ? (
-        <p id={hintId} className="text-sm text-muted">
+        <p id={hintId} className="text-sm text-muted-foreground">
           {hint}
         </p>
       ) : null}
@@ -30,11 +30,11 @@ export function TextField({ name, label, hint, error, ...inputProps }: TextField
         name={name}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy || undefined}
-        className="min-h-11 rounded-md border border-line bg-surface px-3 text-base text-ink outline-none focus-visible:ring-3 focus-visible:ring-focus aria-invalid:border-danger"
+        className="min-h-11 rounded-md border border-input bg-card px-3 text-base text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring aria-invalid:border-destructive"
         {...inputProps}
       />
       {error ? (
-        <p id={errorId} className="text-sm font-medium text-danger">
+        <p id={errorId} className="text-sm font-medium text-destructive">
           {error}
         </p>
       ) : null}

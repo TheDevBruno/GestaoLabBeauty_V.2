@@ -46,7 +46,7 @@ function TeamContent() {
 
   return (
     <AuthLayout title="Equipe e convites" wide>
-      <p className="text-base text-ink">
+      <p className="text-base text-foreground">
         Convide pessoas para <strong>{tenantName}</strong>. O convite vale por 7 dias e só pode ser
         aceito pela conta com o e-mail convidado.
       </p>
@@ -149,7 +149,7 @@ function InviteForm({
           error={errors.role}
         />
         {formError ? (
-          <p role="alert" className="text-sm font-medium text-danger">
+          <p role="alert" className="text-sm font-medium text-destructive">
             {formError}
           </p>
         ) : null}
@@ -185,11 +185,11 @@ function CreatedInvitationPanel({ invitation }: { invitation: CreatedInvitation 
         id="convite-criado"
         ref={headingRef}
         tabIndex={-1}
-        className="rounded-sm text-lg font-semibold text-success outline-none focus-visible:ring-3 focus-visible:ring-focus"
+        className="rounded-sm text-lg font-semibold text-success outline-none focus-visible:ring-3 focus-visible:ring-ring"
       >
         Convite criado
       </h2>
-      <p className="mt-2 text-base text-ink">
+      <p className="mt-2 text-base text-foreground">
         Envie o link para <strong className="break-all">{invitation.email}</strong>. Ele vale até{' '}
         {dateTime.format(new Date(invitation.expiresAt))} e <strong>só aparece agora</strong>: copie
         antes de sair desta tela.
@@ -212,7 +212,7 @@ function CreatedInvitationPanel({ invitation }: { invitation: CreatedInvitation 
         >
           Copiar link
         </Button>
-        <p role="status" className="min-h-6 text-sm text-ink">
+        <p role="status" className="min-h-6 text-sm text-foreground">
           {copyStatus}
         </p>
       </div>
@@ -248,21 +248,21 @@ function PendingInvitations({ tenantId, isOwner }: { tenantId: string; isOwner: 
       <h2 id="convites-pendentes" className="text-lg font-semibold">
         Convites pendentes
       </h2>
-      <p role="status" className="mt-2 min-h-6 text-sm text-ink">
+      <p role="status" className="mt-2 min-h-6 text-sm text-foreground">
         {status}
       </p>
       {revokeError ? (
-        <p role="alert" className="text-sm font-medium text-danger">
+        <p role="alert" className="text-sm font-medium text-destructive">
           {revokeError}
         </p>
       ) : null}
       {query.isPending ? (
-        <p className="mt-2 text-base text-muted" aria-busy="true">
+        <p className="mt-2 text-base text-muted-foreground" aria-busy="true">
           Carregando convites…
         </p>
       ) : query.isError ? (
         <div className="mt-2 flex flex-col gap-3">
-          <p role="alert" className="text-base font-medium text-danger">
+          <p role="alert" className="text-base font-medium text-destructive">
             Não foi possível carregar os convites.
           </p>
           <Button
@@ -275,11 +275,11 @@ function PendingInvitations({ tenantId, isOwner }: { tenantId: string; isOwner: 
           </Button>
         </div>
       ) : query.data.length === 0 ? (
-        <p className="mt-2 text-base text-muted">Nenhum convite pendente.</p>
+        <p className="mt-2 text-base text-muted-foreground">Nenhum convite pendente.</p>
       ) : (
         <ul
           aria-labelledby="convites-pendentes"
-          className="mt-2 flex flex-col divide-y divide-line"
+          className="mt-2 flex flex-col divide-y divide-border"
         >
           {query.data.map((invitation) => (
             <PendingInvitationItem
@@ -334,11 +334,11 @@ function PendingInvitationItem({
   return (
     <li className="flex flex-col gap-3 py-4">
       <div>
-        <p className="break-all text-base font-medium text-ink">{invitation.email}</p>
-        <p className="text-sm text-muted">
+        <p className="break-all text-base font-medium text-foreground">{invitation.email}</p>
+        <p className="text-sm text-muted-foreground">
           {roleLabel} ·{' '}
           {expired ? (
-            <span className="font-medium text-danger">Expirado em {expiresText}</span>
+            <span className="font-medium text-destructive">Expirado em {expiresText}</span>
           ) : (
             `Vale até ${expiresText}`
           )}
@@ -346,7 +346,7 @@ function PendingInvitationItem({
       </div>
       {canRevoke && confirming ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <p className="text-sm text-ink sm:flex-1">O link deixa de funcionar. Revogar?</p>
+          <p className="text-sm text-foreground sm:flex-1">O link deixa de funcionar. Revogar?</p>
           <Button busy={busy} busyLabel="Revogando…" onClick={onConfirm}>
             Confirmar revogação
           </Button>
