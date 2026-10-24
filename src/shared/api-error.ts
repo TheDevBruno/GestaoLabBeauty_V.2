@@ -8,6 +8,7 @@ export const apiErrorCodes = [
   'invalid_request',
   'payload_too_large',
   'invitation_pending',
+  'already_member',
   'internal',
 ] as const;
 

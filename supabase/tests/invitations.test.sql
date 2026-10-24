@@ -31,6 +31,8 @@ select tests.create_user('naoconf@example.test') as naoconf \gset
 select tests.create_user('expirado@example.test') as expirado \gset
 select tests.create_user('revogado@example.test') as revogado \gset
 select tests.create_user('sem-vinculo@example.test') as outsider \gset
+-- Vira membro depois de convidada (a criação já recusa quem é membro: RN-039).
+select tests.create_user('tardio@example.test') as tardio \gset
 update auth.users set email_confirmed_at = now() where email <> 'naoconf@example.test';
 update auth.users set email_confirmed_at = null where email = 'naoconf@example.test';
 
@@ -92,8 +94,11 @@ insert into public.invitations (tenant_id, email, role, token_hash, invited_by) 
   ('00000000-0000-0000-0000-00000000000a', 'naoconf@example.test', 'manager', pg_temp.h('tok-unconf'), :'owner_a'),
   ('00000000-0000-0000-0000-00000000000a', 'expirado@example.test', 'manager', pg_temp.h('tok-exp'), :'owner_a'),
   ('00000000-0000-0000-0000-00000000000a', 'revogado@example.test', 'manager', pg_temp.h('tok-rev'), :'owner_a'),
-  ('00000000-0000-0000-0000-00000000000a', 'receptionist-a@example.test', 'manager', pg_temp.h('tok-member'), :'owner_a'),
+  ('00000000-0000-0000-0000-00000000000a', 'tardio@example.test', 'manager', pg_temp.h('tok-member'), :'owner_a'),
   ('00000000-0000-0000-0000-00000000000b', 'pendente.b@example.test', 'receptionist', pg_temp.h('tok-pend-b'), :'owner_b');
+
+insert into public.memberships (tenant_id, user_id, role)
+values ('00000000-0000-0000-0000-00000000000a', :'tardio', 'receptionist');
 
 update public.invitations set accepted_at = now(), accepted_by = :'novo1' where email = 'revacc@example.test';
 update public.invitations set created_at = now() - interval '9 days', expires_at = now() - interval '2 days'
@@ -307,7 +312,7 @@ select is(pg_temp.try_as(:'revogado', $$select public.accept_invitation('tok-rev
 select is(pg_temp.try_as(:'novo1', $$select public.accept_invitation('token-que-nao-existe')$$), 'E23514', 'token desconhecido é negado');
 select is(pg_temp.try_as(:'novo1', $$select public.accept_invitation(null)$$), 'E23514', 'token nulo é negado');
 select is(
-  pg_temp.try_as(:'receptionist_a', $$select public.accept_invitation('tok-member')$$), 'E23505', 'quem já é membro não aceita'
+  pg_temp.try_as(:'tardio', $$select public.accept_invitation('tok-member')$$), 'E23505', 'quem já é membro não aceita'
 );
 
 select * from finish();

@@ -13,9 +13,9 @@ import { hashInvitationToken } from './token';
 // Integração com o Supabase local: API real (createAppFromEnv) e banco real (trigger, índice de
 // pendente, RLS e public.accept_invitation). As consultas de listar e revogar são as mesmas do
 // adaptador do navegador (src/lib/invitations-api.ts), que server/ não importa (ARCHITECTURE.md).
-// Só roda com `npm run test:integration` (modo "integration"); `npm test` e o CI a ignoram, porque
-// exigem Docker. Pré-requisitos: `npm run db:start`, seed aplicado e as variáveis do servidor no
-// .env.local. Grava dados sintéticos com e-mails únicos por execução: rode `npm run db:reset` antes do
+// Só roda com `npm run test:integration` (modo "integration"): no CI, no job `integration`; o `npm test`
+// a ignora, porque exige Docker. Pré-requisitos: `npm run db:start`, seed aplicado e as variáveis do
+// servidor no .env.local (ou no ambiente do processo, como no CI). Grava dados sintéticos com e-mails únicos por execução: rode `npm run db:reset` antes do
 // `npm run db:test`.
 
 const RUN = import.meta.env.MODE === 'integration';
@@ -214,6 +214,17 @@ describe.runIf(RUN)('convites ponta a ponta (Supabase local)', () => {
     expect(apiErrorSchema.parse(await response.json()).code).toBe('forbidden');
     const { data } = await admin.from('invitations').select('id').eq('email', target);
     expect(data).toEqual([]);
+  });
+
+  it('409 already_member para quem já é membro (RN-039); recepção recebe 403 antes', async () => {
+    const body = { tenantId: TENANT_A, email: 'ana.receptionist@example.test', role: 'manager' };
+    const response = await post(anaAdmin.token, body);
+    expect(response.status).toBe(409);
+    expect(apiErrorSchema.parse(await response.json()).code).toBe('already_member');
+
+    // Quem não gerencia não descobre se o e-mail é de um membro.
+    const probe = await post(anaReceptionist.token, { ...body, email: 'ana.owner@example.test' });
+    expect(probe.status).toBe(403);
   });
 
   it('RLS: token_hash ilegível, recepção não lista, outra empresa não revoga, admin revoga', async () => {

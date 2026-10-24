@@ -17,7 +17,8 @@ export type InsertInvitationResult =
   | { ok: true; id: string; expiresAt: string }
   // forbidden: o trigger de invitations negou quem convida (42501, RN-022/RN-026).
   // pending: já existe convite pendente para o e-mail na empresa (índice parcial, 23505).
-  | { ok: false; reason: 'forbidden' | 'pending' };
+  // member: o e-mail já é de um membro da empresa (trigger invitations_check_not_member, 23505; RN-039).
+  | { ok: false; reason: 'forbidden' | 'pending' | 'member' };
 
 export interface InvitationStore {
   // Valida o JWT do usuário no Auth do Supabase. null = token ausente, inválido ou expirado.
@@ -74,6 +75,9 @@ export function createSupabaseInvitationStore(
         if (code === '42501') return { ok: false, reason: 'forbidden' };
         if (code === '23505' && message.includes('invitations_pending_email_key')) {
           return { ok: false, reason: 'pending' };
+        }
+        if (code === '23505' && message.startsWith('invitations_email_already_member')) {
+          return { ok: false, reason: 'member' };
         }
         throw new StoreError('criar convite', code);
       }

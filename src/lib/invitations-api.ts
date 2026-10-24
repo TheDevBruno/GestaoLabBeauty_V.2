@@ -41,6 +41,7 @@ const CREATE_MESSAGES: Record<ApiErrorCode, string> = {
   payload_too_large: 'Confira os dados do convite.',
   invitation_pending:
     'Já existe um convite pendente para este e-mail. Revogue-o para enviar outro.',
+  already_member: 'Esta pessoa já faz parte da equipe desta empresa.',
   internal: 'Não foi possível criar o convite. Tente de novo em instantes.',
 };
 

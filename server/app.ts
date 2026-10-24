@@ -95,9 +95,24 @@ export function createApp({ store, generateToken = generateInvitationToken }: Ap
     }
 
     if (!result.ok) {
-      return result.reason === 'forbidden'
-        ? apiError(c, 403, 'forbidden', 'Você não pode convidar para esta empresa ou papel.')
-        : apiError(c, 409, 'invitation_pending', 'Já existe um convite pendente para este e-mail.');
+      switch (result.reason) {
+        case 'forbidden':
+          return apiError(
+            c,
+            403,
+            'forbidden',
+            'Você não pode convidar para esta empresa ou papel.',
+          );
+        case 'member':
+          return apiError(c, 409, 'already_member', 'Esta pessoa já é membro desta empresa.');
+        case 'pending':
+          return apiError(
+            c,
+            409,
+            'invitation_pending',
+            'Já existe um convite pendente para este e-mail.',
+          );
+      }
     }
 
     const body: CreateInvitationResponse = {
