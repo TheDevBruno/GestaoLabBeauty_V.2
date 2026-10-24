@@ -49,7 +49,7 @@ Um passo por vez. Cada passo termina com `npm run check` verde, `npm run db:test
 | 3   | Base do frontend (`src/lib`, `src/shared`) | concluído |
 | 4   | Auth e rotas                               | concluído |
 | 5   | Guards (sessão, empresa ativa, permissão)  | concluído |
-| 6   | API de convites (`server/`, Hono)          | pendente  |
+| 6   | API de convites (`server/`, Hono)          | concluído |
 | 7   | Testes                                     | pendente  |
 | 8   | Encerramento da sprint                     | pendente  |
 
@@ -189,3 +189,77 @@ Verificação manual no navegador (Supabase local, dados sintéticos): recepcion
 continua na primeira e o seletor lista só as duas empresas dela com o papel de cada uma.
 
 A guarda de interface é conveniência: a RLS nega os dados a quem não tem a permissão, com ou sem ela.
+
+### Passo 6 — API de convites (2026-10-23)
+
+Dependências (versão exata, publicadas até 2026-10-09, [ADR-001](../decisions/ADR-001-stack-e-versoes.md)):
+
+| Pacote                    | Versão  | Publicada  | Observação                                         |
+| ------------------------- | ------- | ---------- | -------------------------------------------------- |
+| `vite` (dev)              | 8.3.4   | 2026-10-08 | era 8.3.2; corrige o `npm audit` alto (autorizado) |
+| `hono`                    | 4.13.13 | 2026-10-04 | `engines.node >=16.9`                              |
+| `@hono/node-server` (dev) | 2.1.4   | 2026-10-08 | peer `hono ^4`; a 2.1.5 é nova                     |
+
+Configuração (ajustes autorizados na decisão da sprint): `tsconfig.node.json` passa a incluir `server/` e
+`api/` (o ESLint type-checked precisa disso); `vite.config.ts` ganha o plugin `labbeautypro-api-dev`, que
+só no `npm run dev` atende `/api/*` com a API de `server/`. `eslint.config.js` não mudou.
+
+Entregue:
+
+- `server/app.ts` (`createApp`): `POST /api/invitations`. Valida `Authorization: Bearer` com
+  `auth.getUser` (chave anônima; sessão encerrada no Auth também dá 401), valida o corpo com
+  `createInvitationRequestSchema` (`src/shared/invitation.ts`), gera o token (`randomBytes(32)`,
+  base64url, 43 caracteres) e grava só o sha-256 em hexadecimal com a service role. 42501 do trigger →
+  403; 23505 do índice de pendente → revoga o pendente **expirado** e tenta uma vez mais, senão 409.
+  Chegar ao 23505 prova que o trigger aceitou quem convida, então a revogação nunca roda para quem não
+  gerencia a empresa. Resposta 201 `{ id, link: "/convite#<token>", expiresAt }` com
+  `Cache-Control: no-store`. Limite de corpo de 16 KiB (413). Erros sempre `{ code, message, details? }`;
+  o 500 registra só nome e mensagem no log do servidor.
+- `server/invitation-store.ts`: porta `InvitationStore` e adaptador Supabase (cliente anônimo para o
+  JWT, cliente admin para gravar). Erro inesperado do banco vira exceção sem a mensagem do Postgres.
+- `server/env.ts`: `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY`, sem `VITE_`; o
+  erro cita o nome e nunca o valor. `.env.example` só com os nomes.
+- `api/[[...route]].ts`: Vercel Function no formato Web padrão (`app.fetch`). `hono/vercel` não foi usado
+  por estar obsoleto no Hono 4.
+- `src/shared/api-error.ts` (formato de erro) e, em `invitation.ts`, os schemas de pedido e resposta.
+  `tenantId` usa `z.guid()`: o `z.uuid()` exige versão RFC e recusava os ids do seed — defeito achado no
+  teste manual, coberto agora pelo teste da API.
+- `src/lib/invitations-api.ts`: contrato `InvitationsApi` (listar pendentes com colunas explícitas,
+  criar pela API com o JWT da sessão, revogar por update de `revoked_at`; nenhuma linha afetada = erro).
+  Mensagens da tela por código, sem repassar o texto do servidor.
+- `/app/equipe`: formulário (e-mail e papel; "Proprietário(a)" só para o owner, RN-022), aviso "Convite
+  criado" com foco, link mostrado uma única vez em campo somente leitura e botão "Copiar link" (com
+  mensagem alternativa se a área de transferência for negada), lista de pendentes com validade e
+  "Expirado em" por extenso, revogação com confirmação em linha (convite de owner só o owner revoga) e
+  anúncios em `role="status"`. Skill `ui-ux-pro-max` consultada antes (confirmação de ação destrutiva,
+  feedback de envio, status sem mover o foco).
+- 57 testes Vitest novos (261 no total): API com `app.request` e store falso (401, 400, 413, 403, 409,
+  revogação do expirado, 201, token de 32 bytes, hash gravado, 500 sem SQL, 404), adaptador do Supabase,
+  token, env, `InvitationsApi` e a tela em jsdom.
+
+Verificação manual (Supabase local, dados sintéticos do seed, `ana.admin@example.test`):
+
+| Verificação                                                   | Resultado                                                                                                     |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `POST /api/invitations` sem JWT                               | 401 `unauthorized`                                                                                            |
+| JWT de sessão já encerrada no Auth (após `db reset` anterior) | 401 (o `getUser` recusa `session_not_found`)                                                                  |
+| Criar pela tela                                               | 201; foco em "Convite criado"; link com 43 caracteres                                                         |
+| Banco                                                         | `token_hash` = sha-256 do token; `invited_by` certo; 7 dias                                                   |
+| Mesmo e-mail de novo                                          | 409 `invitation_pending`                                                                                      |
+| Admin pede papel `owner` / outra empresa                      | 403 / 403 (trigger)                                                                                           |
+| Pendente expirado no banco e novo convite                     | 201; o antigo revogado, o novo válido                                                                         |
+| Revogar pela tela                                             | confirmação, "Convite de … revogado.", sai da lista                                                           |
+| 375 px                                                        | sem rolagem horizontal; nenhum controle abaixo de 44 px                                                       |
+| "Copiar link" no painel do navegador do app                   | área de transferência negada → mensagem alternativa                                                           |
+| `vite build` + busca em `dist/`                               | valor da service role, `SUPABASE_SERVICE_ROLE_KEY`, `service_role`, `server/`: 0; chave anônima (controle): 1 |
+
+Depois do teste manual: `npm run db:reset` e `npm run db:test` → `Files=12, Tests=1039`, `Result: PASS`.
+
+Observações:
+
+- `npm audit` passou a apontar 1 vulnerabilidade alta no `zod` < 4.6.6 (memória ao validar coleções
+  grandes; GHSA-mrhx-c7xc-m3w5). O `zod` 4.6.6 é de 2026-10-11 e entra na janela de 14 dias em
+  2026-10-25. Mitigação até lá: os schemas da API não têm coleções e o corpo é limitado a 16 KiB.
+- O SPA na Vercel vai precisar de rewrite das rotas do navegador para `index.html` (`vercel.json`) no
+  primeiro deploy; fora deste passo.
+- Convidar quem já é membro só falha no aceite ("já é membro"); sem checagem na criação.

@@ -56,8 +56,11 @@ liberação de recursos por plano.
   via `AuthProvider`; 169 testes Vitest (com telas em jsdom) e fluxo de convite verificado no navegador
   com o Supabase local. Passo 5 concluído: guards de sessão, de empresa ativa (RN-025, preferência local,
   abre a última usada) e de permissão, com revogação refletida na interface sem novo login (RN-024);
-  204 testes Vitest. Registro em
-  [sprint-1.3.md](roadmap/sprint-1.3.md).
+  204 testes Vitest. Passo 6 concluído: `vite` 8.3.4; API Hono em `server/` (`/api/*`, Vercel Function
+  em `api/` e plugin do Vite no `npm run dev`) com `POST /api/invitations` (JWT validado no Auth, token
+  de 32 bytes, só o hash no banco, service role só no servidor, 403/409 e revogação do expirado); tela
+  `/app/equipe` com criar, copiar link, listar e revogar sob RLS; 261 testes Vitest; `dist/` sem a
+  service role. Registro em [sprint-1.3.md](roadmap/sprint-1.3.md).
 
 - Membros já leem a própria empresa, o próprio perfil e a própria membership; quem tem
   `members.manage` lê a equipe. Profissionais, clientes e agendamentos existem só com chaves e FKs; a
@@ -75,15 +78,19 @@ liberação de recursos por plano.
 - [ ] Confirmar as regras marcadas "a confirmar" em [REGRAS-DE-NEGOCIO.md](REGRAS-DE-NEGOCIO.md).
 - [ ] Prova de detecção no CI: uma política `using (true)` em `tenants` deve falhar o job `database`
       (provada só localmente no passo 7).
-- [ ] `npm audit`: 1 vulnerabilidade alta no `vite@8.3.2` (servidor de desenvolvimento). Atualizar para o
-      `vite@8.3.4` (publicado há mais de 14 dias) com autorização do usuário.
+- [ ] `npm audit`: 1 vulnerabilidade alta no `zod` < 4.6.6 (GHSA-mrhx-c7xc-m3w5). O 4.6.6 entra na
+      janela de 14 dias da ADR-001 em 2026-10-25; atualizar com autorização do usuário. (O `vite` já foi
+      para 8.3.4 no passo 6 da Sprint 1.3.)
+- [ ] Bundle de 662 kB (aviso de 500 kB do Vite): divisão de código por rota na Sprint 1.4.
+- [ ] `vercel.json` com rewrite do SPA para `index.html` no primeiro deploy.
 - [ ] Atualizar o Supabase CLI (2.121.0 disponível) quando sair da janela de 14 dias da ADR-001.
 
 ## Próximo passo
 
-**Sprint 1.3 — auth, convites e guards**, passo 6 (API Hono só para criar convite: `server/`, token de
-32 bytes, hash no banco, service role só no servidor). Plano e decisões em
+**Sprint 1.3 — auth, convites e guards**, passo 7 (testes e prova de detecção). Plano e decisões em
 [sprint-1.3.md](roadmap/sprint-1.3.md).
 
-Requisito local: Docker em execução e `npm run db:start`. Senha de teste dos usuários do seed:
+Requisito local: Docker em execução e `npm run db:start`. O `.env.local` precisa também de
+`SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` (valores em `npx supabase status`) para
+a API funcionar no `npm run dev`. Senha de teste dos usuários do seed:
 [sprint-1.2.md](roadmap/sprint-1.2.md#passo-7--seed-sintético-2026-10-22) (só local).

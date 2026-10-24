@@ -22,6 +22,7 @@ GitHub de `TheDevBruno`, com passos de reprodução e impacto estimado. Resposta
 | ---------------------------------------- | ---------------------------------------- |
 | `.env` fora do Git                       | Implementado (Sprint 1.1)                |
 | Lint impede `src/` de importar `server/` | Implementado (Sprint 1.1)                |
+| Service role só no servidor; `dist/` sem | Implementado (Sprint 1.3, verificado)    |
 | Dependabot para npm e GitHub Actions     | Configurado (ativo após o primeiro push) |
 | CI com permissão `contents: read`        | Implementado (Sprint 1.1)                |
 | RLS e testes negativos entre tenants     | Planejado (Sprint 1.2)                   |

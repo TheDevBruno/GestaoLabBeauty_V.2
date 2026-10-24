@@ -64,8 +64,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   sobre `roles_permissions`, revogação refletida na interface sem novo login (RN-024), cache apagado ao
   sair, painel com empresa e papel e página `/app/equipe` protegida por `members.manage`. 35 testes
   Vitest novos (204 no total).
+- Sprint 1.3, passo 6: API Hono (`hono` 4.13.13) em `server/`, servida em `/api/*` pela Vercel Function
+  `api/[[...route]].ts` e, no `npm run dev`, por um plugin do Vite (`@hono/node-server` 2.1.4).
+  `POST /api/invitations` valida o JWT no Auth, valida o corpo com o schema compartilhado, gera token de
+  32 bytes, grava só o sha-256 com a service role (só no servidor), revoga o convite pendente expirado
+  antes de criar outro e responde erros no formato `{ code, message, details? }` (403 do trigger, 409
+  de pendente). Tela `/app/equipe` com criação, link mostrado uma vez com cópia, lista de pendentes e
+  revogação sob RLS. 57 testes Vitest novos (261 no total); `dist/` sem a service role.
 
 ### Alterado
+
+- `vite` 8.3.2 → 8.3.4 (autorizado pelo usuário), que corrige a vulnerabilidade alta apontada pelo
+  `npm audit` no servidor de desenvolvimento.
 
 - `.claude/settings.json` libera commit, push das branches de trabalho e `gh pr create` para o
   Claude Code; bloqueia push na `main`, force push, `reset --hard` e `clean`; merge pede confirmação.

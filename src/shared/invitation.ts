@@ -18,3 +18,26 @@ export const createInvitationSchema = z.object({
 });
 
 export type CreateInvitationInput = z.infer<typeof createInvitationSchema>;
+
+// Corpo de POST /api/invitations: o formulário mais a empresa ativa. O servidor confere no banco
+// (trigger de invitations) se quem chama gerencia essa empresa; o tenantId do cliente não é confiável.
+// z.guid e não z.uuid: o tipo uuid do Postgres aceita qualquer valor 8-4-4-4-12 em hexadecimal, sem
+// exigir versão RFC (os ids do seed, por exemplo, não têm).
+export const createInvitationRequestSchema = createInvitationSchema.extend({
+  tenantId: z.guid({ error: 'Empresa inválida.' }),
+});
+
+export type CreateInvitationRequest = z.infer<typeof createInvitationRequestSchema>;
+
+// Resposta 201. O token só aparece aqui, dentro do link (no fragmento, que não vai ao servidor).
+export const createInvitationResponseSchema = z.object({
+  id: z.guid(),
+  link: z.string().regex(/^\/convite#[A-Za-z0-9_-]{43}$/),
+  expiresAt: z.iso.datetime({ offset: true }),
+});
+
+export type CreateInvitationResponse = z.infer<typeof createInvitationResponseSchema>;
+
+export function invitationLink(token: string): string {
+  return `/convite#${token}`;
+}

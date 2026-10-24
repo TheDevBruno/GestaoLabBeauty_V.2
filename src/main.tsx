@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from '@/app/App';
 import { createSupabaseAuthApi } from '@/lib/auth-api';
+import { createSupabaseInvitationsApi } from '@/lib/invitations-api';
 import { createQueryClient } from '@/lib/query-client';
 import { supabase } from '@/lib/supabase';
 import { createSupabaseTenancyApi } from '@/lib/tenancy-api';
@@ -14,10 +15,16 @@ if (!rootElement) {
 
 const api = createSupabaseAuthApi(supabase);
 const tenancyApi = createSupabaseTenancyApi(supabase);
+const invitationsApi = createSupabaseInvitationsApi(supabase);
 const queryClient = createQueryClient();
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App api={api} tenancyApi={tenancyApi} queryClient={queryClient} />
+    <App
+      api={api}
+      tenancyApi={tenancyApi}
+      invitationsApi={invitationsApi}
+      queryClient={queryClient}
+    />
   </StrictMode>,
 );
