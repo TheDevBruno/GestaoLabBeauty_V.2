@@ -15,11 +15,12 @@ from (values ('A', '00000000-0000-0000-0000-00000000000a'::uuid),
 cross join unnest(enum_range(null::public.member_role)) r (role);
 
 insert into public.memberships (tenant_id, user_id, role) select tenant_id, user_id, role from members;
-insert into public.profiles (id, full_name) select user_id, format('Pessoa %s %s', role, tenant) from members;
+-- O perfil nasce pelo trigger de auth.users (Sprint 1.3); aqui só recebe o nome do cenário.
+update public.profiles p set full_name = format('Pessoa %s %s', m.role, m.tenant) from members m where p.id = m.user_id;
 
 select tests.create_user('sem-vinculo@example.test') as outsider \gset
 select tests.create_user('platform@example.test') as platform_admin \gset
-insert into public.profiles (id, full_name) values (:'outsider', 'Pessoa sem vínculo');
+update public.profiles set full_name = 'Pessoa sem vínculo' where id = :'outsider';
 insert into public.platform_admins (user_id) values (:'platform_admin');
 
 -- Executa o comando como o usuário e devolve as linhas afetadas, ou 'negado' em permission denied.

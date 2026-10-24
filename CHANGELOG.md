@@ -45,9 +45,42 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 1.2, passo 8: job `database` no CI com Supabase local só com Postgres (`supabase start -x`),
   `supabase db reset`, `supabase test db` e `supabase db lint`.
 - Sprint 1.2 encerrada (passo 9): 951 asserções pgTAP, `db lint` sem erros e CI verde;
-  `docs/STATE.md` e `docs/roadmap/sprint-1.2.md` atualizados. Aguarda aprovação do usuário.
+  `docs/STATE.md` e `docs/roadmap/sprint-1.2.md` atualizados. Aprovada pelo usuário em 2026-10-23.
+- Sprint 1.3, passo 1: plano em `docs/roadmap/sprint-1.3.md`; RN-026 confirmada (convite de 7 dias,
+  owner e admin convidam) e RN-038 (aceite do convite) a confirmar.
+- Sprint 1.3, passo 2: trigger que cria o `profiles` junto com a conta; tabela `invitations` (token só
+  como hash, validade de 7 dias, trigger que valida quem convida), RLS de leitura e revogação e função
+  `public.accept_invitation`; 88 asserções pgTAP novas (1039 no total).
+- Sprint 1.3, passo 3: `@supabase/supabase-js` 2.117.3 e `@tanstack/react-query` 5.104.1; `src/lib`
+  (cliente Supabase com chave anônima, `QueryClient`, validação das variáveis `VITE_`), schemas Zod de
+  login, cadastro e convite em `src/shared`, `.env.example` e 42 testes Vitest novos (92 no total).
+- Sprint 1.3, passo 4: rotas com `react-router` (`/entrar`, `/cadastro`, `/convite`, `/app` provisório e
+  página não encontrada), `AuthProvider` com a sessão do Supabase, contrato `AuthApi` com mensagens de
+  erro em pt-BR, aceite do convite por clique com o token no fragmento da URL, `?next=` sem open
+  redirect, componentes de formulário acessíveis e tokens semânticos provisórios. Dependências de teste
+  `jsdom` 30.1.2 e `@testing-library/{react,dom,user-event}`; 77 testes Vitest novos (169 no total).
+- Sprint 1.3, passo 5: guards de rota (`RequireSession`, `RequireTenant`, `RequirePermission`), empresa
+  ativa só entre as memberships do usuário (RN-025) guardada como preferência local, `usePermission`
+  sobre `roles_permissions`, revogação refletida na interface sem novo login (RN-024), cache apagado ao
+  sair, painel com empresa e papel e página `/app/equipe` protegida por `members.manage`. 35 testes
+  Vitest novos (204 no total).
+- Sprint 1.3, passo 6: API Hono (`hono` 4.13.13) em `server/`, servida em `/api/*` pela Vercel Function
+  `api/[[...route]].ts` e, no `npm run dev`, por um plugin do Vite (`@hono/node-server` 2.1.4).
+  `POST /api/invitations` valida o JWT no Auth, valida o corpo com o schema compartilhado, gera token de
+  32 bytes, grava só o sha-256 com a service role (só no servidor), revoga o convite pendente expirado
+  antes de criar outro e responde erros no formato `{ code, message, details? }` (403 do trigger, 409
+  de pendente). Tela `/app/equipe` com criação, link mostrado uma vez com cópia, lista de pendentes e
+  revogação sob RLS. 57 testes Vitest novos (261 no total); `dist/` sem a service role.
+- Sprint 1.3, passo 7: teste de integração da API de convites com o Supabase local
+  (`server/invitations.integration.test.ts`, script `npm run test:integration`, 7 testes, do convite ao
+  aceite e RLS de listar e revogar) e seis provas de detecção registradas em `sprint-1.3.md`.
+- Sprint 1.3, passo 8: encerramento com verificação final registrada; sprint concluída e aguardando
+  aprovação do usuário.
 
 ### Alterado
+
+- `vite` 8.3.2 → 8.3.4 (autorizado pelo usuário), que corrige a vulnerabilidade alta apontada pelo
+  `npm audit` no servidor de desenvolvimento.
 
 - `.claude/settings.json` libera commit, push das branches de trabalho e `gh pr create` para o
   Claude Code; bloqueia push na `main`, force push, `reset --hard` e `clean`; merge pede confirmação.

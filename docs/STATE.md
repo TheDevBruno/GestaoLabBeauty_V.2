@@ -46,10 +46,32 @@ liberação de recursos por plano.
 
   Plano e registro em [sprint-1.2.md](roadmap/sprint-1.2.md).
 
-- Membros já leem a própria empresa, o próprio perfil e a própria membership; quem tem
-  `members.manage` lê a equipe. Profissionais, clientes e agendamentos existem só com chaves e FKs; a
-  Sprint 2 completa as colunas. `platform_admins` segue sem política (nega tudo). Sem autenticação nem
-  funcionalidade de negócio.
+- **Sprint 1.3 (auth, convites e guards) concluída** em 2026-10-23, **aguardando aprovação do usuário**
+  (ponto de aprovação obrigatória), branch `feat/sprint-1.3-auth`. Verificação final no passo 8:
+  `npm ci`, `npm run check` (261 testes + 7 de integração ignorados), `db:test` 1039 PASS, `db lint` sem
+  erros, `test:integration` 7 passed, `dist/` sem a service role. Passo 1
+  concluído: plano, decisões (convite de 7 dias, owner e admin convidam, onboarding na Sprint 2.5) e
+  RN-026/RN-038. Passo 2 concluído: perfil criado por trigger em `auth.users`, tabela `invitations`
+  com RLS e `public.accept_invitation`; 1039 asserções pgTAP verdes. Passo 3 concluído: dependências
+  `@supabase/supabase-js` 2.117.3 e `@tanstack/react-query` 5.104.1, `src/lib` (cliente Supabase,
+  `QueryClient`, validação de env), schemas Zod em `src/shared` e `.env.example`; 92 testes Vitest. Passo 4
+  concluído: telas `/entrar`, `/cadastro`, `/convite` (token no fragmento) e `/app` provisório, sessão
+  via `AuthProvider`; 169 testes Vitest (com telas em jsdom) e fluxo de convite verificado no navegador
+  com o Supabase local. Passo 5 concluído: guards de sessão, de empresa ativa (RN-025, preferência local,
+  abre a última usada) e de permissão, com revogação refletida na interface sem novo login (RN-024);
+  204 testes Vitest. Passo 6 concluído: `vite` 8.3.4; API Hono em `server/` (`/api/*`, Vercel Function
+  em `api/` e plugin do Vite no `npm run dev`) com `POST /api/invitations` (JWT validado no Auth, token
+  de 32 bytes, só o hash no banco, service role só no servidor, 403/409 e revogação do expirado); tela
+  `/app/equipe` com criar, copiar link, listar e revogar sob RLS; 261 testes Vitest; `dist/` sem a
+  service role. Passo 7 concluído: teste de integração da API com o Supabase local
+  (`npm run test:integration`, 7 testes, do convite ao aceite) e seis provas de detecção registradas
+  (servidor, tela e banco). Registro em [sprint-1.3.md](roadmap/sprint-1.3.md).
+
+- Há contas por e-mail e senha, convites (criar pela API, listar, revogar e aceitar) e guards de rota.
+  Membros leem a própria empresa, o próprio perfil e a própria membership; quem tem `members.manage` lê
+  a equipe e gerencia convites. Profissionais, clientes e agendamentos existem só com chaves e FKs; a
+  Sprint 2 completa as colunas. `platform_admins` segue sem política (nega tudo). Sem funcionalidade de
+  negócio além de acesso e equipe.
 - Adiantado da Sprint 1.3, com autorização: validador de slug do portal (`src/shared/slug.ts`, RN-017)
   com 50 testes Vitest, integrado na `main` pelo PR #7. `npm test` deixou de usar `--passWithNoTests`.
 
@@ -62,13 +84,23 @@ liberação de recursos por plano.
 - [ ] Confirmar as regras marcadas "a confirmar" em [REGRAS-DE-NEGOCIO.md](REGRAS-DE-NEGOCIO.md).
 - [ ] Prova de detecção no CI: uma política `using (true)` em `tenants` deve falhar o job `database`
       (provada só localmente no passo 7).
-- [ ] Atualizar o Supabase CLI (2.121.0 disponível) quando sair da janela de 14 dias da ADR-001.
+- [ ] `npm audit`: 1 vulnerabilidade alta no `zod` < 4.6.6 (GHSA-mrhx-c7xc-m3w5). O 4.6.6 entra na
+      janela de 14 dias da ADR-001 em 2026-10-25; atualizar com autorização do usuário. (O `vite` já foi
+      para 8.3.4 no passo 6 da Sprint 1.3.)
+- [ ] Bundle de 678 kB (aviso de 500 kB do Vite): divisão de código por rota na Sprint 1.4.
+- [ ] `vercel.json` com rewrite do SPA para `index.html` no primeiro deploy.
+- [ ] Atualizar o Supabase CLI (2.122.0 disponível) quando sair da janela de 14 dias da ADR-001.
+- [ ] RN-038 "a confirmar": o aceite já exige e-mail da conta igual ao do convite e confirmado.
+- [ ] Convidar quem já é membro só falha no aceite (sem checagem na criação).
+- [ ] Rodar `test:integration` e a prova de detecção no CI depende de autorização para mudar o workflow.
 
 ## Próximo passo
 
-**Sprint 1.3 — auth, convites e guards** (tabela de fases do
-[plano da Fase 0](roadmap/fase-0-plano.md)), com plano próprio em `docs/roadmap/sprint-1.3.md`,
-apresentado ao usuário e aprovado antes de qualquer implementação.
+**Aprovação do fim da Sprint 1.3** pelo usuário (revisar e fazer o merge do PR da branch
+`feat/sprint-1.3-auth`). Só depois: **Sprint 1.4 — design system e app shell**. Resumo e pendências em
+[sprint-1.3.md](roadmap/sprint-1.3.md#passo-8--encerramento-2026-10-23).
 
-Requisito local: Docker em execução e `npm run db:start`. Senha de teste dos usuários do seed:
+Requisito local: Docker em execução e `npm run db:start`. O `.env.local` precisa também de
+`SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` (valores em `npx supabase status`) para
+a API funcionar no `npm run dev`. Senha de teste dos usuários do seed:
 [sprint-1.2.md](roadmap/sprint-1.2.md#passo-7--seed-sintético-2026-10-22) (só local).
