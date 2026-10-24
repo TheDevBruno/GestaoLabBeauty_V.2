@@ -60,7 +60,9 @@ liberação de recursos por plano.
   em `api/` e plugin do Vite no `npm run dev`) com `POST /api/invitations` (JWT validado no Auth, token
   de 32 bytes, só o hash no banco, service role só no servidor, 403/409 e revogação do expirado); tela
   `/app/equipe` com criar, copiar link, listar e revogar sob RLS; 261 testes Vitest; `dist/` sem a
-  service role. Registro em [sprint-1.3.md](roadmap/sprint-1.3.md).
+  service role. Passo 7 concluído: teste de integração da API com o Supabase local
+  (`npm run test:integration`, 7 testes, do convite ao aceite) e seis provas de detecção registradas
+  (servidor, tela e banco). Registro em [sprint-1.3.md](roadmap/sprint-1.3.md).
 
 - Membros já leem a própria empresa, o próprio perfil e a própria membership; quem tem
   `members.manage` lê a equipe. Profissionais, clientes e agendamentos existem só com chaves e FKs; a
@@ -87,8 +89,8 @@ liberação de recursos por plano.
 
 ## Próximo passo
 
-**Sprint 1.3 — auth, convites e guards**, passo 7 (testes e prova de detecção). Plano e decisões em
-[sprint-1.3.md](roadmap/sprint-1.3.md).
+**Sprint 1.3 — auth, convites e guards**, passo 8 (encerramento; ponto de aprovação obrigatória do fim
+da sprint). Plano e decisões em [sprint-1.3.md](roadmap/sprint-1.3.md).
 
 Requisito local: Docker em execução e `npm run db:start`. O `.env.local` precisa também de
 `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` (valores em `npx supabase status`) para

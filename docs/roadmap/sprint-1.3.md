@@ -50,7 +50,7 @@ Um passo por vez. Cada passo termina com `npm run check` verde, `npm run db:test
 | 4   | Auth e rotas                               | concluído |
 | 5   | Guards (sessão, empresa ativa, permissão)  | concluído |
 | 6   | API de convites (`server/`, Hono)          | concluído |
-| 7   | Testes                                     | pendente  |
+| 7   | Testes                                     | concluído |
 | 8   | Encerramento da sprint                     | pendente  |
 
 ## Registro
@@ -263,3 +263,40 @@ Observações:
 - O SPA na Vercel vai precisar de rewrite das rotas do navegador para `index.html` (`vercel.json`) no
   primeiro deploy; fora deste passo.
 - Convidar quem já é membro só falha no aceite ("já é membro"); sem checagem na criação.
+
+### Passo 7 — Testes e prova de detecção (2026-10-23)
+
+Lacuna encontrada: os testes da API usavam um store em memória, e o contrato real com o banco (códigos
+42501 e 23505, nome do índice de pendente, colunas, `auth.getUser`, aceite com o token gerado) só tinha
+verificação manual. O pgTAP de `invitations` (80 asserções) já cobria privilégios, RLS, trigger e aceite.
+
+Entregue:
+
+- `server/invitations.integration.test.ts` (7 testes): API real (`createAppFromEnv`) contra o Supabase
+  local com o seed sintético. Cobre 401 sem JWT e com JWT forjado; criação com e-mail normalizado,
+  `Cache-Control: no-store`, `token_hash` = sha-256 do token e `invited_by` certo; lista sob RLS;
+  conta convidada com e-mail confirmado aceita pela RPC, membership com o papel do convite e token de uso
+  único; 409 para pendente válido; expirado revogado e substituído; 403 (admin → owner, admin de outra
+  empresa, recepção) sem nada gravado; `token_hash` ilegível para `authenticated` (42501), recepção não
+  lista, admin de outra empresa não revoga e admin da empresa revoga. Listar e revogar usam as mesmas
+  consultas do adaptador do navegador, que `server/` não importa (ARCHITECTURE.md).
+- Script `npm run test:integration` (`vitest run --mode integration`). A suíte só roda nesse modo: `npm
+test` e o CI a mostram como ignorada (7 skipped), porque exige Docker. Comando listado no AGENTS.md.
+- Sem mudança de CI (alteração de CI exige autorização).
+
+Provas de detecção (cada mutação aplicada, testes rodados e mutação revertida; `git diff` vazio ao fim):
+
+| Mutação                                                                  | Detectada por                                                              |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Store não reconhece o índice `invitations_pending_email_key` (23505→500) | Vitest: `invitation-store` (1); integração: 409/expirado (1)               |
+| API não tenta de novo após revogar o expirado                            | Vitest: `app` "pendente expirado" (1); integração: 409/expirado (1)        |
+| Token de 31 bytes                                                        | Vitest: `token` (1) e `app` (2); integração (3)                            |
+| Hash gravado diferente do sha-256 do token                               | Vitest: `app` (1); integração (3; o `CHECK` de formato do banco recusa)    |
+| Tela mostra "Proprietário(a)" para admin                                 | Vitest: `team-page` "admin vê a opção Proprietário(a): false" (1)          |
+| `invitations_select_manage` com `using (true)` (direto no banco local)   | pgTAP: `invitations.test.sql` 21/80 falham, `Result: FAIL`; integração (1) |
+
+Depois das provas: `npm run db:reset`, `npm run db:test` → `Files=12, Tests=1039`, `Result: PASS`;
+`npm run test:integration` → 7 passed; `npm run db:reset` de novo para limpar os dados da integração.
+
+Pendente (fora deste passo): prova de detecção no CI (job `database`) continua só local; rodar a
+integração no CI exige mudar o workflow, o que depende de autorização.

@@ -39,6 +39,7 @@ npm run format         # prettier --write .
 npm run format:check   # prettier --check .
 npm test               # vitest run
 npm run test:watch     # vitest
+npm run test:integration # API + Supabase local (exige db:start, seed e variáveis do servidor no .env.local)
 npm run check          # typecheck + lint + format:check + test + build (mesma ordem do CI)
 npm run db:start       # sobe o Supabase local (exige Docker)
 npm run db:stop        # para o Supabase local

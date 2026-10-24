@@ -71,6 +71,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   antes de criar outro e responde erros no formato `{ code, message, details? }` (403 do trigger, 409
   de pendente). Tela `/app/equipe` com criação, link mostrado uma vez com cópia, lista de pendentes e
   revogação sob RLS. 57 testes Vitest novos (261 no total); `dist/` sem a service role.
+- Sprint 1.3, passo 7: teste de integração da API de convites com o Supabase local
+  (`server/invitations.integration.test.ts`, script `npm run test:integration`, 7 testes, do convite ao
+  aceite e RLS de listar e revogar) e seis provas de detecção registradas em `sprint-1.3.md`.
 
 ### Alterado
 
