@@ -157,6 +157,15 @@ describe('POST /api/invitations — criação', () => {
     expect(store.insert).toHaveBeenCalledTimes(1);
   });
 
+  it('e-mail de quem já é membro (RN-039) → 409 already_member, sem revogar nem repetir', async () => {
+    const { store } = createFakeStore([{ ok: false, reason: 'member' }]);
+    const response = await post(createApp({ store }), VALID_BODY);
+    expect(response.status).toBe(409);
+    expect((await errorBody(response)).code).toBe('already_member');
+    expect(store.revokeExpiredPending).not.toHaveBeenCalled();
+    expect(store.insert).toHaveBeenCalledTimes(1);
+  });
+
   it('pendente expirado: revoga e cria o novo (201)', async () => {
     const { store, inserted } = createFakeStore([{ ok: false, reason: 'pending' }], 1);
     const response = await post(createApp({ store }), VALID_BODY);

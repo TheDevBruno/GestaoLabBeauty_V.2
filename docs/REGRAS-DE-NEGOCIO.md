@@ -283,16 +283,28 @@ Regra nova ou alterada deve ser registrada aqui com a origem.
 
 ### RN-038 — Aceite do convite
 
-| Dado                            | Quando                          | Então                                        |
-| ------------------------------- | ------------------------------- | -------------------------------------------- |
-| Um convite válido e não usado   | Um usuário autenticado o aceita | A membership é criada com o papel do convite |
-| Um convite aceito               | Alguém tenta aceitá-lo de novo  | A ação é negada (uso único)                  |
-| Um convite expirado ou revogado | Alguém tenta aceitá-lo          | A ação é negada                              |
-| Um convite para um e-mail       | Outro e-mail tenta aceitá-lo    | A ação é negada                              |
+| Dado                                | Quando                          | Então                                        |
+| ----------------------------------- | ------------------------------- | -------------------------------------------- |
+| Um convite válido e não usado       | Um usuário autenticado o aceita | A membership é criada com o papel do convite |
+| Um convite aceito                   | Alguém tenta aceitá-lo de novo  | A ação é negada (uso único)                  |
+| Um convite expirado ou revogado     | Alguém tenta aceitá-lo          | A ação é negada                              |
+| Um convite para um e-mail           | Outro e-mail tenta aceitá-lo    | A ação é negada                              |
+| Uma conta com e-mail não confirmado | Tenta aceitar o convite         | A ação é negada                              |
 
-- **Origem:** proposta do plano da Sprint 1.3, derivada de RN-026 e ADR-003.
-- **Status:** a confirmar.
-- **Dúvida:** o aceite exige que o e-mail da conta seja igual ao e-mail convidado?
+- **Origem:** proposta do plano da Sprint 1.3, derivada de RN-026 e ADR-003; confirmada pelo usuário em
+  2026-10-23 (aprovação da Sprint 1.3): o e-mail da conta precisa ser igual ao convidado e confirmado.
+- **Status:** confirmada.
+
+### RN-039 — Não convidar quem já é membro
+
+| Dado                                    | Quando                                | Então                                   |
+| --------------------------------------- | ------------------------------------- | --------------------------------------- |
+| Um e-mail que já é de membro da empresa | Alguém com `members.manage` o convida | O convite não é criado ("já é membro")  |
+| Um e-mail de membro de outra empresa    | É convidado                           | O convite é criado normalmente          |
+| Quem não tem `members.manage`           | Tenta convidar um e-mail de membro    | A ação é negada sem revelar se é membro |
+
+- **Origem:** decisão do usuário em 2026-10-23 (aprovação da Sprint 1.3). Antes, só o aceite falhava.
+- **Status:** confirmada.
 
 ## Specialist ("próprio")
 

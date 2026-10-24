@@ -79,6 +79,7 @@ describe('parseCreateResponse', () => {
     [401, 'unauthorized', /sessão expirou/],
     [403, 'forbidden', /permissão/],
     [409, 'invitation_pending', /convite pendente/],
+    [409, 'already_member', /já faz parte da equipe/],
     [500, 'internal', /Tente de novo/],
   ])('%i %s → mensagem própria, sem repassar a do servidor', async (status, code, pattern) => {
     const result = await parseCreateResponse(

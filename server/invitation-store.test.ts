@@ -83,6 +83,13 @@ describe('createSupabaseInvitationStore', () => {
   it.each([
     [{ code: '42501', message: 'quem convida precisa de members.manage' }, 'forbidden'],
     [{ code: '23505', message: 'duplicate key ... "invitations_pending_email_key"' }, 'pending'],
+    [
+      {
+        code: '23505',
+        message: 'invitations_email_already_member: a pessoa já é membro desta empresa',
+      },
+      'member',
+    ],
   ])('insert: %o → %s', async (error, reason) => {
     const admin = fakeClient({ data: null, error });
     const store = createSupabaseInvitationStore(

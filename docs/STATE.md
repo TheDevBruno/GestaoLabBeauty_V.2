@@ -46,8 +46,13 @@ liberação de recursos por plano.
 
   Plano e registro em [sprint-1.2.md](roadmap/sprint-1.2.md).
 
-- **Sprint 1.3 (auth, convites e guards) concluída** em 2026-10-23, **aguardando aprovação do usuário**
-  (ponto de aprovação obrigatória), branch `feat/sprint-1.3-auth`. Verificação final no passo 8:
+- **Sprint 1.3 (auth, convites e guards) concluída e aprovada pelo usuário** em 2026-10-23 (ponto de
+  aprovação obrigatória), PR #20 (`feat/sprint-1.3-auth`) já na `main`; as correções da aprovação estão no PR #21
+  (`feat/sprint-1.3-aprovacao`, merge com o usuário). Na aprovação:
+  RN-038 confirmada; RN-039 (não convidar quem já é membro, checado na criação); `zod` 4.6.6 (exceção à
+  ADR-001 por segurança, autorizada); Supabase CLI 2.120.0; job `integration` no CI; pgTAP 1047 PASS,
+  264 testes Vitest e 8 de integração. Detalhes em
+  [sprint-1.3.md](roadmap/sprint-1.3.md#aprovação-2026-10-23). Verificação final no passo 8:
   `npm ci`, `npm run check` (261 testes + 7 de integração ignorados), `db:test` 1039 PASS, `db lint` sem
   erros, `test:integration` 7 passed, `dist/` sem a service role. Passo 1
   concluído: plano, decisões (convite de 7 dias, owner e admin convidam, onboarding na Sprint 2.5) e
@@ -83,22 +88,16 @@ liberação de recursos por plano.
 - [ ] Validar comercialmente o nome LabBeautyPro antes de registro de marca.
 - [ ] Confirmar as regras marcadas "a confirmar" em [REGRAS-DE-NEGOCIO.md](REGRAS-DE-NEGOCIO.md).
 - [ ] Prova de detecção no CI: uma política `using (true)` em `tenants` deve falhar o job `database`
-      (provada só localmente no passo 7).
-- [ ] `npm audit`: 1 vulnerabilidade alta no `zod` < 4.6.6 (GHSA-mrhx-c7xc-m3w5). O 4.6.6 entra na
-      janela de 14 dias da ADR-001 em 2026-10-25; atualizar com autorização do usuário. (O `vite` já foi
-      para 8.3.4 no passo 6 da Sprint 1.3.)
-- [ ] Bundle de 678 kB (aviso de 500 kB do Vite): divisão de código por rota na Sprint 1.4.
-- [ ] `vercel.json` com rewrite do SPA para `index.html` no primeiro deploy.
-- [ ] Atualizar o Supabase CLI (2.122.0 disponível) quando sair da janela de 14 dias da ADR-001.
-- [ ] RN-038 "a confirmar": o aceite já exige e-mail da conta igual ao do convite e confirmado.
-- [ ] Convidar quem já é membro só falha no aceite (sem checagem na criação).
-- [ ] Rodar `test:integration` e a prova de detecção no CI depende de autorização para mudar o workflow.
+      (provada só localmente).
+- [ ] Bundle de 678 kB (aviso de 500 kB do Vite): divisão de código por rota na **Sprint 1.4**
+      (decisão do usuário).
+- [ ] `vercel.json` com rewrite do SPA para `index.html` no **primeiro deploy** (decisão do usuário).
+- [ ] Supabase CLI: 2.121.0 entra na janela da ADR-001 em 2026-10-28 (instalada: 2.120.0).
 
 ## Próximo passo
 
-**Aprovação do fim da Sprint 1.3** pelo usuário (revisar e fazer o merge do PR da branch
-`feat/sprint-1.3-auth`). Só depois: **Sprint 1.4 — design system e app shell**. Resumo e pendências em
-[sprint-1.3.md](roadmap/sprint-1.3.md#passo-8--encerramento-2026-10-23).
+**Merge do PR #21** (`feat/sprint-1.3-aprovacao` → `main`) pelo usuário, com o job `integration` verde. Depois, **Sprint 1.4 — design system
+e app shell**, começando pelo plano (`docs/roadmap/sprint-1.4.md`) e aguardando OK.
 
 Requisito local: Docker em execução e `npm run db:start`. O `.env.local` precisa também de
 `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` (valores em `npx supabase status`) para
