@@ -1,7 +1,7 @@
 # Sprint 1.3 — Auth, convites e guards
 
 - **Início:** 2026-10-23
-- **Status:** concluída em 2026-10-23; aguardando aprovação do usuário (ponto de aprovação obrigatória)
+- **Status:** concluída e aprovada pelo usuário em 2026-10-23 (ponto de aprovação obrigatória)
 - **Branch:** `feat/sprint-1.3-auth`
 
 ## Objetivo
@@ -337,3 +337,32 @@ Pendências para a aprovação e as próximas sprints:
 - Convidar quem já é membro só falha no aceite.
 - Integração e prova de detecção no CI dependem de autorização para mudar o workflow.
 - Supabase CLI 2.122.0 disponível (ADR-001) e PRs do Dependabot em aberto.
+
+## Aprovação (2026-10-23)
+
+Decisões do usuário sobre as pendências e correções feitas antes do encerramento:
+
+| Pendência                   | Decisão do usuário          | Feito                                                                                                                                                                                                                                                                                                                                                                             |
+| --------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RN-038                      | Confirmada como está        | [REGRAS-DE-NEGOCIO.md](../REGRAS-DE-NEGOCIO.md): status confirmada (e-mail igual e confirmado).                                                                                                                                                                                                                                                                                   |
+| `zod` < 4.6.6 (`npm audit`) | Pode atualizar              | `zod` 4.6.5 → **4.6.6** (2026-10-11), a menor versão com a correção. **Exceção à ADR-001** autorizada pelo usuário por ser correção de segurança: a versão entraria na janela de 14 dias só em 2026-10-25. `npm audit`: 0 vulnerabilidades.                                                                                                                                       |
+| Bundle de 678 kB            | Tratar na Sprint 1.4        | Mantido como pendência da 1.4.                                                                                                                                                                                                                                                                                                                                                    |
+| `vercel.json` (rewrite SPA) | Fica para o primeiro deploy | Mantido como pendência.                                                                                                                                                                                                                                                                                                                                                           |
+| Convite para quem é membro  | Verificar já na criação     | RN-039. Migration `20261024120000_invitations_existing_member.sql`: trigger `invitations_check_not_member` (depois do de quem convida, para não revelar membros a quem não gerencia); API responde 409 `already_member`; mensagem na tela. pgTAP `invitations_existing_member.test.sql` (8); teste antigo de aceite por membro ajustado (a pessoa vira membro depois do convite). |
+| Integração no CI            | Fazer                       | Job `integration` em `.github/workflows/ci.yml`: Supabase com Auth, PostgREST e Kong, `db reset` com seed, variáveis do servidor tiradas de `supabase status` (service role mascarada) e `npm run test:integration`.                                                                                                                                                              |
+| Supabase CLI                | Atualizar                   | 2.119.0 → **2.120.0** (2026-10-06), a mais nova dentro da ADR-001. A 2.121.0 entra na janela em 2026-10-28 e a 2.122.0 em 2026-11-06.                                                                                                                                                                                                                                             |
+
+Testes novos: 3 Vitest (`already_member` na API, no adaptador do servidor e na mensagem da tela) e 1 de
+integração (409 `already_member`; recepção recebe 403 antes). Prova de detecção: sem o trigger
+`invitations_check_not_member` (removido direto no banco local), o pgTAP falhou em 3/8 e a integração em 1;
+o `db:reset` restaurou.
+
+Verificação: `npm run check` (264 testes + 8 de integração ignorados), `db:reset` + `db:test`
+(`Files=13, Tests=1047`, `Result: PASS`), `npm run test:integration` (8 passed), `npm audit` sem
+vulnerabilidades. O job `integration` roda pela primeira vez no PR #20.
+
+Com as decisões aplicadas, o usuário considera a **Sprint 1.3 concluída e aprovada**. O merge do PR #20
+na `main` fica com o usuário.
+
+Pendências que seguem: bundle (Sprint 1.4), `vercel.json` (primeiro deploy), prova de detecção no CI do
+job `database` (só local), Supabase CLI 2.121.0+ quando entrar na janela e PRs do Dependabot.

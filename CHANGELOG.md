@@ -74,13 +74,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 1.3, passo 7: teste de integração da API de convites com o Supabase local
   (`server/invitations.integration.test.ts`, script `npm run test:integration`, 7 testes, do convite ao
   aceite e RLS de listar e revogar) e seis provas de detecção registradas em `sprint-1.3.md`.
-- Sprint 1.3, passo 8: encerramento com verificação final registrada; sprint concluída e aguardando
-  aprovação do usuário.
+- Sprint 1.3, passo 8: encerramento com verificação final registrada.
+- Sprint 1.3, aprovação: RN-039 — convite para quem já é membro é recusado na criação (trigger
+  `invitations_check_not_member`, 409 `already_member` na API, mensagem na tela; 8 asserções pgTAP e 4
+  testes novos); job `integration` no CI (API + Supabase local com `npm run test:integration`).
 
 ### Alterado
 
 - `vite` 8.3.2 → 8.3.4 (autorizado pelo usuário), que corrige a vulnerabilidade alta apontada pelo
   `npm audit` no servidor de desenvolvimento.
+- `zod` 4.6.5 → 4.6.6 (GHSA-mrhx-c7xc-m3w5; exceção à janela de 14 dias da ADR-001 autorizada pelo
+  usuário por ser correção de segurança) e Supabase CLI 2.119.0 → 2.120.0. `npm audit` sem
+  vulnerabilidades.
+- RN-038 confirmada pelo usuário (aceite exige e-mail da conta igual ao convidado e confirmado).
 
 - `.claude/settings.json` libera commit, push das branches de trabalho e `gh pr create` para o
   Claude Code; bloqueia push na `main`, force push, `reset --hard` e `clean`; merge pede confirmação.
