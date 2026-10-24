@@ -1,0 +1,198 @@
+# Sprint 1.4 — Design system e app shell
+
+- **Início:** 2026-10-23
+- **Status:** em andamento (plano aprovado pelo usuário em 2026-10-23)
+- **Branch:** `feat/sprint-1.4-design-system`
+
+## Objetivo
+
+Última sprint da Fase 1. Trocar os componentes e tokens provisórios da 1.3 por um design system
+(shadcn/ui sobre Radix e Tailwind 4, [ADR-001](../decisions/ADR-001-stack-e-versoes.md)) e dar ao
+`/app/*` um app shell com navegação, empresa ativa, papel e sair. Tirar o bundle do aviso de 500 kB com
+divisão de código por rota (decisão do usuário). Não é ponto de aprovação obrigatória.
+
+## Diagnóstico (2026-10-23)
+
+- **Tokens:** `src/styles/index.css` tem 11 tokens semânticos provisórios em `@theme` (`canvas`,
+  `surface`, `ink`, `muted`, `line`, `action`, `danger`, `success`, `focus`…), sobre a paleta `stone` do
+  Tailwind. Não há camada primitiva própria nem camada de componente.
+- **Componentes provisórios** em `src/app/components/`: `TextField`, `SelectField` (select nativo),
+  `Button` (`busy`, `primary`/`secondary`), `AuthLayout` (+ `linkClass`), `LoadingScreen`,
+  `SignOutButton` e `TenantChooser`. Já cumprem label visível, erro junto ao campo com
+  `aria-describedby`, `aria-invalid`, foco visível (`ring-3`) e alvo de 44 px (`min-h-11`).
+- **Telas:** `/entrar`, `/cadastro`, `/convite`, `/app` (painel provisório em `AuthLayout`) e
+  `/app/equipe` (369 linhas). Todo o `/app` usa a moldura de tela de acesso; não existe layout do painel.
+- **Testes de tela** (jsdom): `auth-pages`, `InvitePage`, `tenancy-pages`, `team-page`. Consultam por
+  papel e nome acessível, então sobrevivem à troca de componentes se os nomes forem mantidos.
+- **Bundle:** `npm run build` gera um único `index-*.js` de **678,60 kB** (197,27 kB gzip). Todas as
+  rotas são importadas de forma estática em `routes.tsx`; o `supabase-js` entra pelo `main.tsx`.
+- **Alias `@/`:** existe em `tsconfig.app.json` e `vite.config.ts`, mas não em `tsconfig.json` (raiz
+  só com `references`). A CLI do shadcn lê os aliases do `tsconfig.json` da raiz.
+- **Marca:** a [ADR-004](../decisions/ADR-004-white-label-e-portal-slug.md) exige paleta base neutra
+  ("nenhum tema depende de rosa"), tokens de tenant (`primary`, `secondary`, superfície, raio, fonte)
+  aplicados em `[data-theme-scope="tenant"]` e contraste de 4,5:1 calculado (RN-018). O tema por empresa
+  é a Sprint 3.1; a 1.4 só prepara a estrutura.
+
+## Direção visual (skill `ui-ux-pro-max`)
+
+`--design-system "SaaS beauty salon management dashboard white-label"` sugeriu o estilo **Soft UI
+Evolution** (sombras suaves, profundidade sutil, foco visível, transições de 200 a 300 ms) e
+desaconselhou dark mode para o produto. A paleta e a fonte sugeridas (rosa `#EC4899` com texto preto,
+Playfair Display) **não foram adotadas**: a ADR-004 pede base neutra, e o tema de cada empresa substitui
+o `primary`. Adotado:
+
+- **Estilo:** Soft UI Evolution, densidade média (escala de 8/16/24/32 px), raio médio.
+- **Cores:** base neutra quente (`stone`), primário quase preto e anel de foco azul, como hoje; as
+  páginas usam só tokens semânticos. Contraste conferido por token (alvo 4,5:1 texto, 3:1 bordas de
+  controle e foco).
+- **Tipografia:** Inter variável **auto-hospedada** (sem chamada ao Google Fonts), base 16 px,
+  `line-height` 1,5. Alternativa sem dependência: pilha de fontes do sistema.
+- **Ícones:** Lucide (SVG, `aria-hidden` quando decorativo), nunca emoji.
+- **Dark mode: fora da 1.4.** Motivo: a skill desaconselha para o produto, o tema do tenant (Sprint
+  3.1) vai mexer nas mesmas variáveis e dobraria a matriz de contraste a validar. A camada semântica
+  fica pronta para um `.dark` futuro sem mudar componentes.
+
+## Dependências para autorização
+
+Versão exata, publicadas até 2026-10-09 (14 dias em 2026-10-23), peers conferidos com React 19.3,
+Tailwind 4.3.3 e Zod 4.6.6.
+
+| Pacote                       | Versão | Publicada  | `latest` na data     | Uso / peers                                                       |
+| ---------------------------- | ------ | ---------- | -------------------- | ----------------------------------------------------------------- |
+| `radix-ui`                   | 1.7.0  | 2026-10-05 | 1.8.1 (10-12, nova)  | primitivos (Dialog, DropdownMenu, Label, Slot…); peer `react ^19` |
+| `class-variance-authority`   | 0.7.1  | 2024-11-26 | 0.7.1                | variantes dos componentes                                         |
+| `clsx`                       | 2.1.1  | 2024-04-23 | 2.1.1                | junção de classes (`cn`)                                          |
+| `tailwind-merge`             | 3.7.0  | 2026-09-12 | 3.7.0                | `cn` sem conflito de classes (v3 = Tailwind 4)                    |
+| `lucide-react`               | 1.54.0 | 2026-10-09 | 1.61.0 (10-21, nova) | ícones; peer `react ^19`                                          |
+| `tw-animate-css` (dev)       | 1.4.0  | 2025-09-24 | 1.4.0                | animações dos componentes shadcn (CSS)                            |
+| `@fontsource-variable/inter` | 5.3.0  | 2026-07-19 | 5.3.0                | fonte auto-hospedada (opcional, decisão 3)                        |
+| `shadcn` (CLI, via `npx`)    | 4.21.4 | 2026-10-07 | 4.22.1 (10-18, nova) | só gera código; **não** entra no `package.json`                   |
+
+Ficam fora: `react-hook-form` 7.89.0 e `@hookform/resolvers` 5.9.1 (os formulários atuais funcionam;
+entram quando o primeiro CRUD da Fase 2 precisar) e o Radix Select (o select nativo é mais acessível no
+celular e já atende).
+
+## Configuração para autorização
+
+- **`components.json`** novo (shadcn): estilo `new-york`, base Radix, `tsx: true`, `rsc: false`,
+  CSS em `src/styles/index.css`, aliases `@/components/ui`, `@/lib/utils`, ícones `lucide`.
+- **`tsconfig.json` (raiz):** acrescentar só `compilerOptions.paths` `@/*` (o mesmo do
+  `tsconfig.app.json`), porque a CLI do shadcn resolve os aliases por ele. Se a CLI funcionar sem isso,
+  o arquivo não muda. Alternativa sem tocar em configuração: copiar o código dos componentes do
+  shadcn à mão (licença MIT), sem `components.json`.
+- **`vite.config.ts`:** **não** muda no plano. Só se, depois das rotas preguiçosas, o chunk de entrada
+  continuar acima de 500 kB; aí peço autorização para separar o `supabase-js` num chunk de fornecedor
+  (`build.rolldownOptions.output`). Subir o `chunkSizeWarningLimit` não é opção.
+- `eslint.config.js` não muda. Se o código gerado pelo shadcn falhar no lint type-checked, ajusto o
+  código, não a regra.
+
+## Passos
+
+| #   | Passo                                                                      | Status    |
+| --- | -------------------------------------------------------------------------- | --------- |
+| 1   | Plano (este documento) e OK do usuário                                     | concluído |
+| 2   | Dependências, `components.json`, `cn` e tokens (3 camadas)                 | pendente  |
+| 3   | Componentes base em `src/components/ui/` e migração das telas              | pendente  |
+| 4   | App shell em `/app/*`                                                      | pendente  |
+| 5   | Divisão de código por rota                                                 | pendente  |
+| 6   | Verificação (testes, navegador 375 px e desktop, checklist) e encerramento | pendente  |
+
+### Passo 2 — Fundação
+
+- Instalar as dependências autorizadas com `--save-exact`; `npx shadcn@4.21.4 init` (ou cópia manual).
+- `src/lib/utils.ts` com `cn()` e teste.
+- `src/styles/index.css` em três camadas:
+  - **primitivos** (`--lb-stone-50…950`, `--lb-blue-700`, `--lb-red-700`, `--lb-green-800`, raios,
+    sombras, duração) em OKLCH;
+  - **semânticos** com os nomes do shadcn (`--background`, `--foreground`, `--card`, `--primary`,
+    `--primary-foreground`, `--muted-foreground`, `--border`, `--input`, `--ring`, `--destructive`,
+    `--success`) expostos ao Tailwind por `@theme inline`, mais o escopo `[data-theme-scope="tenant"]`
+    vazio, já documentado para a Sprint 3.1;
+  - **componente** (`--control-height: 2.75rem`, `--radius-control`, `--focus-ring-width`…).
+- Os nomes provisórios (`ink`, `canvas`, `action`…) somem; cada um é substituído no mesmo passo.
+- Teste unitário de contraste dos pares de tokens (texto/fundo ≥ 4,5:1, foco/fundo ≥ 3:1), reaproveitável
+  pela RN-018 na Sprint 3.1.
+
+### Passo 3 — Componentes base
+
+Em `src/components/ui/`, a partir do shadcn e ajustados às regras do projeto:
+
+- `button` (variantes `default`, `secondary`, `outline`, `ghost`, `destructive`, `link`; `busy` e
+  `busyLabel` preservados; `min-h-11`), `input`, `label`, `field` (label + dica + erro com
+  `aria-describedby`, substitui `TextField`), `native-select` (substitui `SelectField`), `card`,
+  `alert`, `badge`, `separator`, `dropdown-menu`, `sheet` (gaveta do menu móvel, Dialog do Radix) e
+  `skeleton`.
+- `AuthLayout` e `LoadingScreen` passam a usar `card`; `linkClass` vira a variante `link` do botão ou um
+  componente `TextLink`.
+- Telas migradas sem mudar textos nem nomes acessíveis; os testes de tela existentes continuam verdes
+  sem edição de asserções (se algum precisar mudar, explico o motivo no registro).
+- `src/app/components/` fica só com o que é do app (`SignOutButton`, `TenantChooser`) ou é apagado
+  quando vazio — apagar arquivos provisórios substituídos faz parte deste passo (peço confirmação no OK).
+- Testes de componente (jsdom): erro ligado ao campo, `aria-invalid`, `busy`, foco visível por classe,
+  menu e gaveta abrem e fecham por teclado (Esc devolve o foco).
+
+### Passo 4 — App shell
+
+- Rota de layout em `/app` (`RequireSession` → `RequireTenant` → `AppShell` → `Outlet`); `HomePage` e
+  `TeamPage` deixam de chamar `RequireTenant` cada uma.
+- **≥ 1024 px:** barra lateral fixa com o nome da empresa, navegação e, no rodapé, conta + papel +
+  Sair. **< 1024 px:** barra superior com botão "Abrir menu" (44 px, `aria-label`, `aria-expanded`) que
+  abre a gaveta com a mesma navegação.
+- Navegação: "Painel" e, com `members.manage`, "Equipe". Item atual com `aria-current="page"`. Sem itens
+  de módulos que ainda não existem.
+- Empresa ativa: nome e papel por extenso; com mais de uma, "Trocar de empresa" (menu suspenso) que
+  reaproveita o fluxo do `RequireTenant` (RN-025).
+- Link "Pular para o conteúdo", `<header>`, `<nav aria-label="Principal">` e `<main id="conteudo">`;
+  título da aba por página. Sem rolagem horizontal em 375 px.
+- O painel `/app` vira uma página de boas-vindas simples dentro do shell (conta, papel e atalho para a
+  equipe), sem indicadores fictícios.
+- Testes: navegação por papel (recepcionista não vê "Equipe"), `aria-current`, gaveta móvel, troca de
+  empresa e sair.
+
+### Passo 5 — Divisão de código
+
+- `lazy` do React Router nas páginas (`/entrar`, `/cadastro`, `/convite`, `/app/*`, 404), com
+  `HydrateFallback`/carregamento acessível (`role="status"`).
+- Medir o build antes e depois e registrar o tamanho de cada chunk. Meta: nenhum chunk acima de 500 kB
+  sem mexer no limite. Se o chunk de entrada continuar acima (o `supabase-js` é carregado pelo
+  `main.tsx`), parar e pedir autorização para o ajuste no `vite.config.ts` descrito acima.
+
+### Passo 6 — Verificação e encerramento
+
+- `npm run check`, `npm run db:test` e `npm run test:integration` verdes (o banco não muda nesta sprint).
+- Navegador (preview `vite`, Supabase local, dados sintéticos): login, convite, painel e equipe em
+  **375 px** e **1440 px** (mais 768 e 1024 px no shell), teclado de ponta a ponta, foco visível, sem
+  rolagem horizontal; capturas no registro.
+- Checklist `references/pro-rules.md` da skill `ui-ux-pro-max`.
+- `docs/STATE.md`, `CHANGELOG.md`, este registro e `ARCHITECTURE.md` (`src/components/ui/` passa a
+  existir).
+
+## Fora do escopo
+
+- Tema por empresa, upload de logo e cálculo de contraste na interface (Sprint 3.1, ADR-004 e RN-018).
+- Dark mode (justificativa acima).
+- Painel global `/admin/*` (Fase 5) e portal `/{slug}` (Fase 3).
+- `react-hook-form`; formulários seguem como estão até o primeiro CRUD.
+- `vercel.json` com rewrite do SPA: fica para o primeiro deploy (decisão do usuário).
+
+## Decisões do usuário (2026-10-23)
+
+1. Autorizadas as dependências da tabela acima, nas versões exatas listadas.
+2. Autorizado o `components.json` e, se a CLI do shadcn exigir, `compilerOptions.paths` no
+   `tsconfig.json` da raiz.
+3. Fonte: **Inter auto-hospedada** (`@fontsource-variable/inter`).
+4. **Dark mode fora** da Sprint 1.4.
+5. Autorizado apagar os componentes provisórios de `src/app/components/` à medida que forem
+   substituídos.
+
+## Forma de trabalho
+
+Um passo por vez. Cada passo termina com `npm run check` verde, `npm run db:test` verde, commit,
+`docs/STATE.md` e `CHANGELOG.md` atualizados e push da branch. Nenhuma migration nesta sprint.
+
+## Registro
+
+### Passo 1 — Plano (2026-10-23)
+
+- Este documento. Branch criada a partir da `main` em `c90e5cb` (merge do PR #21).
+- Plano aprovado pelo usuário com as cinco decisões acima.

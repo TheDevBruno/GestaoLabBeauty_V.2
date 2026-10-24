@@ -96,8 +96,10 @@ liberação de recursos por plano.
 
 ## Próximo passo
 
-**Merge do PR #21** (`feat/sprint-1.3-aprovacao` → `main`) pelo usuário, com o job `integration` verde. Depois, **Sprint 1.4 — design system
-e app shell**, começando pelo plano (`docs/roadmap/sprint-1.4.md`) e aguardando OK.
+**Sprint 1.4 — design system e app shell** (`feat/sprint-1.4-design-system`, a partir da `main` com o
+PR #21 mesclado). Passo 1 concluído: plano em [sprint-1.4.md](roadmap/sprint-1.4.md) aprovado pelo
+usuário em 2026-10-23 (dependências, `components.json`, Inter auto-hospedada, dark mode fora e remoção
+dos componentes provisórios). Em curso: passo 2 (dependências, `cn` e tokens em três camadas).
 
 Requisito local: Docker em execução e `npm run db:start`. O `.env.local` precisa também de
 `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` (valores em `npx supabase status`) para

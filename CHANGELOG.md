@@ -78,6 +78,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 1.3, aprovação: RN-039 — convite para quem já é membro é recusado na criação (trigger
   `invitations_check_not_member`, 409 `already_member` na API, mensagem na tela; 8 asserções pgTAP e 4
   testes novos); job `integration` no CI (API + Supabase local com `npm run test:integration`).
+- Sprint 1.4, passo 1: plano do design system e do app shell em `docs/roadmap/sprint-1.4.md`
+  (diagnóstico, direção visual, dependências e configuração para autorização).
 
 ### Alterado
 
