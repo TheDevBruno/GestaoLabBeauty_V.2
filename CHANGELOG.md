@@ -87,9 +87,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 1.4, passo 3: componentes base em `src/components/ui/` (`button`, `input`, `label`,
   `native-select`, `field`, `card`, `alert`, `text-link`, `sheet` e `dropdown-menu`) e testes de
   componente.
+- Sprint 1.4, passo 4: app shell em `/app/*` (`src/app/shell/`): navegação lateral a partir de 1024 px
+  e gaveta abaixo, empresa ativa e papel, troca de empresa por menu, conta, sair, link para pular para
+  o conteúdo e `aria-current` no item atual.
 
 ### Alterado
 
+- Sprint 1.4: `/app` virou boas-vindas dentro do shell e "Trocar de empresa" abre um menu com as
+  outras empresas em vez de voltar ao seletor.
 - Sprint 1.4: telas migradas para `src/components/ui/`; `TextField`, `SelectField` e `Button`
   provisórios removidos de `src/app/components/`.
 - Sprint 1.4: tokens provisórios da Sprint 1.3 substituídos pelos do design system; borda dos campos

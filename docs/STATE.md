@@ -103,7 +103,9 @@ dos componentes provisórios). Passo 2 concluído: dependências do design syste
 `cn()`, tokens em três camadas (primitivo, semântico, componente), Inter auto-hospedada e teste de
 contraste dos tokens. Passo 3 concluído: componentes base em `src/components/ui/` (a partir do
 shadcn/ui, ajustados a 44 px, foco sólido e tokens), telas migradas sem mudar os testes de tela e
-provisórios apagados; 308 testes Vitest, pgTAP 1047 PASS. Próximo: passo 4 (app shell em `/app/*`).
+provisórios apagados. Passo 4 concluído: app shell em `/app/*` (navegação lateral a partir de
+1024 px e gaveta abaixo, empresa ativa, troca de empresa por menu, papel, conta e sair); 318 testes
+Vitest, pgTAP 1047 PASS. Próximo: passo 5 (divisão de código por rota; bundle em 808 kB).
 
 Requisito local: Docker em execução e `npm run db:start`. O `.env.local` precisa também de
 `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` (valores em `npx supabase status`) para

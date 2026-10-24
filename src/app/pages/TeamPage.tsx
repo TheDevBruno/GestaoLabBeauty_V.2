@@ -6,12 +6,10 @@ import { memberRoleLabels, memberRoles } from '@/shared/roles';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { InputField, SelectField } from '@/components/ui/field';
-import { TextLink } from '@/components/ui/text-link';
-import { AuthLayout } from '@/app/components/AuthLayout';
 import { type FieldErrors, fieldErrorsFrom, firstInvalidField } from '@/app/forms/field-errors';
 import { focusField } from '@/app/forms/focus-field';
 import { RequirePermission } from '@/app/guards/RequirePermission';
-import { RequireTenant } from '@/app/guards/RequireTenant';
+import { ShellPage } from '@/app/shell/ShellPage';
 import { useInvitationsApi } from '@/app/team/invitations-context';
 import { invitationsQueryKey } from '@/app/team/queries';
 import { useActiveTenant } from '@/app/tenancy/tenancy-context';
@@ -24,11 +22,9 @@ const dateTime = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyl
 // conveniência; quem decide é o banco (RLS e trigger de invitations).
 export function TeamPage() {
   return (
-    <RequireTenant title="Equipe">
-      <RequirePermission permission="members.manage" title="Equipe">
-        <TeamContent />
-      </RequirePermission>
-    </RequireTenant>
+    <RequirePermission permission="members.manage" title="Equipe e convites">
+      <TeamContent />
+    </RequirePermission>
   );
 }
 
@@ -42,22 +38,20 @@ function TeamContent() {
   const { state } = useActiveTenant();
   const [created, setCreated] = useState<CreatedInvitation | null>(null);
   if (state.status !== 'active') return null;
-  const { tenantId, tenantName, role } = state.membership;
+  const { tenantId, role } = state.membership;
 
   return (
-    <AuthLayout title="Equipe e convites" wide>
+    <ShellPage title="Equipe e convites">
+      {/* O nome da empresa já está na navegação do shell. */}
       <p className="text-base text-foreground">
-        Convide pessoas para <strong>{tenantName}</strong>. O convite vale por 7 dias e só pode ser
-        aceito pela conta com o e-mail convidado.
+        Convide pessoas para esta empresa. O convite vale por 7 dias e só pode ser aceito pela conta
+        com o e-mail convidado.
       </p>
       <InviteForm tenantId={tenantId} isOwner={role === 'owner'} onCreated={setCreated} />
       {/* key: cada convite novo remonta o aviso (foco no título e status da cópia zerado). */}
       {created ? <CreatedInvitationPanel key={created.link} invitation={created} /> : null}
       <PendingInvitations tenantId={tenantId} isOwner={role === 'owner'} />
-      <p className="mt-8 text-base">
-        <TextLink to="/app">Voltar ao painel</TextLink>
-      </p>
-    </AuthLayout>
+    </ShellPage>
   );
 }
 

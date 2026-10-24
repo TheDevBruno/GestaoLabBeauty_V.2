@@ -93,7 +93,7 @@ celular e já atende).
 | 1   | Plano (este documento) e OK do usuário                                     | concluído |
 | 2   | Dependências, `components.json`, `cn` e tokens (3 camadas)                 | concluído |
 | 3   | Componentes base em `src/components/ui/` e migração das telas              | concluído |
-| 4   | App shell em `/app/*`                                                      | pendente  |
+| 4   | App shell em `/app/*`                                                      | concluído |
 | 5   | Divisão de código por rota                                                 | pendente  |
 | 6   | Verificação (testes, navegador 375 px e desktop, checklist) e encerramento | pendente  |
 
@@ -293,3 +293,56 @@ horizontal, nenhum controle abaixo de 44 px, select com 16 px; envio vazio foca 
 ligado; convite criado (foco em "Convite criado", link em campo somente leitura) e revogado pela tela
 com o aviso de status; `/entrar` e `/app` sem rolagem na largura do painel. O bundle foi a 716,54 kB
 (Radix e Lucide); o passo 5 divide por rota.
+
+### Passo 4 — App shell (2026-10-24)
+
+Sem dependência nova nem mudança de configuração.
+
+Entregue em `src/app/shell/`:
+
+- `AppShell`: rota de layout de `/app/*` (`RequireSession` → `RequireTenant` → `AppShell` → `Outlet`).
+  A partir de 1024 px, navegação lateral fixa (`<aside>`, com rolagem própria); abaixo disso, barra
+  superior (`<header>`) com o nome da empresa e o botão "Abrir menu" (44 px, `aria-label`,
+  `aria-expanded` do Radix), que abre a mesma navegação numa gaveta (`Sheet`, foco preso, Esc e
+  "Fechar" devolvem o foco; escolher um item fecha a gaveta).
+- Só uma das duas navegações existe no DOM por vez (`useMediaQuery`, sobre `matchMedia`), para o leitor
+  de tela e os testes não encontrarem a navegação duplicada. Sem `matchMedia` (jsdom), vale a lateral.
+- Conteúdo da navegação: marca, empresa ativa e papel por extenso; com mais de uma empresa, "Trocar de
+  empresa" abre um menu suspenso só com as **outras** empresas das memberships do usuário (RN-025); a
+  escolha vira a última usada e leva ao painel dela. `<nav aria-label="Principal">` com "Painel" e, com
+  `members.manage`, "Equipe e convites" (`NavLink`, `aria-current="page"` no item atual, ícones Lucide
+  decorativos). Rodapé com o e-mail da conta e "Sair".
+- Link "Pular para o conteúdo" (visível no foco) e um único `<main id="conteudo">`.
+- `ShellPage`: moldura das páginas do shell (título da aba e um único `h1`), alinhada à esquerda.
+- `use-media-query.ts`: `useSyncExternalStore` sobre `matchMedia`, tolerante ao jsdom, que declara
+  `matchMedia` sem implementá-la.
+
+Telas:
+
+- `/app` virou boas-vindas simples dentro do shell, sem indicadores fictícios. Empresa, papel, conta,
+  sair e o link da equipe ficam na navegação.
+- `/app/equipe` usa `ShellPage`; o texto inicial deixou de repetir o nome da empresa (já está na
+  navegação) e o link "Voltar ao painel" saiu (o item "Painel" faz isso).
+- `RequirePermission` usa `ShellPage` nos estados "Carregando…" e "Acesso não permitido".
+- `HomePage` e `TeamPage` não chamam mais `RequireTenant`; a rota de layout chama uma vez.
+
+Testes:
+
+- Um teste de tela mudou, por mudança de comportamento prevista no plano: em `tenancy-pages.test.tsx`
+  ("várias sem preferência"), "Trocar de empresa" agora abre o menu com as outras empresas em vez de
+  voltar ao seletor. O teste passou a escolher "Studio Ana" no menu e conferir a empresa e a preferência
+  guardada. Os demais testes de tela continuaram verdes sem edição.
+- `src/app/testing/render-app.tsx` substitui `ResizeObserver` e a captura de ponteiro no jsdom, que o
+  menu do Radix usa, para todos os testes de tela.
+- `src/app/shell/app-shell.test.tsx` (10 testes): navegação e item atual, papéis sem `members.manage`
+  veem só "Painel", um único `main`, título da aba, link para pular, troca de empresa levando ao painel
+  da escolhida, barra e gaveta no celular (abrir, navegar fechando a gaveta, Esc devolvendo o foco).
+- Prova de detecção: tirar o `end` do item "Painel" (que passaria a ficar marcado em `/app/equipe`) fez
+  falhar o teste do item atual.
+
+Verificação: `npm run check` verde (318 testes Vitest; 8 de integração ignorados), `npm run db:test`
+1047 PASS. Navegador com o Supabase local e o owner do seed: 1440 e 1024 px com a lateral, item atual
+marcado, um único `main`, nenhum controle abaixo de 44 px e sem rolagem horizontal; 768 e 375 px com a
+barra superior (botão do menu com 44 × 44 px), gaveta de 319 px em 375 px com o foco dentro, todos os
+controles com 44 px e sem rolagem horizontal. O bundle foi a 808 kB (posicionamento do menu do Radix);
+o passo 5 divide por rota.

@@ -64,9 +64,14 @@ describe('Empresa ativa (RN-025)', () => {
     expect(await screen.findByRole('heading', { name: 'Clínica Bela' })).toBeTruthy();
     expect(window.localStorage.getItem(PREF_KEY)).toBe('tenant-B');
 
+    // Sprint 1.4: a troca é um menu no app shell com as outras empresas, sem passar pelo seletor.
     await user.click(screen.getByRole('button', { name: 'Trocar de empresa' }));
-    expect(await screen.findByRole('heading', { name: 'Escolha a empresa' })).toBeTruthy();
-    expect(window.localStorage.getItem(PREF_KEY)).toBeNull();
+    const menu = await screen.findByRole('menu');
+    const items = within(menu).getAllByRole('menuitem');
+    expect(items.map((item) => item.textContent)).toEqual(['Studio AnaProprietário(a)']);
+    await user.click(within(menu).getByRole('menuitem', { name: /Studio Ana/ }));
+    expect(await screen.findByRole('heading', { name: 'Studio Ana' })).toBeTruthy();
+    expect(window.localStorage.getItem(PREF_KEY)).toBe('tenant-A');
   });
 
   it('várias com preferência válida: abre a última usada', async () => {
