@@ -47,7 +47,8 @@ liberação de recursos por plano.
   Plano e registro em [sprint-1.2.md](roadmap/sprint-1.2.md).
 
 - **Sprint 1.3 (auth, convites e guards) concluída e aprovada pelo usuário** em 2026-10-23 (ponto de
-  aprovação obrigatória), branch `feat/sprint-1.3-auth`, PR #20 (merge com o usuário). Na aprovação:
+  aprovação obrigatória), PR #20 (`feat/sprint-1.3-auth`) já na `main`; as correções da aprovação estão no PR #21
+  (`feat/sprint-1.3-aprovacao`, merge com o usuário). Na aprovação:
   RN-038 confirmada; RN-039 (não convidar quem já é membro, checado na criação); `zod` 4.6.6 (exceção à
   ADR-001 por segurança, autorizada); Supabase CLI 2.120.0; job `integration` no CI; pgTAP 1047 PASS,
   264 testes Vitest e 8 de integração. Detalhes em
@@ -95,7 +96,7 @@ liberação de recursos por plano.
 
 ## Próximo passo
 
-**Merge do PR #20** (`feat/sprint-1.3-auth` → `main`) pelo usuário. Depois, **Sprint 1.4 — design system
+**Merge do PR #21** (`feat/sprint-1.3-aprovacao` → `main`) pelo usuário, com o job `integration` verde. Depois, **Sprint 1.4 — design system
 e app shell**, começando pelo plano (`docs/roadmap/sprint-1.4.md`) e aguardando OK.
 
 Requisito local: Docker em execução e `npm run db:start`. O `.env.local` precisa também de

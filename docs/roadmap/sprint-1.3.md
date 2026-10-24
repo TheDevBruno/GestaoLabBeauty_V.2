@@ -359,10 +359,11 @@ o `db:reset` restaurou.
 
 Verificação: `npm run check` (264 testes + 8 de integração ignorados), `db:reset` + `db:test`
 (`Files=13, Tests=1047`, `Result: PASS`), `npm run test:integration` (8 passed), `npm audit` sem
-vulnerabilidades. O job `integration` roda pela primeira vez no PR #20.
+vulnerabilidades. O job `integration` roda pela primeira vez no PR #21.
 
-Com as decisões aplicadas, o usuário considera a **Sprint 1.3 concluída e aprovada**. O merge do PR #20
-na `main` fica com o usuário.
+Com as decisões aplicadas, o usuário considera a **Sprint 1.3 concluída e aprovada**. O PR #20 foi
+mesclado na `main` antes destas correções; elas seguem no PR #21 (`feat/sprint-1.3-aprovacao`), cujo
+merge fica com o usuário.
 
 Pendências que seguem: bundle (Sprint 1.4), `vercel.json` (primeiro deploy), prova de detecção no CI do
 job `database` (só local), Supabase CLI 2.121.0+ quando entrar na janela e PRs do Dependabot.
