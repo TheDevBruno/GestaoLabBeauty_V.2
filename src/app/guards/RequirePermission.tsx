@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router';
-import { AuthLayout, linkClass } from '@/app/components/AuthLayout';
+import { TextLink } from '@/components/ui/text-link';
+import { AuthLayout } from '@/app/components/AuthLayout';
 import { LoadingScreen } from '@/app/components/LoadingScreen';
 import { usePermission } from '@/app/tenancy/usePermission';
 
@@ -24,9 +24,7 @@ export function RequirePermission({
           Seu papel nesta empresa não permite abrir esta página.
         </p>
         <p className="mt-6 text-base">
-          <Link to="/app" className={linkClass}>
-            Voltar ao painel
-          </Link>
+          <TextLink to="/app">Voltar ao painel</TextLink>
         </p>
       </AuthLayout>
     );

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
 import { AuthLayout } from '@/app/components/AuthLayout';
-import { Button } from '@/app/components/Button';
 import { LoadingScreen } from '@/app/components/LoadingScreen';
 import { SignOutButton } from '@/app/components/SignOutButton';
 import { TenantChooser } from '@/app/components/TenantChooser';

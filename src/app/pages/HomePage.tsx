@@ -1,7 +1,7 @@
-import { Link } from 'react-router';
 import { memberRoleLabels } from '@/shared/roles';
-import { AuthLayout, linkClass } from '@/app/components/AuthLayout';
-import { Button } from '@/app/components/Button';
+import { Button } from '@/components/ui/button';
+import { TextLink } from '@/components/ui/text-link';
+import { AuthLayout } from '@/app/components/AuthLayout';
 import { SignOutButton } from '@/app/components/SignOutButton';
 import { useAuth } from '@/app/auth/auth-context';
 import { RequireTenant } from '@/app/guards/RequireTenant';
@@ -34,14 +34,12 @@ function ActiveTenantSummary() {
       </dl>
       {canManageMembers ? (
         <p className="mt-6 text-base">
-          <Link to="/app/equipe" className={linkClass}>
-            Equipe e convites
-          </Link>
+          <TextLink to="/app/equipe">Equipe e convites</TextLink>
         </p>
       ) : null}
       <div className="mt-6 flex flex-col gap-3">
         {memberships.length > 1 ? (
-          <Button variant="secondary" onClick={change}>
+          <Button variant="outline" onClick={change}>
             Trocar de empresa
           </Button>
         ) : null}

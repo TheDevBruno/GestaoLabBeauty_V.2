@@ -92,7 +92,7 @@ celular e já atende).
 | --- | -------------------------------------------------------------------------- | --------- |
 | 1   | Plano (este documento) e OK do usuário                                     | concluído |
 | 2   | Dependências, `components.json`, `cn` e tokens (3 camadas)                 | concluído |
-| 3   | Componentes base em `src/components/ui/` e migração das telas              | pendente  |
+| 3   | Componentes base em `src/components/ui/` e migração das telas              | concluído |
 | 4   | App shell em `/app/*`                                                      | pendente  |
 | 5   | Divisão de código por rota                                                 | pendente  |
 | 6   | Verificação (testes, navegador 375 px e desktop, checklist) e encerramento | pendente  |
@@ -240,3 +240,56 @@ Verificação: `npm run check` verde (294 testes Vitest; 8 de integração ignor
 1047 PASS. Navegador (`/entrar`): Inter carregada, cores dos tokens aplicadas, campos e botão com 44 px,
 anel de foco azul de 3 px, sem rolagem horizontal em 375 px. O bundle segue em 679 kB (passo 5). A
 fonte gera um `woff2` por subconjunto, e o navegador baixa só os que a página usa (`unicode-range`).
+
+### Passo 3 — Componentes base (2026-10-24)
+
+Sem dependência nova nem mudança de configuração.
+
+Como os componentes foram gerados: `npx shadcn@4.21.4 add … --dry-run --view` para obter o código do
+registro `new-york`. Os arquivos foram escritos a partir dele, sem rodar o `add` de fato, porque o
+comando instalaria `radix-ui` sem versão fixa (`npm install radix-ui`). O código foi ajustado às regras do
+projeto: alvo de 44 px (`min-h-control`), texto de 16 px também em telas largas (o shadcn usa
+`md:text-sm`), anel de foco sólido de 3 px (`ring-3 ring-ring`; o `ring-ring/50` do shadcn fica abaixo de
+3:1), só tokens (o `text-white` do `destructive` virou `text-destructive-foreground`), rótulos em pt-BR
+("Fechar") e sem as classes `dark:`.
+
+Entregue em `src/components/ui/`:
+
+- `button` (variantes `default`, `outline`, `secondary`, `ghost`, `destructive`, `link`; tamanhos
+  `default` e `icon`; `asChild` para links com aparência de botão; `busy`/`busyLabel` preservados; `type`
+  padrão `button`).
+- `input`, `label` (Radix), `native-select` (select nativo com ícone decorativo) e `field` (`Field`,
+  `FieldDescription`, `FieldError` e os campos prontos `InputField` e `SelectField`, que substituem
+  `TextField` e `SelectField` com as mesmas regras: label visível, dica e erro por `aria-describedby`,
+  `aria-invalid`, erro logo abaixo do controle e sem `role="alert"` no erro de campo).
+- `card`, `alert` (`role="alert"` por padrão; variantes `destructive` e `success`), `text-link`
+  (substitui o `linkClass`), `sheet` (Dialog do Radix, para o menu móvel do passo 4) e `dropdown-menu`
+  (itens de 44 px, para a troca de empresa do passo 4).
+- Ficaram de fora `badge`, `separator` e `skeleton`: nenhuma tela usa. Entram quando forem necessários.
+
+Migração:
+
+- `AuthLayout` passou a usar `Card`; `LoadingScreen` segue sobre ele.
+- Todas as telas trocaram `TextField`/`SelectField`/`Button`/`linkClass` pelos novos componentes. O
+  botão `secondary` provisório virou a variante `outline` (mesma aparência: borda e fundo do cartão).
+  Os erros de formulário (`formError`, `revokeError`) usam `Alert`. Os dois links com aparência de botão
+  do `/convite` usam `Button asChild`.
+- Apagados `src/app/components/Button.tsx`, `TextField.tsx` e `SelectField.tsx` (autorizado). Ficam em
+  `src/app/components/` só os componentes do app: `AuthLayout`, `LoadingScreen`, `SignOutButton` e
+  `TenantChooser`.
+- Textos e nomes acessíveis não mudaram. Os testes de tela passaram **sem editar nenhuma asserção**.
+
+Testes: `src/components/ui/ui.test.tsx` (jsdom, 14 testes): label, dica e erro ligados ao campo;
+`aria-invalid`; erro logo após o controle e sem alerta; 44 px e foco; opções e erro do select; `type`
+padrão; `busy`; `asChild` em link; `TextLink`; `Alert` com `role` sobrescrito; gaveta com nome, foco
+preso, Esc e "Fechar" devolvendo o foco; menu aberto pelo teclado, setas, Enter e Esc devolvendo o foco.
+O jsdom não tem `ResizeObserver` nem captura de ponteiro; o teste os substitui só no próprio arquivo.
+Prova de detecção: tirar o `aria-describedby` do `InputField` fez falhar 3 testes (1 de componente e 2
+de tela).
+
+Verificação: `npm run check` verde (308 testes Vitest; 8 de integração ignorados), `npm run db:test`
+1047 PASS. Navegador com o Supabase local e o owner do seed: em 375 px, `/app/equipe` sem rolagem
+horizontal, nenhum controle abaixo de 44 px, select com 16 px; envio vazio foca o e-mail com o erro
+ligado; convite criado (foco em "Convite criado", link em campo somente leitura) e revogado pela tela
+com o aviso de status; `/entrar` e `/app` sem rolagem na largura do painel. O bundle foi a 716,54 kB
+(Radix e Lucide); o passo 5 divide por rota.

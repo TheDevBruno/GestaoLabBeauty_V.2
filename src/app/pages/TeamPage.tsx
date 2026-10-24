@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type SubmitEvent, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router';
 import type { PendingInvitation } from '@/lib/invitations-api';
 import { createInvitationSchema } from '@/shared/invitation';
 import { memberRoleLabels, memberRoles } from '@/shared/roles';
-import { AuthLayout, linkClass } from '@/app/components/AuthLayout';
-import { Button } from '@/app/components/Button';
-import { SelectField } from '@/app/components/SelectField';
-import { TextField } from '@/app/components/TextField';
+import { Alert } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { InputField, SelectField } from '@/components/ui/field';
+import { TextLink } from '@/components/ui/text-link';
+import { AuthLayout } from '@/app/components/AuthLayout';
 import { type FieldErrors, fieldErrorsFrom, firstInvalidField } from '@/app/forms/field-errors';
 import { focusField } from '@/app/forms/focus-field';
 import { RequirePermission } from '@/app/guards/RequirePermission';
@@ -55,9 +55,7 @@ function TeamContent() {
       {created ? <CreatedInvitationPanel key={created.link} invitation={created} /> : null}
       <PendingInvitations tenantId={tenantId} isOwner={role === 'owner'} />
       <p className="mt-8 text-base">
-        <Link to="/app" className={linkClass}>
-          Voltar ao painel
-        </Link>
+        <TextLink to="/app">Voltar ao painel</TextLink>
       </p>
     </AuthLayout>
   );
@@ -132,7 +130,7 @@ function InviteForm({
           void handleSubmit(event);
         }}
       >
-        <TextField
+        <InputField
           name="email"
           label="E-mail da pessoa"
           type="email"
@@ -148,11 +146,7 @@ function InviteForm({
           defaultValue="receptionist"
           error={errors.role}
         />
-        {formError ? (
-          <p role="alert" className="text-sm font-medium text-destructive">
-            {formError}
-          </p>
-        ) : null}
+        {formError ? <Alert variant="destructive">{formError}</Alert> : null}
         <Button type="submit" busy={busy} busyLabel="Criando convite…">
           Criar convite
         </Button>
@@ -195,7 +189,7 @@ function CreatedInvitationPanel({ invitation }: { invitation: CreatedInvitation 
         antes de sair desta tela.
       </p>
       <div className="mt-4 flex flex-col gap-3">
-        <TextField
+        <InputField
           name="invitationLink"
           label="Link do convite"
           readOnly
@@ -205,7 +199,7 @@ function CreatedInvitationPanel({ invitation }: { invitation: CreatedInvitation 
           }}
         />
         <Button
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             void copy();
           }}
@@ -251,11 +245,7 @@ function PendingInvitations({ tenantId, isOwner }: { tenantId: string; isOwner: 
       <p role="status" className="mt-2 min-h-6 text-sm text-foreground">
         {status}
       </p>
-      {revokeError ? (
-        <p role="alert" className="text-sm font-medium text-destructive">
-          {revokeError}
-        </p>
-      ) : null}
+      {revokeError ? <Alert variant="destructive">{revokeError}</Alert> : null}
       {query.isPending ? (
         <p className="mt-2 text-base text-muted-foreground" aria-busy="true">
           Carregando convites…
@@ -266,7 +256,7 @@ function PendingInvitations({ tenantId, isOwner }: { tenantId: string; isOwner: 
             Não foi possível carregar os convites.
           </p>
           <Button
-            variant="secondary"
+            variant="outline"
             onClick={() => {
               void query.refetch();
             }}
@@ -350,13 +340,13 @@ function PendingInvitationItem({
           <Button busy={busy} busyLabel="Revogando…" onClick={onConfirm}>
             Confirmar revogação
           </Button>
-          <Button variant="secondary" onClick={onCancel} disabled={busy}>
+          <Button variant="outline" onClick={onCancel} disabled={busy}>
             Cancelar
           </Button>
         </div>
       ) : canRevoke ? (
         <Button
-          variant="secondary"
+          variant="outline"
           className="self-start"
           aria-label={`Revogar convite de ${invitation.email}`}
           onClick={onAsk}

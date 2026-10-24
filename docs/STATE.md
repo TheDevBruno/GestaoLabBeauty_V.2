@@ -101,8 +101,9 @@ PR #21 mesclado). Passo 1 concluído: plano em [sprint-1.4.md](roadmap/sprint-1.
 usuário em 2026-10-23 (dependências, `components.json`, Inter auto-hospedada, dark mode fora e remoção
 dos componentes provisórios). Passo 2 concluído: dependências do design system, `components.json`,
 `cn()`, tokens em três camadas (primitivo, semântico, componente), Inter auto-hospedada e teste de
-contraste dos tokens; 294 testes Vitest, pgTAP 1047 PASS. Próximo: passo 3 (componentes base em
-`src/components/ui/` e migração das telas).
+contraste dos tokens. Passo 3 concluído: componentes base em `src/components/ui/` (a partir do
+shadcn/ui, ajustados a 44 px, foco sólido e tokens), telas migradas sem mudar os testes de tela e
+provisórios apagados; 308 testes Vitest, pgTAP 1047 PASS. Próximo: passo 4 (app shell em `/app/*`).
 
 Requisito local: Docker em execução e `npm run db:start`. O `.env.local` precisa também de
 `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` (valores em `npx supabase status`) para

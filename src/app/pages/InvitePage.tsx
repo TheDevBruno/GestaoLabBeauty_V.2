@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
+import { Button } from '@/components/ui/button';
+import { TextLink } from '@/components/ui/text-link';
 import { useAuth } from '@/app/auth/auth-context';
 import { createTokenStore, tokenFromHash } from '@/app/auth/invite-token';
 import { loginPath, signupPath } from '@/app/auth/redirect';
-import { AuthLayout, linkClass } from '@/app/components/AuthLayout';
-import { Button } from '@/app/components/Button';
+import { AuthLayout } from '@/app/components/AuthLayout';
 
 const INVITE_PATH = '/convite';
 
@@ -74,9 +75,7 @@ export function InvitePage() {
           Pronto! Você agora faz parte da empresa.
         </p>
         <p className="mt-6 text-base">
-          <Link to="/app" className={linkClass}>
-            Ir para o painel
-          </Link>
+          <TextLink to="/app">Ir para o painel</TextLink>
         </p>
       </AuthLayout>
     );
@@ -100,18 +99,12 @@ export function InvitePage() {
           mesmo e-mail que recebeu o convite.
         </p>
         <div className="mt-6 flex flex-col gap-3">
-          <Link
-            to={loginPath(INVITE_PATH)}
-            className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 text-base font-medium text-primary-foreground outline-none hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            Entrar
-          </Link>
-          <Link
-            to={signupPath(INVITE_PATH)}
-            className="inline-flex min-h-11 items-center justify-center rounded-md border border-input bg-card px-4 text-base font-medium text-foreground outline-none hover:bg-background focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            Criar conta
-          </Link>
+          <Button asChild>
+            <Link to={loginPath(INVITE_PATH)}>Entrar</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to={signupPath(INVITE_PATH)}>Criar conta</Link>
+          </Button>
         </div>
       </AuthLayout>
     );
@@ -141,7 +134,7 @@ export function InvitePage() {
           </Button>
         ) : null}
         <Button
-          variant="secondary"
+          variant="outline"
           disabled={busy}
           onClick={() => {
             void switchAccount();

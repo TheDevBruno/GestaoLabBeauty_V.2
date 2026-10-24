@@ -84,9 +84,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   `tailwind-merge`, `lucide-react`, `@fontsource-variable/inter`, `tw-animate-css`), `components.json`,
   `cn()`, tokens em três camadas em `src/styles/index.css`, Inter auto-hospedada,
   `src/shared/color-contrast.ts` e teste de contraste dos tokens.
+- Sprint 1.4, passo 3: componentes base em `src/components/ui/` (`button`, `input`, `label`,
+  `native-select`, `field`, `card`, `alert`, `text-link`, `sheet` e `dropdown-menu`) e testes de
+  componente.
 
 ### Alterado
 
+- Sprint 1.4: telas migradas para `src/components/ui/`; `TextField`, `SelectField` e `Button`
+  provisórios removidos de `src/app/components/`.
 - Sprint 1.4: tokens provisórios da Sprint 1.3 substituídos pelos do design system; borda dos campos
   de `stone-400` para `stone-500` (contraste de 3:1).
 - `vite` 8.3.2 → 8.3.4 (autorizado pelo usuário), que corrige a vulnerabilidade alta apontada pelo
