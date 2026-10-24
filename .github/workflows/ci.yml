@@ -60,3 +60,44 @@ jobs:
       - name: Para o Supabase local
         if: always()
         run: npx supabase stop --no-backup
+
+  integration:
+    name: 'Integração: API e Supabase'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # A API precisa de Auth (gotrue), PostgREST e do gateway (kong) além do Postgres.
+      - name: Sobe o Supabase local (banco, Auth e API)
+        run: >-
+          npx supabase start -x
+          realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+
+      # Reset aplica migrations e o seed sintético, de que a integração depende.
+      - run: npx supabase db reset
+
+      # Chaves do Supabase efêmero deste job (não são segredos de nenhum ambiente real). A service role
+      # fica mascarada no log e só existe como variável do processo de teste, sem prefixo VITE_.
+      - name: Variáveis do servidor
+        run: |
+          eval "$(npx supabase status -o env)"
+          echo "::add-mask::$SERVICE_ROLE_KEY"
+          {
+            echo "SUPABASE_URL=$API_URL"
+            echo "SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+          } >> "$GITHUB_ENV"
+
+      - run: npm run test:integration
+
+      - name: Para o Supabase local
+        if: always()
+        run: npx supabase stop --no-backup
