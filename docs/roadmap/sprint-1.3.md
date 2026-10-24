@@ -21,6 +21,9 @@ O fim da sprint é ponto de aprovação obrigatória.
   `vite.config.ts` e `eslint.config.js` que forem necessários.
 - Senha: mantém o **mínimo de 6** do Supabase local e a confirmação de e-mail como está (desligada
   localmente).
+- Passo 4: link do convite com o token no **fragmento** (`/convite#<token>`), que não vai ao servidor;
+  **cadastro aberto** a qualquer pessoa (a conta nasce sem empresa); dependências de teste de interface
+  autorizadas (`jsdom`, `@testing-library/*`).
 
 ## Fora do escopo
 
@@ -42,7 +45,7 @@ Um passo por vez. Cada passo termina com `npm run check` verde, `npm run db:test
 | 1   | Plano e regras (RN-026, RN-038)            | concluído |
 | 2   | Banco: perfil automático e `invitations`   | concluído |
 | 3   | Base do frontend (`src/lib`, `src/shared`) | concluído |
-| 4   | Auth e rotas                               | pendente  |
+| 4   | Auth e rotas                               | concluído |
 | 5   | Guards (sessão, empresa ativa, permissão)  | pendente  |
 | 6   | API de convites (`server/`, Hono)          | pendente  |
 | 7   | Testes                                     | pendente  |
@@ -111,3 +114,43 @@ Observação: `npm audit` aponta 1 vulnerabilidade alta no `vite@8.3.2` (servido
 instalado na Sprint 1.1 e sem relação com este passo. Fica como pendência para decisão do usuário
 (o `npm audit` atinge só o `vite` 8.3.0 a 8.3.2; o `vite@8.3.4`, de 2026-10-08, está dentro da política de
 14 dias, e o `8.3.5`, de 2026-10-21, ainda não).
+
+### Passo 4 — Auth e rotas (2026-10-23)
+
+Dependências de desenvolvimento (versão exata, publicadas até 2026-10-09; peers conferidos):
+`jsdom` 30.1.2 (a 30.1.3 é nova), `@testing-library/react` 16.3.3, `@testing-library/dom` 10.4.2 e
+`@testing-library/user-event` 14.6.7 (a 14.6.8 é nova). O ambiente jsdom é ligado por arquivo
+(`// @vitest-environment jsdom`); `vite.config.ts` e `eslint.config.js` não mudaram.
+
+Entregue:
+
+- `src/lib/auth-api.ts`: contrato `AuthApi` (sessão, login, cadastro, saída, aceite do convite) e a
+  implementação com `supabase-js`. As telas só conhecem o contrato, o que permite testá-las sem Supabase.
+  `src/lib/auth-errors.ts`: mensagens em pt-BR por código do Auth e por SQLSTATE da RPC; a mensagem crua
+  do servidor nunca chega à tela.
+- `src/app/auth/`: `AuthProvider` (sessão via `getSession` + `onAuthStateChange`), `useAuth`,
+  `safeNextPath` (só caminhos internos em `?next=`, sem open redirect) e o token do convite (lido do
+  fragmento, guardado na `sessionStorage`, retirado da URL).
+- Rotas (`src/app/routes.tsx`, `react-router`): `/` → `/app`; `/entrar`; `/cadastro`; `/convite` (aceite
+  por clique, nunca automático; "Entrar com outra conta"); `/app` (painel provisório: e-mail e Sair; sem
+  sessão manda para `/entrar?next=/app`); página "não encontrada". Todos os segmentos estão na lista de
+  slugs reservados (RN-017).
+- Componentes provisórios em `src/app/components/` (campo, botão, moldura) com label visível, erro junto
+  ao campo via `aria-describedby`, `aria-invalid`, foco no primeiro campo inválido, `role="alert"` no
+  erro do servidor, alvos de 44 px, foco visível, `autocomplete` correto e colar senha permitido.
+- Tokens semânticos provisórios em `src/styles/index.css` (`@theme`) e respeito a
+  `prefers-reduced-motion`. O design system é a Sprint 1.4.
+- 77 testes Vitest novos (169 no total), incluindo telas em jsdom. Prova de detecção: tirar a limpeza do
+  token após o aceite fez o teste correspondente falhar.
+
+Verificação manual no navegador, com o Supabase local completo (Auth ligado) e dados sintéticos:
+senha errada → "E-mail ou senha incorretos."; login com usuário do seed → `/app`; convite criado no banco
+local (simulando a API do passo 6) → `/convite#<token>` limpa a URL e guarda o token → cadastro com o
+e-mail convidado → volta ao convite → aceite → membership `receptionist` criada e token apagado. Em 375 px,
+sem rolagem horizontal e com alvos de 44 px.
+
+Observações:
+
+- O bundle passou a 646 kB (188 kB gzip), acima do aviso de 500 kB do Vite, por causa do `supabase-js`.
+  Divisão de código por rota fica para a Sprint 1.4.
+- A lista de memberships e o aviso "sem empresa" no `/app` ficam no passo 5 (empresa ativa).

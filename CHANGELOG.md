@@ -54,6 +54,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 1.3, passo 3: `@supabase/supabase-js` 2.117.3 e `@tanstack/react-query` 5.104.1; `src/lib`
   (cliente Supabase com chave anônima, `QueryClient`, validação das variáveis `VITE_`), schemas Zod de
   login, cadastro e convite em `src/shared`, `.env.example` e 42 testes Vitest novos (92 no total).
+- Sprint 1.3, passo 4: rotas com `react-router` (`/entrar`, `/cadastro`, `/convite`, `/app` provisório e
+  página não encontrada), `AuthProvider` com a sessão do Supabase, contrato `AuthApi` com mensagens de
+  erro em pt-BR, aceite do convite por clique com o token no fragmento da URL, `?next=` sem open
+  redirect, componentes de formulário acessíveis e tokens semânticos provisórios. Dependências de teste
+  `jsdom` 30.1.2 e `@testing-library/{react,dom,user-event}`; 77 testes Vitest novos (169 no total).
 
 ### Alterado
 

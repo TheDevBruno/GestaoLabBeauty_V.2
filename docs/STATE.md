@@ -51,7 +51,10 @@ liberação de recursos por plano.
   RN-026/RN-038. Passo 2 concluído: perfil criado por trigger em `auth.users`, tabela `invitations`
   com RLS e `public.accept_invitation`; 1039 asserções pgTAP verdes. Passo 3 concluído: dependências
   `@supabase/supabase-js` 2.117.3 e `@tanstack/react-query` 5.104.1, `src/lib` (cliente Supabase,
-  `QueryClient`, validação de env), schemas Zod em `src/shared` e `.env.example`; 92 testes Vitest. Registro em
+  `QueryClient`, validação de env), schemas Zod em `src/shared` e `.env.example`; 92 testes Vitest. Passo 4
+  concluído: telas `/entrar`, `/cadastro`, `/convite` (token no fragmento) e `/app` provisório, sessão
+  via `AuthProvider`; 169 testes Vitest (com telas em jsdom) e fluxo de convite verificado no navegador
+  com o Supabase local. Registro em
   [sprint-1.3.md](roadmap/sprint-1.3.md).
 
 - Membros já leem a própria empresa, o próprio perfil e a própria membership; quem tem
@@ -76,8 +79,9 @@ liberação de recursos por plano.
 
 ## Próximo passo
 
-**Sprint 1.3 — auth, convites e guards**, passo 4 (auth e rotas: login, cadastro, saída e roteamento com
-`react-router`). Plano e decisões em [sprint-1.3.md](roadmap/sprint-1.3.md).
+**Sprint 1.3 — auth, convites e guards**, passo 5 (guards: sessão, empresa ativa só entre as
+memberships — RN-025 — e permissão via `roles_permissions`). Plano e decisões em
+[sprint-1.3.md](roadmap/sprint-1.3.md).
 
 Requisito local: Docker em execução e `npm run db:start`. Senha de teste dos usuários do seed:
 [sprint-1.2.md](roadmap/sprint-1.2.md#passo-7--seed-sintético-2026-10-22) (só local).
