@@ -24,6 +24,8 @@ O fim da sprint é ponto de aprovação obrigatória.
 - Passo 4: link do convite com o token no **fragmento** (`/convite#<token>`), que não vai ao servidor;
   **cadastro aberto** a qualquer pessoa (a conta nasce sem empresa); dependências de teste de interface
   autorizadas (`jsdom`, `@testing-library/*`).
+- Passo 5: a empresa ativa é **preferência local** (`localStorage`, uma por usuário), sem a empresa na
+  URL; com várias empresas, abre a **última usada** e só mostra o seletor se ela não for mais válida.
 
 ## Fora do escopo
 
@@ -46,7 +48,7 @@ Um passo por vez. Cada passo termina com `npm run check` verde, `npm run db:test
 | 2   | Banco: perfil automático e `invitations`   | concluído |
 | 3   | Base do frontend (`src/lib`, `src/shared`) | concluído |
 | 4   | Auth e rotas                               | concluído |
-| 5   | Guards (sessão, empresa ativa, permissão)  | pendente  |
+| 5   | Guards (sessão, empresa ativa, permissão)  | concluído |
 | 6   | API de convites (`server/`, Hono)          | pendente  |
 | 7   | Testes                                     | pendente  |
 | 8   | Encerramento da sprint                     | pendente  |
@@ -153,4 +155,37 @@ Observações:
 
 - O bundle passou a 646 kB (188 kB gzip), acima do aviso de 500 kB do Vite, por causa do `supabase-js`.
   Divisão de código por rota fica para a Sprint 1.4.
-- A lista de memberships e o aviso "sem empresa" no `/app` ficam no passo 5 (empresa ativa).
+- A lista de memberships e o aviso "sem empresa" no `/app` ficaram para o passo 5 (abaixo).
+
+### Passo 5 — Guards (2026-10-23)
+
+Sem dependência nova nem mudança em `vite.config.ts` ou `eslint.config.js`.
+
+Entregue:
+
+- `src/lib/tenancy-api.ts`: contrato `TenancyApi` (memberships do usuário com a empresa embutida e
+  permissões de um papel em `roles_permissions`), tudo sob RLS com o JWT do usuário. As linhas são
+  validadas com Zod; erro do servidor vira `TenancyError`, sem repassar detalhes.
+- `src/app/guards/`: `RequireSession` (layout de `/app/*`: sem sessão manda para `/entrar` com volta à
+  rota pedida), `RequireTenant` (carregando, erro com "tentar de novo", **nenhuma empresa**, **escolha**
+  ou conteúdo) e `RequirePermission` (tela "acesso não permitido").
+- `src/app/tenancy/`: `resolveActiveTenant` (RN-025: a empresa ativa só sai da lista de memberships do
+  usuário), `ActiveTenantProvider`, `usePermission(permissão)` e a preferência local por usuário.
+  Preferência que não é mais uma membership é ignorada e apagada.
+- **Revogação (RN-024):** a lista de memberships nunca é considerada atual (`staleTime` 0) e é buscada
+  de novo ao focar a janela, ao reconectar, a cada navegação e a cada 60 s com a aba visível. Papel
+  rebaixado ou membership removida refletem na interface sem novo login. A matriz de permissões fica em
+  cache de 5 min (global, só muda por migration). Ao sair, o cache de consultas é apagado.
+- `/app` mostra empresa, papel e, para quem tem `members.manage`, o link para `/app/equipe`, página
+  protegida por permissão (o formulário de convite vem no passo 6). "Trocar de empresa" aparece com
+  mais de uma.
+- Quem tinha uma só empresa continua nela ao ganhar a segunda (a empresa em uso vira a "última usada").
+- 35 testes Vitest novos (204 no total). Provas de detecção: tirar a nova busca de memberships ao
+  navegar fez falhar os dois testes de revogação.
+
+Verificação manual no navegador (Supabase local, dados sintéticos): recepcionista do seed em
+`/app/equipe` → "acesso não permitido"; promovida a `admin` no banco, a navegação seguinte já mostra
+"Administrador(a)" e o link da equipe, sem novo login; com uma segunda empresa concedida no banco,
+continua na primeira e o seletor lista só as duas empresas dela com o papel de cada uma.
+
+A guarda de interface é conveniência: a RLS nega os dados a quem não tem a permissão, com ou sem ela.

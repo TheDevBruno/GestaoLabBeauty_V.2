@@ -59,6 +59,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   erro em pt-BR, aceite do convite por clique com o token no fragmento da URL, `?next=` sem open
   redirect, componentes de formulário acessíveis e tokens semânticos provisórios. Dependências de teste
   `jsdom` 30.1.2 e `@testing-library/{react,dom,user-event}`; 77 testes Vitest novos (169 no total).
+- Sprint 1.3, passo 5: guards de rota (`RequireSession`, `RequireTenant`, `RequirePermission`), empresa
+  ativa só entre as memberships do usuário (RN-025) guardada como preferência local, `usePermission`
+  sobre `roles_permissions`, revogação refletida na interface sem novo login (RN-024), cache apagado ao
+  sair, painel com empresa e papel e página `/app/equipe` protegida por `members.manage`. 35 testes
+  Vitest novos (204 no total).
 
 ### Alterado
 

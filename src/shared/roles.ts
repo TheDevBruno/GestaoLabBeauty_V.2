@@ -9,3 +9,13 @@ export const memberRoles = [
 ] as const;
 
 export type MemberRole = (typeof memberRoles)[number];
+
+// Nome do papel na interface (pt-BR).
+export const memberRoleLabels: Record<MemberRole, string> = {
+  owner: 'Proprietário(a)',
+  admin: 'Administrador(a)',
+  manager: 'Gerente',
+  specialist: 'Especialista',
+  receptionist: 'Recepção',
+  financial: 'Financeiro',
+};

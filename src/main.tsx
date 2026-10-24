@@ -4,6 +4,7 @@ import { App } from '@/app/App';
 import { createSupabaseAuthApi } from '@/lib/auth-api';
 import { createQueryClient } from '@/lib/query-client';
 import { supabase } from '@/lib/supabase';
+import { createSupabaseTenancyApi } from '@/lib/tenancy-api';
 import '@/styles/index.css';
 
 const rootElement = document.getElementById('root');
@@ -12,10 +13,11 @@ if (!rootElement) {
 }
 
 const api = createSupabaseAuthApi(supabase);
+const tenancyApi = createSupabaseTenancyApi(supabase);
 const queryClient = createQueryClient();
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App api={api} queryClient={queryClient} />
+    <App api={api} tenancyApi={tenancyApi} queryClient={queryClient} />
   </StrictMode>,
 );

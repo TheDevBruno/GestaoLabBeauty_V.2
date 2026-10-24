@@ -183,7 +183,7 @@ describe('Painel provisório (/app) e rotas', () => {
   it('com sessão, mostra o e-mail e sai', async () => {
     const { api } = createFakeAuthApi(SIGNED_IN);
     const { user, router } = renderAt('/app', api);
-    expect((await screen.findByText('ana@example.test')).tagName).toBe('STRONG');
+    expect(await screen.findByText('ana@example.test')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Sair' }));
     expect(api.signOut).toHaveBeenCalledTimes(1);
     await waitFor(() => {
