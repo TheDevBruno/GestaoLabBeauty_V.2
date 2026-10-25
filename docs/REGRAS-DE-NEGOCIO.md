@@ -398,13 +398,16 @@ Regra nova ou alterada deve ser registrada aqui com a origem.
 
 ### RN-044 — Candidatos ao vínculo de profissional
 
-| Dado                            | Quando                           | Então                                                   |
-| ------------------------------- | -------------------------------- | ------------------------------------------------------- |
-| Um membro com `services.manage` | Liga um profissional a um membro | Vê nome e papel dos membros da empresa sem profissional |
-| Um membro sem `services.manage` | Pede a lista de candidatos       | Não recebe nenhum nome                                  |
+| Dado                            | Quando                              | Então                                                                               |
+| ------------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------- |
+| Um membro com `services.manage` | Liga um profissional a um membro    | Vê nome e papel dos membros da empresa e a qual profissional cada um já está ligado |
+| Um membro com `services.manage` | Escolhe o membro de um profissional | Só os membros sem profissional e o já ligado a ele podem ser escolhidos             |
+| Um membro sem `services.manage` | Pede a lista de candidatos          | Não recebe nenhum nome                                                              |
 
 - **Origem:** decisão do usuário em 2026-10-25 (Sprint 2.1). Exceção controlada à leitura só do
-  próprio perfil: os nomes saem por função, nunca pela tabela `profiles`.
+  próprio perfil: os nomes saem por função (`public.list_professional_link_candidates`), nunca pela
+  tabela `profiles`. No passo 2 a função passou a devolver também o profissional ligado, para a tela
+  mostrar o vínculo atual; aguarda confirmação do usuário.
 - **Status:** confirmada.
 
 ## Administração global

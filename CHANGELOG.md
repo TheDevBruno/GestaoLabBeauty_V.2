@@ -98,6 +98,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   Sprint 1.4 concluída.
 - Sprint 2.1, passo 1: plano de serviços (com `buffer_minutes`) e profissionais em
   `docs/roadmap/sprint-2.1.md`, aprovado; RN-040 a RN-044.
+- Sprint 2.1, passo 2: tabelas `services` (duração, `buffer_minutes` opcional, preço em centavos e
+  moeda, ativo, nome único por empresa) e `professional_services`, colunas `display_name` e `is_active`
+  em `professionals` e função `public.list_professional_link_candidates`, com RLS, `GRANT` mínimos e
+  293 asserções pgTAP novas.
 
 ### Alterado
 

@@ -35,8 +35,8 @@ cross join unnest(array[
   'agend_dele', 'agend_outro'
 ]) n (nome);
 
-insert into public.professionals (id, tenant_id, membership_id)
-select g.id, g.tenant_id, case when g.nome = 'prof_dele' then ms.id end
+insert into public.professionals (id, tenant_id, membership_id, display_name)
+select g.id, g.tenant_id, case when g.nome = 'prof_dele' then ms.id end, format('%s %s', g.nome, g.tenant)
 from targets g
 join members m on m.tenant = g.tenant and m.role = 'specialist'
 join public.memberships ms on ms.user_id = m.user_id
@@ -93,9 +93,9 @@ insert into cases (op, alvo_empresa, alvo1, alvo2, permitidos, sim, nao, sql) va
   ('professionals select', 'outra', 'prof_dele', null, '{}', '1', '0',
    'select 1 from public.professionals where id = %2$L'),
   ('professionals insert', 'própria', null, null, '{owner,admin,manager}', '1', 'negado',
-   'insert into public.professionals (tenant_id) values (%1$L)'),
+   'insert into public.professionals (tenant_id, display_name) values (%1$L, ''Profissional novo'')'),
   ('professionals insert', 'outra', null, null, '{}', '1', 'negado',
-   'insert into public.professionals (tenant_id) values (%1$L)'),
+   'insert into public.professionals (tenant_id, display_name) values (%1$L, ''Profissional novo'')'),
   ('professionals update', 'própria', 'prof_outro', null, '{owner,admin,manager}', '1', '0',
    'update public.professionals set membership_id = membership_id where id = %2$L'),
   ('professionals update', 'outra', 'prof_outro', null, '{}', '1', '0',
@@ -232,7 +232,9 @@ select set_eq(
       and privilege_type in ('INSERT', 'UPDATE')$$,
   $$values
     ('professionals', 'tenant_id', 'INSERT'), ('professionals', 'membership_id', 'INSERT'),
-    ('professionals', 'membership_id', 'UPDATE'),
+    ('professionals', 'display_name', 'INSERT'), ('professionals', 'is_active', 'INSERT'),
+    ('professionals', 'membership_id', 'UPDATE'), ('professionals', 'display_name', 'UPDATE'),
+    ('professionals', 'is_active', 'UPDATE'),
     ('clients', 'tenant_id', 'INSERT'), ('clients', 'full_name', 'INSERT'), ('clients', 'full_name', 'UPDATE'),
     ('appointments', 'tenant_id', 'INSERT'), ('appointments', 'client_id', 'INSERT'),
     ('appointments', 'professional_id', 'INSERT'),
@@ -334,8 +336,8 @@ select throws_ok(
   '23503', null, 'agendamento de A com profissional de B é recusado'
 );
 select throws_ok(
-  format('insert into public.professionals (tenant_id, membership_id) values (%L, %L)',
-    '00000000-0000-0000-0000-00000000000a', :'membership_specialist_b'),
+  format('insert into public.professionals (tenant_id, membership_id, display_name) values (%L, %L, %L)',
+    '00000000-0000-0000-0000-00000000000a', :'membership_specialist_b', 'Profissional cruzado'),
   '23503', null, 'profissional de A ligado a membership de B é recusado'
 );
 select throws_ok(

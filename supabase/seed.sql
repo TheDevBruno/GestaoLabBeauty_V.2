@@ -75,11 +75,11 @@ from seed_usuario s
 on conflict do nothing;
 
 -- 3. Profissionais: 01 e 03 ligados ao specialist de cada empresa; 02 e 04 sem ligação.
-insert into public.professionals (id, tenant_id, membership_id) values
-  ('5eed0000-0000-0000-0003-000000000001', '5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0002-000000000004'),
-  ('5eed0000-0000-0000-0003-000000000002', '5eed0000-0000-0000-0000-000000000001', null),
-  ('5eed0000-0000-0000-0003-000000000003', '5eed0000-0000-0000-0000-000000000002', '5eed0000-0000-0000-0002-000000000010'),
-  ('5eed0000-0000-0000-0003-000000000004', '5eed0000-0000-0000-0000-000000000002', null)
+insert into public.professionals (id, tenant_id, membership_id, display_name) values
+  ('5eed0000-0000-0000-0003-000000000001', '5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0002-000000000004', 'Profissional Teste 1 (Studio Ana)'),
+  ('5eed0000-0000-0000-0003-000000000002', '5eed0000-0000-0000-0000-000000000001', null, 'Profissional Teste 2 (Studio Ana)'),
+  ('5eed0000-0000-0000-0003-000000000003', '5eed0000-0000-0000-0000-000000000002', '5eed0000-0000-0000-0002-000000000010', 'Profissional Teste 3 (Clinica Bela)'),
+  ('5eed0000-0000-0000-0003-000000000004', '5eed0000-0000-0000-0000-000000000002', null, 'Profissional Teste 4 (Clinica Bela)')
 on conflict do nothing;
 
 -- 4. Clientes: 01 e 04 têm agendamento com o specialist; 02 e 05 só com o outro profissional; 03 e 06 sem.

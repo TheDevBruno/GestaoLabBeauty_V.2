@@ -218,3 +218,48 @@ guarda a moeda (sem `tenants.currency`). As opções apresentadas ficam abaixo c
   dele. Supabase local em execução (Docker) e `.env.local` presente.
 - Este documento. Plano aprovado pelo usuário em 2026-10-25 com todas as recomendações; RN-040 a
   RN-044 registradas.
+
+### Passo 2 — Migration e pgTAP (2026-10-25)
+
+Sem dependência nova nem mudança de configuração. Tudo só no Supabase local.
+
+Entregue em `supabase/migrations/20261025120000_services_professionals.sql`:
+
+- `public.services` com os `CHECK`s da RN-040 (duração de 5 a 720 em passos de 5, `buffer_minutes`
+  nulo ou de 0 a 240 em passos de 5, preço não negativo, moeda `^[A-Z]{3}$` com padrão `BRL`, nome não
+  branco até 80, descrição até 500) e índice único `(tenant_id, lower(btrim(name)))`.
+- `public.professional_services` com PK `(tenant_id, professional_id, service_id)`, FKs compostas com
+  `on delete cascade` e índice da FK de serviço.
+- `professionals.display_name` (obrigatório, não branco, até 80) e `professionals.is_active`.
+- RLS: SELECT para membro e escrita com `services.manage` nas duas tabelas novas;
+  `professional_services` sem UPDATE. `GRANT` de tabela só `select`/`delete` e de coluna nos campos
+  editáveis; nada para `anon`. Trigger de `tenant_id` imutável nas duas.
+- `public.list_professional_link_candidates(p_tenant_id)`: `security definer`, `STABLE`, `search_path`
+  vazio, `EXECUTE` só para `authenticated`. Devolve `membership_id`, `full_name`, `role` e
+  `professional_id` (profissional já ligado, ou nulo) de todos os membros da empresa, e zero linhas
+  para quem não tem `services.manage`. **Ajuste em relação ao plano:** o plano falava em devolver só
+  os membros sem profissional; a função devolve todos com o profissional ligado, para a tela de edição
+  mostrar o vínculo atual e a lista mostrar quem está ligado a quem. A RN-044 foi ajustada e aguarda
+  confirmação do usuário.
+
+Ajustes em arquivos existentes, por mudança de schema:
+
+- `supabase/seed.sql`: nome nos 4 profissionais (serviços e vínculos do seed ficam no passo 3).
+- `supabase/tests/rls_specialist.test.sql`: os `insert` em `professionals` passam a informar
+  `display_name`, e a lista de colunas com `INSERT`/`UPDATE` de `authenticated` inclui `display_name` e
+  `is_active`. Nenhum resultado esperado mudou.
+
+Testes novos em `supabase/tests/services_professionals.test.sql` (293 asserções): 228 casos gerados
+(2 empresas × 6 papéis × operação × alvo, incluindo a função de candidatos) e 65 fixos (estrutura,
+políticas, `GRANT`, função, conteúdo dos candidatos, `CHECK`s e limites, nome único sem diferenciar
+maiúsculas, profissional com agendamento não excluído, FKs compostas entre empresas, cascata,
+`tenant_id` imutável, specialist sem alterar o próprio profissional, exclusão da empresa).
+
+Prova de detecção: `services_select_member` trocada para `using (true)` direto no banco local fez
+falhar 14 testes (12 casos "outra empresa" e 2 listagens). Política restaurada com `db:reset`.
+
+Verificação: `npm run db:test` 1340 PASS (14 arquivos), `supabase db lint` sem erros, `npm run check`
+verde (318 testes Vitest; 8 de integração ignorados). `npm run test:integration`: a primeira execução,
+logo após o `db:reset`, estourou o tempo de 10 s no preparo (8 ignorados); a segunda passou com 8.
+Durante a prova de detecção a CLI perdeu a conexão com o Postgres local (`DbConnectError`) até
+`db:stop` + `db:start`.

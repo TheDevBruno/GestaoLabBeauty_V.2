@@ -101,8 +101,9 @@ liberação de recursos por plano.
 Passo 1 concluído: plano em [sprint-2.1.md](roadmap/sprint-2.1.md) aprovado pelo usuário em 2026-10-25
 com todas as recomendações (sem categorias, moeda em `services.currency`, nome único por empresa, sem
 preço por profissional, função de candidatos ao vínculo, páginas próprias, menu só com
-`services.manage`, sem `react-hook-form`); RN-040 a RN-044. Próximo: passo 2 (migration e pgTAP, só
-no banco local).
+`services.manage`, sem `react-hook-form`); RN-040 a RN-044. Passo 2 concluído: migration com `services`,
+`professional_services`, nome e ativo em `professionals` e função de candidatos ao vínculo; pgTAP 1340
+PASS. Próximo: passo 3 (seed, schemas Zod e `money.ts`).
 
 Sprint anterior: **Sprint 1.4 — design system e app shell** (`feat/sprint-1.4-design-system`, PR #22
 mesclado em 2026-10-25). Passo 1 concluído: plano em [sprint-1.4.md](roadmap/sprint-1.4.md) aprovado pelo
