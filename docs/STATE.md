@@ -99,6 +99,10 @@ liberação de recursos por plano.
       (Sprints 1.4 e 2.1). Em clientes já viraram botão (Sprint 2.2).
 - [ ] Confirmar se o specialist pode arquivar os clientes que vê (RN-046 permite; bloquear exige
       trigger).
+- [ ] Vitest intermitente no `npm run check` local: 2 a 9 testes de tela falham por tempo com o
+      paralelismo padrão (6 CPUs e Supabase no Docker); passam isolados e com `--maxWorkers=2`.
+      Decidir entre aumentar o tempo dos `findBy` iniciais nos testes ou limitar workers na
+      configuração (Sprint 2.3, passo 2).
 
 ## Próximo passo
 
@@ -109,7 +113,12 @@ liberação de recursos por plano.
 `services.manage` e exceções também com `appointments.write`, exceção sempre de um profissional, sem
 vigência, cálculo no banco com prévia de 7 dias, rota `/app/profissionais/:id/horarios` e "Meus
 horários", correção dos `TextLink` de 20 px, specialist arquivando cliente mantido); RN-048 a RN-052.
-Próximo: passo 2 (migration e pgTAP).
+Passo 2 concluído: migration `20261025160000_availability.sql` (`btree_gist`, `tenants.timezone` com
+trigger de validação, `availability_rules` com exclusion de sobreposição, `availability_exceptions`,
+RLS e `GRANT` de colunas, `public.set_availability_rules` e `public.professional_availability`) e
+`availability.test.sql` com 510 asserções; pgTAP 2100 PASS, `db lint` sem erros, integração 8 passed.
+A hora local que não existe no horário de verão é descartada no cálculo (achado do passo). Próximo:
+passo 3 (seed, schemas Zod e `timezone.ts`).
 
 Sprint anterior: **Sprint 2.2 — clientes** (`feat/sprint-2.2-clientes`, a partir da `main` em
 `5848ff1`, merge do PR #23). **Concluída em 2026-10-25**, PR #24 mesclado em 2026-10-25 (não é ponto

@@ -1,8 +1,8 @@
 # Sprint 2.3 — Disponibilidade
 
 - **Início:** 2026-10-25
-- **Status:** passo 1 concluído (plano aprovado pelo usuário em 2026-10-25 com todas as
-  recomendações); não é ponto de aprovação obrigatória
+- **Status:** passos 1 e 2 concluídos (plano aprovado pelo usuário em 2026-10-25 com todas as
+  recomendações; migration e pgTAP); não é ponto de aprovação obrigatória
 - **Branch:** `feat/sprint-2.3-disponibilidade` (a partir da `main` em `3986ca5`, merge do PR #24)
 
 ## Objetivo
@@ -338,7 +338,7 @@ resultado próprio; uso os padrões gerais de formulário acima.
 | #   | Passo                                                                                                      | Status    |
 | --- | ---------------------------------------------------------------------------------------------------------- | --------- |
 | 1   | Plano (este documento) e OK do usuário                                                                     | concluído |
-| 2   | Migration (`timezone`, `btree_gist`, regras, exceções, RLS, `set_availability_rules`, cálculo) e pgTAP     | pendente  |
+| 2   | Migration (`timezone`, `btree_gist`, regras, exceções, RLS, `set_availability_rules`, cálculo) e pgTAP     | concluído |
 | 3   | Seed, schemas Zod e `timezone.ts` com testes de borda                                                      | pendente  |
 | 4   | Tela de horários: semana, prévia de 7 dias e entradas (profissionais e "Meus horários")                    | pendente  |
 | 5   | Exceções: lista, cadastro, edição e exclusão                                                               | pendente  |
@@ -363,3 +363,45 @@ Cada passo termina com `npm run check` e `npm run db:test` verdes, commit, `docs
 - Este documento. **Aprovado pelo usuário em 2026-10-25 com todas as recomendações** (decisões 1 a
   10, inclusive a extensão `btree_gist`). RN-048 a RN-052 registradas em
   [REGRAS-DE-NEGOCIO.md](../REGRAS-DE-NEGOCIO.md#disponibilidade).
+
+### Passo 2 — Migration e pgTAP (2026-10-25)
+
+- Migration `supabase/migrations/20261025160000_availability.sql`, aplicada só no Supabase local
+  (`npm run db:reset`):
+  - extensão `btree_gist` no schema `extensions`;
+  - `tenants.timezone` (`not null`, padrão `America/Sao_Paulo`) validado pelo trigger
+    `tenants_check_timezone` contra `pg_timezone_names` (erro `22023`); `GRANT select, update (timezone)`;
+  - `availability_rules` com os `CHECK`s do plano e a exclusion `availability_rules_no_overlap`
+    (`int4range` de minutos, `[)`);
+  - `availability_exceptions` com os `CHECK`s do plano; o de 5 minutos usa a distância para a época em
+    UTC (sem `extract` sobre `timestamptz`), índice gist `(tenant_id, professional_id, period)`;
+  - FKs compostas com `on delete cascade`, `prevent_tenant_id_change`, RLS e uma política por operação
+    (RN-051), `GRANT` só de colunas, sem `professional_id` no `UPDATE`;
+  - `public.set_availability_rules` (`security invoker`, `VOLATILE`): confere `services.manage` antes
+    (`42501` mesmo com a semana vazia), `p_rules` precisa ser array com até 70 itens (`22023`),
+    profissional da empresa (`P0002`), apaga e insere numa transação;
+  - `public.professional_availability` (`security invoker`, `STABLE`): de 1 a 62 dias (`22023`),
+    regras convertidas com `at time zone`, extras somados e bloqueios subtraídos com `range_agg` e
+    `tstzmultirange`, recorte à janela local, vazio para profissional inativo ou invisível.
+- **Achado na implementação:** uma hora local que não existe no adiantamento do relógio vira um
+  instante depois do fim (em New York, 02:30 → 07:30 UTC e 03:00 → 07:00 UTC). Sem tratamento, uma
+  regra 02:30–03:00 quebraria o `tstzrange` e a função inteira naquele dia. O cálculo descarta o
+  intervalo que fica com início depois do fim; coberto em teste (08/03/2026 e o domingo seguinte).
+- `supabase/tests/availability.test.sql`: 510 asserções — estrutura, `CHECK`s nos limites, exclusion
+  (sobreposto e cobrindo recusados; encostado, outro dia e outro profissional aceitos), FKs compostas,
+  cascade, `tenant_id` imutável, fuso inválido, `GRANT`, políticas, propriedades das funções, 360
+  casos de RLS (2 empresas × 6 papéis × 30 casos), anon e usuário sem vínculo, `set_availability_rules`
+  (troca, falha inteira, entradas inválidas, papéis) e `professional_availability` (dia comum, almoço,
+  virada de dia em UTC com `24:00`, folga de dia inteiro, bloqueio parcial, extra em dia sem regra,
+  bloqueio por cima de extra, extra encostado, recorte da janela, Manaus, New York em 2026-03-08 e
+  2026-11-01, hora inexistente, outra empresa, inativo, limite de 62 dias, sessão em outro fuso).
+- Prova de detecção: com a exclusion removida e a política de inserção de exceção trocada por só
+  `appointments.write`, 9 asserções falharam; `db:reset` restaurou o banco.
+- Verificação: `npm run db:test` 2100 PASS (16 arquivos), `npx supabase db lint` sem erros,
+  `npm run test:integration` 8 passed, `typecheck`, `lint`, `format:check` e `build` verdes.
+- **Vitest intermitente com o paralelismo padrão:** no `npm run check`, 2 a 9 testes de tela falham por
+  tempo (o primeiro `findBy` de cada arquivo, com rota `lazy`, passa de 1 s com 6 CPUs e o Supabase no
+  Docker); os arquivos que falham mudam a cada execução e passam isolados. Com `npx vitest run
+--maxWorkers=2`: 609 passed. Nenhum arquivo de `src/` mudou nesta sprint até aqui; registrado como
+  pendência para o usuário decidir (aumentar o tempo dos `findBy` iniciais ou limitar workers exige
+  mudar testes ou configuração).

@@ -147,6 +147,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 2.3, passo 1: plano de disponibilidade em `docs/roadmap/sprint-2.3.md` (fuso da empresa,
   horário semanal sem sobreposição com `btree_gist`, exceções de bloqueio e extra, cálculo no banco,
   telas por papel), aprovado; RN-048 a RN-052.
+- Sprint 2.3, passo 2: extensão `btree_gist`; `tenants.timezone` validado por trigger; tabelas
+  `availability_rules` (horário semanal sem sobreposição por exclusion) e `availability_exceptions`
+  (bloqueio e extra em UTC), com RLS por papel e `GRANT` de colunas; funções
+  `public.set_availability_rules` (grava a semana inteira numa transação) e
+  `public.professional_availability` (regras + extras − bloqueios no fuso da empresa, até 62 dias,
+  descartando a hora que não existe no horário de verão), com 510 asserções pgTAP novas.
 
 ### Corrigido
 
