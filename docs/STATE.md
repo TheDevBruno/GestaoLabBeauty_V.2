@@ -106,8 +106,11 @@ menu para quem tem `clients.read`; "Carregar mais" de 50 em 50); RN-045 a RN-047
 RN-037. Passo 2 concluído: migration `20261025140000_clients.sql` (colunas `phone`, `email`,
 `birth_date`, `is_active`, limite de 120 no nome, `search_name` por trigger com `unaccent`,
 `private.search_text` e `public.search_clients` com `security invoker`) e `clients.test.sql` com 248
-asserções; pgTAP 1589 PASS, `db lint` sem erros. Próximo: passo 3 (seed, schemas Zod, `phone.ts` e
-normalização da busca).
+asserções; pgTAP 1589 PASS, `db lint` sem erros. Passo 3 concluído: seed com contato nos clientes e 12
+clientes a mais no Studio Ana (acentos, um arquivado), `src/shared/phone.ts` (formato brasileiro ↔
+E.164) e `src/shared/client.ts` (schema do formulário, nascimento até hoje, termo de busca); pgTAP 1590
+PASS, 540 testes Vitest, integração 8 passed. Próximo: passo 4 (lista de clientes com busca, filtro e
+paginação; item "Clientes" no shell).
 
 Sprint anterior: **Sprint 2.1 — serviços (com `buffer_minutes`) e profissionais**
 (`feat/sprint-2.1-servicos-profissionais`, a partir da `main` em `ead9e69`). **Concluída em

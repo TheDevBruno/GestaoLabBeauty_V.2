@@ -127,6 +127,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   de 120 no nome, extensão `unaccent`, `search_name` mantida por trigger, `private.search_text` e
   `public.search_clients` (busca sem acento por nome ou telefone, `security invoker`, paginada), com
   `GRANT` de colunas e 248 asserções pgTAP novas.
+- Sprint 2.2, passo 3: seed com telefone, e-mail e nascimento fictícios nos clientes e 12 clientes a
+  mais no Studio Ana (nomes com acento, um arquivado); `src/shared/phone.ts` (formato brasileiro ↔
+  E.164) e `src/shared/client.ts` (schema do formulário de cliente e termo de busca), com 68 testes
+  Vitest novos.
 
 ### Alterado
 

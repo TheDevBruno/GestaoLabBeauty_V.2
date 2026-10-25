@@ -178,7 +178,7 @@ padrão da própria skill para autocompletar ("debounced fetch").
 | --- | ------------------------------------------------------------------------------------------------- | --------- |
 | 1   | Plano (este documento) e OK do usuário                                                            | concluído |
 | 2   | Migration (colunas, `CHECK`s, trigger de busca, `unaccent`, `search_clients`) e pgTAP             | concluído |
-| 3   | Seed, schemas Zod, `phone.ts` e normalização da busca                                             | pendente  |
+| 3   | Seed, schemas Zod, `phone.ts` e normalização da busca                                             | concluído |
 | 4   | Lista de clientes com busca, filtro e paginação; item "Clientes" no shell                         | pendente  |
 | 5   | Cadastro, edição, arquivar e ficha de leitura                                                     | pendente  |
 | 6   | Verificação (check, db:test, integração, navegador 375/1440 px por papel, teclado) e encerramento | pendente  |
@@ -329,3 +329,37 @@ Verificação: `npm run db:test` 1589 PASS (15 arquivos), `supabase db lint` sem
 verde (472 testes Vitest; 8 de integração ignorados). Na primeira tentativa de `db:reset` a CLI perdeu
 a conexão com o Postgres local (`DbConnectError`), como no passo 2 da Sprint 2.1; resolvido com
 `db:stop` + `db:start` e novo `db:reset`.
+
+### Passo 3 — Seed, schemas Zod, `phone.ts` e normalização da busca (2026-10-25)
+
+Sem dependência nova, sem migration e sem mudança de configuração.
+
+- `supabase/seed.sql`: os 6 clientes ganham telefone (E.164, DDD 11 no Studio Ana e 21 na Clinica
+  Bela), e-mail `@example.test` e nascimento fictícios, alguns vazios; 12 clientes a mais no Studio Ana
+  (ids `5eed0000-0000-0000-0004-000000000007` a `…018`), sem agendamento, com acentos no nome
+  ("Joana Conceição", "João", "Ângela", "Íris", "Renée", "Cauã" etc., todos com "Teste") e o 18
+  arquivado. Telefones na faixa `+55 11 90000-xxxx`. Total: 18 clientes (15 no Studio Ana), 1
+  arquivado, 3 sem telefone, 8 sem e-mail. O specialist do Studio Ana continua vendo só o Cliente
+  Teste 1.
+- `supabase/tests/seed_rls.test.sql`: asserção nova conferindo essas contagens com o seed, ou nenhuma
+  linha sem ele.
+- `src/shared/phone.ts`:
+  - `parsePhoneToE164` aceita "(11) 98765-4321", "11987654321", "011 98765-4321" e "+55 11 98765-4321"
+    (separadores: espaço, parênteses, hífen e ponto); número brasileiro precisa de DDD sem zero e
+    fixo de 8 dígitos começando em 2 a 5 ou celular de 9 dígitos começando em 9, inclusive com "+55";
+    outro país só com "+", no padrão E.164 do banco.
+  - `formatPhone` devolve "(11) 98765-4321" ou "(11) 3456-7890"; número de outro país volta como está.
+    O texto formatado volta ao mesmo E.164 no parser (usado para preencher o campo na edição).
+- `src/shared/client.ts`:
+  - `clientFormSchema`: nome até 120; telefone vazio ou convertido para E.164; e-mail aparado,
+    minúsculo, até 254, validado por `z.email()` e pelo mesmo padrão do `CHECK`; nascimento vazio ou
+    data real de 1900-01-01 até hoje (data local do navegador, `todayIsoDate`); ativo. Vazios viram
+    `null`.
+  - `formatBirthDate` ("1990-03-15" → "15/03/1990").
+  - `normalizeClientSearch`: reduz espaços, apara e corta em 100 caracteres (o limite de
+    `search_clients`). Acento e maiúsculas ficam com o banco.
+
+Testes: `phone.test.ts` e `client.test.ts` (68 testes Vitest novos).
+
+Verificação: `npm run db:reset` com seed, `npm run db:test` 1590 PASS (15 arquivos), `npm run check`
+verde (540 testes Vitest; 8 de integração ignorados) e `npm run test:integration` 8 passed.

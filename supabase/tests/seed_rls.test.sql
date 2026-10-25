@@ -3,7 +3,7 @@
 -- existentes fica vazia e as verificações passam sem comparar nada; por isso o teste de completude
 -- exige 0 ou 12 usuários, nunca um seed pela metade.
 begin;
-select plan(4);
+select plan(5);
 
 select is(
   array(
@@ -109,6 +109,24 @@ select is(
     else array[0, 0, 0, 0]::bigint[]
   end,
   'seed: serviços e vínculos completos com o seed (6, 2 inativos, 2 sem intervalo, 6 vínculos) ou ausentes'
+);
+
+-- Sprint 2.2: com o seed, 18 clientes (15 no Studio Ana, 1 arquivado, 3 sem telefone, 8 sem e-mail);
+-- sem ele, nenhum.
+select is(
+  array[
+    (select count(*) from public.clients where id::text like '5eed0000-%'),
+    (select count(*) from public.clients where tenant_id = '5eed0000-0000-0000-0000-000000000001'),
+    (select count(*) from public.clients where id::text like '5eed0000-%' and not is_active),
+    (select count(*) from public.clients where id::text like '5eed0000-%' and phone is null),
+    (select count(*) from public.clients where id::text like '5eed0000-%' and email is null)
+  ],
+  case
+    when (select count(*) from auth.users u join seed_usuario s on s.user_id = u.id) = 12
+      then array[18, 15, 1, 3, 8]::bigint[]
+    else array[0, 0, 0, 0, 0]::bigint[]
+  end,
+  'seed: clientes completos com o seed (18, 15 no Studio Ana, 1 arquivado, 3 sem telefone, 8 sem e-mail) ou ausentes'
 );
 
 select * from finish();
