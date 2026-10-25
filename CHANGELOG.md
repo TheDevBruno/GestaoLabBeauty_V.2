@@ -78,9 +78,33 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 1.3, aprovação: RN-039 — convite para quem já é membro é recusado na criação (trigger
   `invitations_check_not_member`, 409 `already_member` na API, mensagem na tela; 8 asserções pgTAP e 4
   testes novos); job `integration` no CI (API + Supabase local com `npm run test:integration`).
+- Sprint 1.4, passo 1: plano do design system e do app shell em `docs/roadmap/sprint-1.4.md`
+  (diagnóstico, direção visual, dependências e configuração para autorização).
+- Sprint 1.4, passo 2: dependências do design system (`radix-ui`, `class-variance-authority`, `clsx`,
+  `tailwind-merge`, `lucide-react`, `@fontsource-variable/inter`, `tw-animate-css`), `components.json`,
+  `cn()`, tokens em três camadas em `src/styles/index.css`, Inter auto-hospedada,
+  `src/shared/color-contrast.ts` e teste de contraste dos tokens.
+- Sprint 1.4, passo 3: componentes base em `src/components/ui/` (`button`, `input`, `label`,
+  `native-select`, `field`, `card`, `alert`, `text-link`, `sheet` e `dropdown-menu`) e testes de
+  componente.
+- Sprint 1.4, passo 4: app shell em `/app/*` (`src/app/shell/`): navegação lateral a partir de 1024 px
+  e gaveta abaixo, empresa ativa e papel, troca de empresa por menu, conta, sair, link para pular para
+  o conteúdo e `aria-current` no item atual.
+- Sprint 1.4, passo 5: divisão de código. Páginas e shell carregam por rota (`lazy` do React Router) com
+  `RouteFallback` (`role="status"`); `vite.config.ts` separa fornecedores em `vendor-react`,
+  `vendor-router-query` e `vendor-supabase` (autorizado pelo usuário). Maior chunk: 214 kB (era 808 kB).
+- Sprint 1.4, passo 6: verificação final em 375, 768, 1024 e 1440 px (sem rolagem horizontal, alvos de
+  44 px, foco visível, gaveta com foco preso) e capturas em `docs/roadmap/sprint-1.4-capturas/`.
+  Sprint 1.4 concluída.
 
 ### Alterado
 
+- Sprint 1.4: `/app` virou boas-vindas dentro do shell e "Trocar de empresa" abre um menu com as
+  outras empresas em vez de voltar ao seletor.
+- Sprint 1.4: telas migradas para `src/components/ui/`; `TextField`, `SelectField` e `Button`
+  provisórios removidos de `src/app/components/`.
+- Sprint 1.4: tokens provisórios da Sprint 1.3 substituídos pelos do design system; borda dos campos
+  de `stone-400` para `stone-500` (contraste de 3:1).
 - `vite` 8.3.2 → 8.3.4 (autorizado pelo usuário), que corrige a vulnerabilidade alta apontada pelo
   `npm audit` no servidor de desenvolvimento.
 - `zod` 4.6.5 → 4.6.6 (GHSA-mrhx-c7xc-m3w5; exceção à janela de 14 dias da ADR-001 autorizada pelo

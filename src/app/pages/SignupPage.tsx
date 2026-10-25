@@ -1,11 +1,13 @@
-﻿import { type SubmitEvent, useRef, useState } from 'react';
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
+import { type SubmitEvent, useRef, useState } from 'react';
+import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { PASSWORD_MIN_LENGTH, signupSchema } from '@/shared/auth';
+import { Alert } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { InputField } from '@/components/ui/field';
+import { TextLink } from '@/components/ui/text-link';
 import { useAuth } from '@/app/auth/auth-context';
 import { loginPath, safeNextPath } from '@/app/auth/redirect';
-import { AuthLayout, linkClass } from '@/app/components/AuthLayout';
-import { Button } from '@/app/components/Button';
-import { TextField } from '@/app/components/TextField';
+import { AuthLayout } from '@/app/components/AuthLayout';
 import { type FieldErrors, fieldErrorsFrom, firstInvalidField } from '@/app/forms/field-errors';
 import { focusField } from '@/app/forms/focus-field';
 
@@ -60,14 +62,12 @@ export function SignupPage() {
   if (confirmationSentTo) {
     return (
       <AuthLayout title="Confirme seu e-mail">
-        <p role="status" className="text-base text-ink">
+        <p role="status" className="text-base text-foreground">
           Enviamos um link de confirmação para <strong>{confirmationSentTo}</strong>. Depois de
           confirmar, entre com seu e-mail e senha.
         </p>
         <p className="mt-6 text-base">
-          <Link to={loginPath(rawNext ? next : undefined)} className={linkClass}>
-            Ir para Entrar
-          </Link>
+          <TextLink to={loginPath(rawNext ? next : undefined)}>Ir para Entrar</TextLink>
         </p>
       </AuthLayout>
     );
@@ -83,13 +83,13 @@ export function SignupPage() {
           void handleSubmit(event);
         }}
       >
-        <TextField
+        <InputField
           name="fullName"
           label="Nome completo (opcional)"
           autoComplete="name"
           error={errors.fullName}
         />
-        <TextField
+        <InputField
           name="email"
           label="E-mail"
           type="email"
@@ -98,7 +98,7 @@ export function SignupPage() {
           required
           error={errors.email}
         />
-        <TextField
+        <InputField
           name="password"
           label="Senha"
           type="password"
@@ -107,20 +107,13 @@ export function SignupPage() {
           hint={`Mínimo de ${String(PASSWORD_MIN_LENGTH)} caracteres.`}
           error={errors.password}
         />
-        {formError ? (
-          <p role="alert" className="text-sm font-medium text-danger">
-            {formError}
-          </p>
-        ) : null}
+        {formError ? <Alert variant="destructive">{formError}</Alert> : null}
         <Button type="submit" busy={busy} busyLabel="Criando conta…">
           Criar conta
         </Button>
       </form>
-      <p className="mt-6 text-base text-muted">
-        Já tem conta?{' '}
-        <Link to={loginPath(rawNext ? next : undefined)} className={linkClass}>
-          Entrar
-        </Link>
+      <p className="mt-6 text-base text-muted-foreground">
+        Já tem conta? <TextLink to={loginPath(rawNext ? next : undefined)}>Entrar</TextLink>
       </p>
     </AuthLayout>
   );

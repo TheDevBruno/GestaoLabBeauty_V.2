@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/app/auth/auth-context';
-import { Button } from './Button';
 
 export function SignOutButton({ className = '' }: { className?: string }) {
   const { api } = useAuth();
@@ -16,7 +16,7 @@ export function SignOutButton({ className = '' }: { className?: string }) {
 
   return (
     <Button
-      variant="secondary"
+      variant="outline"
       className={className}
       busy={busy}
       busyLabel="Saindo…"

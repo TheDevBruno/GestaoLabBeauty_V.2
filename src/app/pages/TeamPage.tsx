@@ -1,17 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type SubmitEvent, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router';
 import type { PendingInvitation } from '@/lib/invitations-api';
 import { createInvitationSchema } from '@/shared/invitation';
 import { memberRoleLabels, memberRoles } from '@/shared/roles';
-import { AuthLayout, linkClass } from '@/app/components/AuthLayout';
-import { Button } from '@/app/components/Button';
-import { SelectField } from '@/app/components/SelectField';
-import { TextField } from '@/app/components/TextField';
+import { Alert } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { InputField, SelectField } from '@/components/ui/field';
 import { type FieldErrors, fieldErrorsFrom, firstInvalidField } from '@/app/forms/field-errors';
 import { focusField } from '@/app/forms/focus-field';
 import { RequirePermission } from '@/app/guards/RequirePermission';
-import { RequireTenant } from '@/app/guards/RequireTenant';
+import { ShellPage } from '@/app/shell/ShellPage';
 import { useInvitationsApi } from '@/app/team/invitations-context';
 import { invitationsQueryKey } from '@/app/team/queries';
 import { useActiveTenant } from '@/app/tenancy/tenancy-context';
@@ -24,11 +22,9 @@ const dateTime = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyl
 // conveniência; quem decide é o banco (RLS e trigger de invitations).
 export function TeamPage() {
   return (
-    <RequireTenant title="Equipe">
-      <RequirePermission permission="members.manage" title="Equipe">
-        <TeamContent />
-      </RequirePermission>
-    </RequireTenant>
+    <RequirePermission permission="members.manage" title="Equipe e convites">
+      <TeamContent />
+    </RequirePermission>
   );
 }
 
@@ -42,24 +38,20 @@ function TeamContent() {
   const { state } = useActiveTenant();
   const [created, setCreated] = useState<CreatedInvitation | null>(null);
   if (state.status !== 'active') return null;
-  const { tenantId, tenantName, role } = state.membership;
+  const { tenantId, role } = state.membership;
 
   return (
-    <AuthLayout title="Equipe e convites" wide>
-      <p className="text-base text-ink">
-        Convide pessoas para <strong>{tenantName}</strong>. O convite vale por 7 dias e só pode ser
-        aceito pela conta com o e-mail convidado.
+    <ShellPage title="Equipe e convites">
+      {/* O nome da empresa já está na navegação do shell. */}
+      <p className="text-base text-foreground">
+        Convide pessoas para esta empresa. O convite vale por 7 dias e só pode ser aceito pela conta
+        com o e-mail convidado.
       </p>
       <InviteForm tenantId={tenantId} isOwner={role === 'owner'} onCreated={setCreated} />
       {/* key: cada convite novo remonta o aviso (foco no título e status da cópia zerado). */}
       {created ? <CreatedInvitationPanel key={created.link} invitation={created} /> : null}
       <PendingInvitations tenantId={tenantId} isOwner={role === 'owner'} />
-      <p className="mt-8 text-base">
-        <Link to="/app" className={linkClass}>
-          Voltar ao painel
-        </Link>
-      </p>
-    </AuthLayout>
+    </ShellPage>
   );
 }
 
@@ -132,7 +124,7 @@ function InviteForm({
           void handleSubmit(event);
         }}
       >
-        <TextField
+        <InputField
           name="email"
           label="E-mail da pessoa"
           type="email"
@@ -148,11 +140,7 @@ function InviteForm({
           defaultValue="receptionist"
           error={errors.role}
         />
-        {formError ? (
-          <p role="alert" className="text-sm font-medium text-danger">
-            {formError}
-          </p>
-        ) : null}
+        {formError ? <Alert variant="destructive">{formError}</Alert> : null}
         <Button type="submit" busy={busy} busyLabel="Criando convite…">
           Criar convite
         </Button>
@@ -185,17 +173,17 @@ function CreatedInvitationPanel({ invitation }: { invitation: CreatedInvitation 
         id="convite-criado"
         ref={headingRef}
         tabIndex={-1}
-        className="rounded-sm text-lg font-semibold text-success outline-none focus-visible:ring-3 focus-visible:ring-focus"
+        className="rounded-sm text-lg font-semibold text-success outline-none focus-visible:ring-3 focus-visible:ring-ring"
       >
         Convite criado
       </h2>
-      <p className="mt-2 text-base text-ink">
+      <p className="mt-2 text-base text-foreground">
         Envie o link para <strong className="break-all">{invitation.email}</strong>. Ele vale até{' '}
         {dateTime.format(new Date(invitation.expiresAt))} e <strong>só aparece agora</strong>: copie
         antes de sair desta tela.
       </p>
       <div className="mt-4 flex flex-col gap-3">
-        <TextField
+        <InputField
           name="invitationLink"
           label="Link do convite"
           readOnly
@@ -205,14 +193,14 @@ function CreatedInvitationPanel({ invitation }: { invitation: CreatedInvitation 
           }}
         />
         <Button
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             void copy();
           }}
         >
           Copiar link
         </Button>
-        <p role="status" className="min-h-6 text-sm text-ink">
+        <p role="status" className="min-h-6 text-sm text-foreground">
           {copyStatus}
         </p>
       </div>
@@ -248,25 +236,21 @@ function PendingInvitations({ tenantId, isOwner }: { tenantId: string; isOwner: 
       <h2 id="convites-pendentes" className="text-lg font-semibold">
         Convites pendentes
       </h2>
-      <p role="status" className="mt-2 min-h-6 text-sm text-ink">
+      <p role="status" className="mt-2 min-h-6 text-sm text-foreground">
         {status}
       </p>
-      {revokeError ? (
-        <p role="alert" className="text-sm font-medium text-danger">
-          {revokeError}
-        </p>
-      ) : null}
+      {revokeError ? <Alert variant="destructive">{revokeError}</Alert> : null}
       {query.isPending ? (
-        <p className="mt-2 text-base text-muted" aria-busy="true">
+        <p className="mt-2 text-base text-muted-foreground" aria-busy="true">
           Carregando convites…
         </p>
       ) : query.isError ? (
         <div className="mt-2 flex flex-col gap-3">
-          <p role="alert" className="text-base font-medium text-danger">
+          <p role="alert" className="text-base font-medium text-destructive">
             Não foi possível carregar os convites.
           </p>
           <Button
-            variant="secondary"
+            variant="outline"
             onClick={() => {
               void query.refetch();
             }}
@@ -275,11 +259,11 @@ function PendingInvitations({ tenantId, isOwner }: { tenantId: string; isOwner: 
           </Button>
         </div>
       ) : query.data.length === 0 ? (
-        <p className="mt-2 text-base text-muted">Nenhum convite pendente.</p>
+        <p className="mt-2 text-base text-muted-foreground">Nenhum convite pendente.</p>
       ) : (
         <ul
           aria-labelledby="convites-pendentes"
-          className="mt-2 flex flex-col divide-y divide-line"
+          className="mt-2 flex flex-col divide-y divide-border"
         >
           {query.data.map((invitation) => (
             <PendingInvitationItem
@@ -334,11 +318,11 @@ function PendingInvitationItem({
   return (
     <li className="flex flex-col gap-3 py-4">
       <div>
-        <p className="break-all text-base font-medium text-ink">{invitation.email}</p>
-        <p className="text-sm text-muted">
+        <p className="break-all text-base font-medium text-foreground">{invitation.email}</p>
+        <p className="text-sm text-muted-foreground">
           {roleLabel} ·{' '}
           {expired ? (
-            <span className="font-medium text-danger">Expirado em {expiresText}</span>
+            <span className="font-medium text-destructive">Expirado em {expiresText}</span>
           ) : (
             `Vale até ${expiresText}`
           )}
@@ -346,17 +330,17 @@ function PendingInvitationItem({
       </div>
       {canRevoke && confirming ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <p className="text-sm text-ink sm:flex-1">O link deixa de funcionar. Revogar?</p>
+          <p className="text-sm text-foreground sm:flex-1">O link deixa de funcionar. Revogar?</p>
           <Button busy={busy} busyLabel="Revogando…" onClick={onConfirm}>
             Confirmar revogação
           </Button>
-          <Button variant="secondary" onClick={onCancel} disabled={busy}>
+          <Button variant="outline" onClick={onCancel} disabled={busy}>
             Cancelar
           </Button>
         </div>
       ) : canRevoke ? (
         <Button
-          variant="secondary"
+          variant="outline"
           className="self-start"
           aria-label={`Revogar convite de ${invitation.email}`}
           onClick={onAsk}

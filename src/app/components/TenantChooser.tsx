@@ -15,10 +15,12 @@ export function TenantChooser({ memberships }: { memberships: readonly TenantMem
             onClick={() => {
               select(membership.tenantId);
             }}
-            className="flex min-h-11 w-full flex-col items-start rounded-md border border-line bg-surface px-4 py-2 text-left outline-none hover:bg-canvas focus-visible:ring-3 focus-visible:ring-focus"
+            className="flex min-h-11 w-full flex-col items-start rounded-md border border-input bg-card px-4 py-2 text-left outline-none hover:bg-background focus-visible:ring-3 focus-visible:ring-ring"
           >
-            <span className="text-base font-medium text-ink">{membership.tenantName}</span>
-            <span className="text-sm text-muted">{memberRoleLabels[membership.role]}</span>
+            <span className="text-base font-medium text-foreground">{membership.tenantName}</span>
+            <span className="text-sm text-muted-foreground">
+              {memberRoleLabels[membership.role]}
+            </span>
           </button>
         </li>
       ))}

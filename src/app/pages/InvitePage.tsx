@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
+import { Button } from '@/components/ui/button';
+import { TextLink } from '@/components/ui/text-link';
 import { useAuth } from '@/app/auth/auth-context';
 import { createTokenStore, tokenFromHash } from '@/app/auth/invite-token';
 import { loginPath, signupPath } from '@/app/auth/redirect';
-import { AuthLayout, linkClass } from '@/app/components/AuthLayout';
-import { Button } from '@/app/components/Button';
+import { AuthLayout } from '@/app/components/AuthLayout';
 
 const INVITE_PATH = '/convite';
 
@@ -59,7 +60,7 @@ export function InvitePage() {
   if (!token && outcome.kind === 'idle') {
     return (
       <AuthLayout title="Convite">
-        <p role="alert" className="text-base text-ink">
+        <p role="alert" className="text-base text-foreground">
           Este link de convite está incompleto ou inválido. Peça um novo convite a quem administra a
           empresa.
         </p>
@@ -70,13 +71,11 @@ export function InvitePage() {
   if (outcome.kind === 'accepted') {
     return (
       <AuthLayout title="Convite aceito">
-        <p role="status" className="text-base text-ink">
+        <p role="status" className="text-base text-foreground">
           Pronto! Você agora faz parte da empresa.
         </p>
         <p className="mt-6 text-base">
-          <Link to="/app" className={linkClass}>
-            Ir para o painel
-          </Link>
+          <TextLink to="/app">Ir para o painel</TextLink>
         </p>
       </AuthLayout>
     );
@@ -85,7 +84,7 @@ export function InvitePage() {
   if (state.status === 'loading') {
     return (
       <AuthLayout title="Convite">
-        <p role="status" className="text-base text-muted">
+        <p role="status" className="text-base text-muted-foreground">
           Carregando…
         </p>
       </AuthLayout>
@@ -95,23 +94,17 @@ export function InvitePage() {
   if (state.status === 'signed-out') {
     return (
       <AuthLayout title="Convite">
-        <p className="text-base text-ink">
+        <p className="text-base text-foreground">
           Você recebeu um convite para uma empresa no LabBeautyPro. Entre ou crie sua conta com o
           mesmo e-mail que recebeu o convite.
         </p>
         <div className="mt-6 flex flex-col gap-3">
-          <Link
-            to={loginPath(INVITE_PATH)}
-            className="inline-flex min-h-11 items-center justify-center rounded-md bg-action px-4 text-base font-medium text-on-action outline-none hover:bg-action-hover focus-visible:ring-3 focus-visible:ring-focus focus-visible:ring-offset-2"
-          >
-            Entrar
-          </Link>
-          <Link
-            to={signupPath(INVITE_PATH)}
-            className="inline-flex min-h-11 items-center justify-center rounded-md border border-line bg-surface px-4 text-base font-medium text-ink outline-none hover:bg-canvas focus-visible:ring-3 focus-visible:ring-focus focus-visible:ring-offset-2"
-          >
-            Criar conta
-          </Link>
+          <Button asChild>
+            <Link to={loginPath(INVITE_PATH)}>Entrar</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to={signupPath(INVITE_PATH)}>Criar conta</Link>
+          </Button>
         </div>
       </AuthLayout>
     );
@@ -119,12 +112,12 @@ export function InvitePage() {
 
   return (
     <AuthLayout title="Aceitar convite">
-      <p className="text-base text-ink">
+      <p className="text-base text-foreground">
         Você entrou como <strong>{state.session.email ?? 'usuário sem e-mail'}</strong>. Ao aceitar,
         você passa a fazer parte da empresa que enviou o convite.
       </p>
       {outcome.kind === 'failed' ? (
-        <p role="alert" className="mt-4 text-sm font-medium text-danger">
+        <p role="alert" className="mt-4 text-sm font-medium text-destructive">
           {outcome.message}
         </p>
       ) : null}
@@ -141,7 +134,7 @@ export function InvitePage() {
           </Button>
         ) : null}
         <Button
-          variant="secondary"
+          variant="outline"
           disabled={busy}
           onClick={() => {
             void switchAccount();

@@ -13,6 +13,31 @@ import { routes } from '@/app/routes';
 import { InvitationsApiContext } from '@/app/team/invitations-context';
 import { TenancyApiContext } from '@/app/tenancy/tenancy-context';
 
+// O jsdom não tem ResizeObserver nem captura de ponteiro, que o menu e a gaveta do Radix usam no app
+// shell. Os testes de tela importam este módulo, então o ajuste vale para todos eles.
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {
+        /* sem layout no jsdom */
+      }
+      unobserve() {
+        /* sem layout no jsdom */
+      }
+      disconnect() {
+        /* sem layout no jsdom */
+      }
+    },
+  );
+}
+if (typeof Element !== 'undefined') {
+  Object.assign(Element.prototype, {
+    hasPointerCapture: () => false,
+    scrollIntoView: () => undefined,
+  });
+}
+
 // Só para testes: AuthApi em memória, sem Supabase. Login e cadastro bem-sucedidos abrem a sessão e
 // avisam os ouvintes, como o onAuthStateChange real.
 export function createFakeAuthApi(initial: AuthSession | null = null) {

@@ -1,20 +1,112 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource-variable/inter';
 
-/* Tokens semânticos provisórios (Sprint 1.3). O design system completo, com tema por empresa, é a
-   Sprint 1.4. Os componentes usam só estes nomes, nunca a cor crua. Contrastes sobre `surface`
-   (branco): ink 17:1, muted 7,7:1, danger 6,5:1; texto branco sobre `action` 17:1. */
-@theme {
-  --color-canvas: var(--color-stone-50);
-  --color-surface: var(--color-white);
-  --color-ink: var(--color-stone-900);
-  --color-muted: var(--color-stone-600);
-  --color-line: var(--color-stone-400);
-  --color-action: var(--color-stone-900);
-  --color-action-hover: var(--color-stone-700);
-  --color-on-action: var(--color-white);
-  --color-danger: var(--color-red-700);
-  --color-success: var(--color-green-800);
-  --color-focus: var(--color-blue-700);
+/* Design system (Sprint 1.4) em três camadas. Componentes e páginas usam só as classes geradas pelas
+   camadas semântica e de componente (bg-primary, text-muted-foreground, min-h-control…), nunca um
+   primitivo nem uma cor crua. Os pares de contraste são verificados em src/styles/tokens.test.ts.
+   Sem dark mode na 1.4 (decisão do usuário): um `.dark` futuro redefine só a camada semântica. */
+
+/* 1. Primitivos: a paleta da plataforma, neutra (ADR-004), em OKLCH. */
+:root {
+  --lb-white: oklch(100% 0 0);
+  --lb-stone-50: oklch(98.5% 0.001 106.423);
+  --lb-stone-100: oklch(97% 0.001 106.424);
+  --lb-stone-200: oklch(92.3% 0.003 48.717);
+  --lb-stone-300: oklch(86.9% 0.005 56.366);
+  --lb-stone-500: oklch(55.3% 0.013 58.071);
+  --lb-stone-600: oklch(44.4% 0.011 73.639);
+  --lb-stone-700: oklch(37.4% 0.01 67.558);
+  --lb-stone-900: oklch(21.6% 0.006 56.043);
+  --lb-blue-700: oklch(48.8% 0.243 264.376);
+  --lb-red-700: oklch(50.5% 0.213 27.518);
+  --lb-green-800: oklch(44.8% 0.119 151.328);
+
+  --lb-radius-md: 0.5rem;
+  --lb-radius-lg: 0.75rem;
+  --lb-size-44: 2.75rem;
+}
+
+/* 2. Semânticos, com os nomes do shadcn/ui. É esta camada que o tema de cada empresa vai sobrescrever
+   (ADR-004: primary, secondary, superfície, raio e fonte). */
+:root {
+  --background: var(--lb-stone-50);
+  --foreground: var(--lb-stone-900);
+  --card: var(--lb-white);
+  --card-foreground: var(--lb-stone-900);
+  --popover: var(--lb-white);
+  --popover-foreground: var(--lb-stone-900);
+  --primary: var(--lb-stone-900);
+  --primary-foreground: var(--lb-white);
+  --secondary: var(--lb-stone-100);
+  --secondary-foreground: var(--lb-stone-900);
+  --muted: var(--lb-stone-100);
+  --muted-foreground: var(--lb-stone-600);
+  --accent: var(--lb-stone-200);
+  --accent-foreground: var(--lb-stone-900);
+  --destructive: var(--lb-red-700);
+  --destructive-foreground: var(--lb-white);
+  --success: var(--lb-green-800);
+  --success-foreground: var(--lb-white);
+  /* `border` separa áreas (decorativo); `input` é a borda de controles e precisa de 3:1. */
+  --border: var(--lb-stone-200);
+  --input: var(--lb-stone-500);
+  --ring: var(--lb-blue-700);
+  --radius: var(--lb-radius-lg);
+}
+
+/* Tema da empresa (Sprint 3.1, ADR-004 §5 e RN-018): o contêiner `[data-theme-scope="tenant"]` vai
+   redefinir aqui os tokens semânticos permitidos, com valores validados por Zod e contraste de 4,5:1
+   calculado antes de salvar. O painel global usa sempre os valores de :root. */
+
+/* 3. Componente: medidas comuns a botões, campos e itens de navegação. */
+:root {
+  --control-height: var(--lb-size-44);
+  --control-radius: var(--lb-radius-md);
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-control: var(--control-radius);
+
+  --spacing-control: var(--control-height);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background font-sans text-base/normal text-foreground antialiased;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
