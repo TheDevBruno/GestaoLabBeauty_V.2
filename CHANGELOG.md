@@ -144,6 +144,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 2.2, passo 6: verificação final (`npm ci`, `check`, `db:test`, `db lint`, integração, `dist/`
   sem a service role, navegador em 375/768/1024/1440 px com os 5 papéis de operação e teste só com
   teclado) e encerramento da sprint.
+- Sprint 2.3, passo 1: plano de disponibilidade em `docs/roadmap/sprint-2.3.md` (fuso da empresa,
+  horário semanal sem sobreposição com `btree_gist`, exceções de bloqueio e extra, cálculo no banco,
+  telas por papel), aprovado; RN-048 a RN-052.
 
 ### Corrigido
 

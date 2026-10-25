@@ -102,12 +102,18 @@ liberação de recursos por plano.
 
 ## Próximo passo
 
-**Sprint 2.3 — disponibilidade** (Fase 2, plano §6). Não iniciada: começa só com autorização do
-usuário e depois do merge do PR da Sprint 2.2.
+**Sprint 2.3 — disponibilidade** (Fase 2, plano §6; `feat/sprint-2.3-disponibilidade`, a partir da
+`main` em `3986ca5`, merge do PR #24). Passo 1 concluído: plano em
+[sprint-2.3.md](roadmap/sprint-2.3.md) aprovado pelo usuário em 2026-10-25 com todas as recomendações
+(fuso em `tenants.timezone`, `locations` só na Sprint 2.4, extensão `btree_gist`, regras com
+`services.manage` e exceções também com `appointments.write`, exceção sempre de um profissional, sem
+vigência, cálculo no banco com prévia de 7 dias, rota `/app/profissionais/:id/horarios` e "Meus
+horários", correção dos `TextLink` de 20 px, specialist arquivando cliente mantido); RN-048 a RN-052.
+Próximo: passo 2 (migration e pgTAP).
 
 Sprint anterior: **Sprint 2.2 — clientes** (`feat/sprint-2.2-clientes`, a partir da `main` em
-`5848ff1`, merge do PR #23). **Concluída em 2026-10-25**, com PR aberto para o usuário revisar e
-mesclar (não é ponto de aprovação obrigatória). Passo 6 concluído: `npm ci`, `check` (609 testes),
+`5848ff1`, merge do PR #23). **Concluída em 2026-10-25**, PR #24 mesclado em 2026-10-25 (não é ponto
+de aprovação obrigatória). Passo 6 concluído: `npm ci`, `check` (609 testes),
 `db:test` 1590 PASS, `db lint` sem erros, `test:integration` 8 passed, `dist/` sem a service role;
 navegador em 375, 768, 1024 e 1440 px com owner, manager, receptionist, specialist e financial e teste
 só com teclado; "Voltar para clientes" virou botão de 44 px (registro em

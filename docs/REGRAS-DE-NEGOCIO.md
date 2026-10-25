@@ -451,6 +451,70 @@ Regra nova ou alterada deve ser registrada aqui com a origem.
   mantida por trigger e função `public.search_clients` com `security invoker`.
 - **Status:** confirmada.
 
+## Disponibilidade
+
+### RN-048 — Fuso da empresa
+
+| Dado        | Quando                             | Então                                                              |
+| ----------- | ---------------------------------- | ------------------------------------------------------------------ |
+| Uma empresa | É criada                           | Fica no fuso `America/Sao_Paulo`                                   |
+| Uma empresa | Grava um fuso                      | É aceito só se for um nome IANA conhecido pelo banco               |
+| Um horário  | É semanal ou de "dia inteiro"      | É interpretado no fuso da empresa; o banco guarda instantes em UTC |
+| Uma empresa | Troca de fuso (tela na Sprint 2.5) | Só owner e admin (`tenant.settings`)                               |
+
+- **Origem:** plano §7; RN-032; decisão 1 do usuário em 2026-10-25 (Sprint 2.3).
+- **Status:** confirmada.
+
+### RN-049 — Horário semanal do profissional
+
+| Dado            | Quando                             | Então                                                        |
+| --------------- | ---------------------------------- | ------------------------------------------------------------ |
+| Um intervalo    | É gravado                          | Tem dia da semana, início antes do fim, no mesmo dia         |
+| Um intervalo    | Tem hora fora de 5 em 5 minutos    | É recusado                                                   |
+| Um intervalo    | Termina à meia-noite               | É gravado com fim `24:00`                                    |
+| Dois intervalos | Se sobrepõem no mesmo dia e pessoa | São recusados; encostados (12:00–14:00 e 14:00–18:00) passam |
+| Uma semana      | É salva e um intervalo é inválido  | Nada muda: a semana inteira é gravada ou nenhuma parte       |
+| Um intervalo    | É alterado                         | Vale dali em diante; não há data de vigência                 |
+
+- **Origem:** decisões 3 e 6 do usuário em 2026-10-25 (Sprint 2.3).
+- **Status:** confirmada.
+
+### RN-050 — Exceções de disponibilidade
+
+| Dado                | Quando                   | Então                                                         |
+| ------------------- | ------------------------ | ------------------------------------------------------------- |
+| Uma exceção         | É gravada                | É de um profissional: bloqueio (não atende) ou horário extra  |
+| Uma exceção         | É gravada                | Vai de 5 em 5 minutos, com fim depois do início, até 366 dias |
+| Duas exceções       | Se sobrepõem             | São aceitas; no cálculo, bloqueio vence extra                 |
+| Um feriado          | Vale para a empresa toda | Vira um bloqueio por profissional                             |
+| O motivo da exceção | É preenchido             | Tem até 120 caracteres e não deve conter dado de saúde        |
+
+- **Origem:** decisão 5 do usuário em 2026-10-25 (Sprint 2.3).
+- **Status:** confirmada.
+
+### RN-051 — Quem altera a disponibilidade
+
+| Dado                          | Quem altera                                                                      |
+| ----------------------------- | -------------------------------------------------------------------------------- |
+| Horário semanal               | `services.manage` (owner, admin, manager)                                        |
+| Exceções                      | `services.manage` e `appointments.write` (receptionist; specialist só o próprio) |
+| Leitura de horário e exceções | Todo membro da empresa; nada para `anon` (o portal lê por função na Sprint 3.2)  |
+
+- **Origem:** plano §8; decisão 4 do usuário em 2026-10-25 (Sprint 2.3).
+- **Status:** confirmada.
+
+### RN-052 — Disponibilidade calculada
+
+| Dado                    | Quando                       | Então                                                          |
+| ----------------------- | ---------------------------- | -------------------------------------------------------------- |
+| Um profissional ativo   | Tem a disponibilidade pedida | Recebe horário do dia + extras − bloqueios, no fuso da empresa |
+| Um profissional inativo | Tem a disponibilidade pedida | Recebe vazio (RN-042)                                          |
+| Um pedido               | Passa de 62 dias             | É recusado                                                     |
+
+- **Origem:** decisão 7 do usuário em 2026-10-25 (Sprint 2.3). Agendamentos, duração e intervalo do
+  serviço entram na Sprint 2.4 (RN-003).
+- **Status:** confirmada.
+
 ## Administração global
 
 ### RN-030 — Admin global fora dos papéis da empresa
