@@ -407,7 +407,7 @@ Regra nova ou alterada deve ser registrada aqui com a origem.
 - **Origem:** decisão do usuário em 2026-10-25 (Sprint 2.1). Exceção controlada à leitura só do
   próprio perfil: os nomes saem por função (`public.list_professional_link_candidates`), nunca pela
   tabela `profiles`. No passo 2 a função passou a devolver também o profissional ligado, para a tela
-  mostrar o vínculo atual; aguarda confirmação do usuário.
+  mostrar o vínculo atual; ajuste confirmado pelo usuário em 2026-10-25.
 - **Status:** confirmada.
 
 ## Administração global

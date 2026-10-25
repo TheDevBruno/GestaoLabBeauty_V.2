@@ -239,8 +239,8 @@ Entregue em `supabase/migrations/20261025120000_services_professionals.sql`:
   `professional_id` (profissional já ligado, ou nulo) de todos os membros da empresa, e zero linhas
   para quem não tem `services.manage`. **Ajuste em relação ao plano:** o plano falava em devolver só
   os membros sem profissional; a função devolve todos com o profissional ligado, para a tela de edição
-  mostrar o vínculo atual e a lista mostrar quem está ligado a quem. A RN-044 foi ajustada e aguarda
-  confirmação do usuário.
+  mostrar o vínculo atual e a lista mostrar quem está ligado a quem. A RN-044 foi ajustada e o
+  ajuste foi confirmado pelo usuário em 2026-10-25.
 
 Ajustes em arquivos existentes, por mudança de schema:
 
