@@ -97,12 +97,17 @@ liberação de recursos por plano.
 
 ## Próximo passo
 
-**Sprint 2.2 — clientes** (Fase 2, plano §6). Não iniciada: começa só com autorização do usuário e
-depois do merge do PR da Sprint 2.1.
+**Sprint 2.2 — clientes** (`feat/sprint-2.2-clientes`, a partir da `main` em `5848ff1`, merge do PR
+#23). Em andamento. Passo 1 concluído: plano em [sprint-2.2.md](roadmap/sprint-2.2.md) aprovado pelo
+usuário em 2026-10-25 com todas as recomendações (nome, telefone E.164, e-mail, nascimento e ativo;
+contatos não únicos; busca sem acento com a extensão `unaccent`, `search_name` por trigger e
+`public.search_clients`; notas e consentimentos fora; arquivar no lugar de excluir; páginas próprias;
+menu para quem tem `clients.read`; "Carregar mais" de 50 em 50); RN-045 a RN-047 e complemento da
+RN-037. Próximo: passo 2 (migration e pgTAP).
 
 Sprint anterior: **Sprint 2.1 — serviços (com `buffer_minutes`) e profissionais**
 (`feat/sprint-2.1-servicos-profissionais`, a partir da `main` em `ead9e69`). **Concluída em
-2026-10-25**, com PR aberto para o usuário revisar e mesclar (não é ponto de aprovação obrigatória).
+2026-10-25**, PR #23 mesclado em 2026-10-25 (não é ponto de aprovação obrigatória).
 Passo 1 concluído: plano em [sprint-2.1.md](roadmap/sprint-2.1.md) aprovado pelo usuário em 2026-10-25
 com todas as recomendações (sem categorias, moeda em `services.currency`, nome único por empresa, sem
 preço por profissional, função de candidatos ao vínculo, páginas próprias, menu só com

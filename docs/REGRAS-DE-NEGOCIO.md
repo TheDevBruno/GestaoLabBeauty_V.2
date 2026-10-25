@@ -410,6 +410,47 @@ Regra nova ou alterada deve ser registrada aqui com a origem.
   mostrar o vínculo atual; ajuste confirmado pelo usuário em 2026-10-25.
 - **Status:** confirmada.
 
+## Clientes
+
+### RN-045 — Dados do cliente
+
+| Dado        | Quando                                     | Então                                                         |
+| ----------- | ------------------------------------------ | ------------------------------------------------------------- |
+| Um cliente  | O nome é gravado                           | É obrigatório, não branco, até 120 caracteres                 |
+| Um cliente  | O telefone é gravado                       | É vazio ou em E.164 (`+5511987654321`)                        |
+| Um cliente  | O e-mail é gravado                         | É vazio ou um e-mail em minúsculas, até 254 caracteres        |
+| Um cliente  | A data de nascimento é gravada             | É vazia ou de 1900-01-01 até hoje (o "até hoje" é da tela)    |
+| Uma empresa | Cadastra dois clientes com o mesmo contato | É aceito: telefone e e-mail podem se repetir na mesma empresa |
+
+- **Origem:** plano §7 (`clients`); decisões do usuário em 2026-10-25 (Sprint 2.2): sem CPF, endereço
+  ou gênero (minimização), telefone em E.164 com a tela aceitando o formato brasileiro, contatos não
+  únicos (fusão de duplicados do portal decidida na Sprint 3.2).
+- **Status:** confirmada.
+
+### RN-046 — Cliente arquivado
+
+| Dado                 | Quando                               | Então                                                 |
+| -------------------- | ------------------------------------ | ----------------------------------------------------- |
+| Um cliente           | Alguém com `clients.write` o arquiva | Não é excluído (RN-037); some da lista padrão         |
+| Um cliente arquivado | Alguém marca "Mostrar arquivados"    | Aparece, marcado como arquivado, e pode ser reativado |
+| Um cliente arquivado | Um agendamento novo é oferecido      | Não é oferecido (Sprints 2.4 e 3.2)                   |
+
+- **Origem:** RN-037; decisão do usuário em 2026-10-25 (Sprint 2.2).
+- **Status:** confirmada. O specialist pode arquivar os clientes que vê (RN-036); bloquear isso exige
+  trigger e fica como possível ajuste.
+
+### RN-047 — Busca de clientes
+
+| Dado      | Quando                      | Então                                                         |
+| --------- | --------------------------- | ------------------------------------------------------------- |
+| Um membro | Busca por parte do nome     | Acha sem diferenciar acento e maiúsculas ("joao" acha "João") |
+| Um membro | Busca por 3 ou mais dígitos | Acha também pelo telefone                                     |
+| Um membro | Faz qualquer busca          | Só recebe clientes que já pode ver (recorte da RN-028)        |
+
+- **Origem:** decisão do usuário em 2026-10-25 (Sprint 2.2): extensão `unaccent`, coluna de busca
+  mantida por trigger e função `public.search_clients` com `security invoker`.
+- **Status:** confirmada.
+
 ## Administração global
 
 ### RN-030 — Admin global fora dos papéis da empresa
@@ -451,8 +492,9 @@ Regra nova ou alterada deve ser registrada aqui com a origem.
 | Um membro | Tenta excluir um cliente ou um agendamento | A ação é negada |
 
 - **Origem:** decisão do usuário em 2026-10-20 (Sprint 1.2, passo 6).
-- **Status:** confirmada para a Sprint 1.2. Cancelamento vira status na Sprint 2; remoção de cliente
-  terá regra própria.
+- **Status:** confirmada para a Sprint 1.2. Cancelamento vira status na Sprint 2. Remoção de cliente:
+  o caminho é arquivar (RN-046), decisão do usuário em 2026-10-25 (Sprint 2.2); pedido de apagar os
+  dados de um cliente fica para quando a LGPD for tratada.
 
 ## Financeiro e valores
 

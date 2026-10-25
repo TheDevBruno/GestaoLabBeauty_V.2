@@ -120,6 +120,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 2.1, passo 6: verificação final (`npm ci`, `check`, `db:test`, `db lint`, integração,
   `dist/` sem a service role, navegador em 375/768/1024/1440 px com owner, manager e receptionist e
   teste só com teclado) e encerramento da sprint.
+- Sprint 2.2, passo 1: plano de clientes em `docs/roadmap/sprint-2.2.md` (diagnóstico de `clients`,
+  modelo com telefone E.164, e-mail, nascimento e arquivamento, busca sem acento com `unaccent` e
+  `search_clients`, telas por papel), aprovado; RN-045 a RN-047 e complemento da RN-037.
 
 ### Alterado
 
