@@ -1,0 +1,452 @@
+# Sprint 2.1 — Serviços (com `buffer_minutes`) e profissionais
+
+- **Início:** 2026-10-24
+- **Status:** concluída em 2026-10-25 (plano aprovado pelo usuário em 2026-10-25; não é ponto de
+  aprovação obrigatória)
+- **Branch:** `feat/sprint-2.1-servicos-profissionais` (a partir da `main` em `ead9e69`, merge do PR #22)
+
+## Objetivo
+
+Primeira sprint da Fase 2. A empresa passa a cadastrar os **serviços** que oferece (duração, intervalo
+`buffer_minutes`, preço) e os **profissionais** que atendem, com a lista de serviços que cada um faz.
+Esses dados alimentam a disponibilidade (Sprint 2.3), a agenda (Sprint 2.4) e o portal (Sprint 3.2).
+Não é ponto de aprovação obrigatória.
+
+## Diagnóstico (2026-10-24)
+
+- **`professionals`** existe desde a Sprint 1.2 só com `id`, `tenant_id`, `membership_id` e
+  `created_at`; **não tem nome**. Políticas: membro lê, `services.manage` cria, altera e exclui
+  (RN-035). `GRANT` de coluna: `insert (tenant_id, membership_id)`, `update (membership_id)`.
+- **`appointments → professionals`** é FK sem `on delete`: excluir um profissional com agendamento já
+  falha no banco.
+- **`services`, `service_categories` e `professional_services`** não existem. Plano §7 lista as três.
+- **`tenants`** não tem moeda nem fuso. Nesta sprint só a moeda importa (preço, RN-032).
+- **`profiles`** só deixa ler o próprio perfil. Para ligar um profissional a um membro, quem tem
+  `services.manage` precisa ver o nome dos membros; hoje nem o owner lê o perfil dos outros.
+- **Testes pgTAP** que inserem em `professionals`: só `rls_specialist.test.sql` (4 inserções). O seed
+  insere 4 profissionais.
+- **Interface:** `src/modules/` ainda não existe (ARCHITECTURE.md: "Fase 2"). O shell tem "Painel" e
+  "Equipe e convites". Os formulários usam `useState` + Zod (`safeParse`) + `fieldErrorsFrom` +
+  `InputField`/`SelectField`, sem `react-hook-form`.
+
+## Proposta de modelo de dados
+
+Uma migration nova (`supabase/migrations/2026102xxxxxxx_services_professionals.sql`). Nenhuma ADR muda.
+
+### `public.services` (nova)
+
+| Coluna             | Tipo / regra                                                               |
+| ------------------ | -------------------------------------------------------------------------- |
+| `id`               | `uuid` PK, `gen_random_uuid()`                                             |
+| `tenant_id`        | `uuid not null` → `tenants (id) on delete cascade`                         |
+| `name`             | `text not null`, sem branco, até 80 caracteres                             |
+| `description`      | `text` opcional, até 500 caracteres                                        |
+| `duration_minutes` | `integer not null`, de 5 a 720, múltiplo de 5                              |
+| `buffer_minutes`   | `integer` **opcional** (`null` = sem intervalo), de 0 a 240, múltiplo de 5 |
+| `price_cents`      | `integer not null`, `>= 0` (centavos, RN-032)                              |
+| `currency`         | `text not null default 'BRL'`, `^[A-Z]{3}$` (ver decisão 3)                |
+| `is_active`        | `boolean not null default true`                                            |
+| `created_at`       | `timestamptz not null default now()`                                       |
+
+- `unique (tenant_id, id)`; nome único por empresa sem diferenciar maiúsculas
+  (`unique index on (tenant_id, lower(btrim(name)))`, decisão 4).
+- Trigger `private.prevent_tenant_id_change` (ADR-003 §4).
+- RLS: **SELECT** para membro (`private.is_member`), porque recepção, specialist e financeiro vão ver
+  o serviço na agenda; **INSERT/UPDATE/DELETE** com `services.manage` (plano §8).
+- `GRANT` só de `select`, `delete` e das colunas editáveis em `insert`/`update` (ADR-008). Nada para
+  `anon`; o portal lê por função própria na Sprint 3.2 (ADR-003 §7).
+- `buffer_minutes` não entra em nenhum cálculo nesta sprint; a RN-003 (período inclui o buffer) é
+  aplicada na Sprint 2.4. Aqui só fica gravado e validado.
+
+### `public.professional_services` (nova)
+
+Quais serviços cada profissional faz.
+
+- Colunas: `tenant_id`, `professional_id`, `service_id`, `created_at`.
+- PK `(tenant_id, professional_id, service_id)`; FKs compostas para `professionals (tenant_id, id)` e
+  `services (tenant_id, id)` com `on delete cascade` (o vínculo some com o profissional ou o serviço).
+  A FK composta impede ligar serviço de outra empresa (ADR-003 §2).
+- RLS: SELECT para membro; INSERT e DELETE com `services.manage`; **sem UPDATE** (troca = apagar e
+  inserir).
+- Duração e preço por profissional ficam fora (decisão 5).
+
+### `public.professionals` (alterada)
+
+- `display_name text not null`, sem branco, até 80 caracteres — nome exibido na agenda e no portal.
+  Não usa o nome do perfil, porque o profissional pode não ter conta (RN-035).
+- `is_active boolean not null default true` — desativar tira o profissional da agenda nova sem apagar
+  o histórico.
+- `GRANT insert`/`update` passam a incluir `display_name` e `is_active`.
+- Exclusão continua permitida com `services.manage`, mas o banco recusa quando há agendamento (FK já
+  existente). A tela oferece "Desativar" como caminho normal.
+- `display_name` entra como `not null` sem valor padrão: em homologação e produção ainda não há
+  linhas; no local, `db reset` aplica a migration antes do seed. Os 4 `insert` do
+  `rls_specialist.test.sql` e o seed passam a informar o nome (único ajuste em teste existente, por
+  mudança de schema).
+
+### Nomes dos membros para o vínculo (decisão 6)
+
+Recomendado: função `public.list_professional_link_candidates(p_tenant_id uuid)` (`security definer`,
+`STABLE`, `search_path` vazio, `EXECUTE` só para `authenticated`) que, **só para quem tem
+`services.manage`**, devolve `membership_id`, nome do perfil e papel dos membros da empresa ainda sem
+profissional. Não abre a tabela `profiles`; expõe só esses três campos e só nessa empresa. Testada em
+pgTAP (manager vê, receptionist recebe vazio/erro, tenant B não aparece).
+
+### Seed
+
+- Nome nos 4 profissionais existentes.
+- 3 serviços por empresa (um com `buffer_minutes`, um sem, um inativo), todos fictícios.
+- Vínculos em `professional_services` (o profissional do specialist faz 2 dos 3).
+- `seed_rls.test.sql` atualizado para contar os novos dados.
+
+### Testes pgTAP (novos)
+
+- `services.test.sql`: estrutura (colunas, `CHECK`s de duração, buffer, preço e moeda, nome único sem
+  diferenciar maiúsculas), RLS × operação × papel nos dois tenants, `anon` sem acesso, tenant B
+  invisível, `tenant_id` imutável, `GRANT` só nas colunas previstas.
+- `professional_services.test.sql`: FK composta recusa serviço ou profissional de outra empresa, RLS ×
+  papel, sem UPDATE, cascata ao excluir serviço.
+- `professionals` (acréscimos): `display_name` obrigatório e não branco, `is_active`, `GRANT` das
+  colunas novas, exclusão recusada com agendamento.
+- Função de candidatos (se aprovada).
+- `rls_coverage.test.sql` cobre as tabelas novas automaticamente.
+
+## Proposta de interface
+
+Direção visual da Sprint 1.4 (Soft UI, tokens semânticos, Inter, 44 px). Consultas à skill
+`ui-ux-pro-max` (`--domain ux`): tabela vira cartões no celular, estado vazio com mensagem e ação,
+retorno de carregamento e de sucesso ao salvar, rótulo visível e erro junto ao campo.
+
+- Código em `src/modules/services/` e `src/modules/professionals/` (primeiro uso de `src/modules/`,
+  ARCHITECTURE.md). Schemas Zod em `src/shared/service.ts` e `src/shared/professional.ts`.
+- `src/shared/money.ts`: converte "120,00" ↔ `12000` centavos e formata em `pt-BR` com
+  `Intl.NumberFormat`; testes de borda (vírgula, ponto de milhar, zero, negativo recusado, mais de
+  duas casas recusado).
+- **Rotas** (decisão 7): `/app/servicos`, `/app/servicos/novo`, `/app/servicos/:id`,
+  `/app/profissionais`, `/app/profissionais/novo`, `/app/profissionais/:id`. Página própria para criar e
+  editar (link direto, botão voltar previsível), carregada com `lazy`.
+- **Navegação:** "Serviços" e "Profissionais" no shell, visíveis com `services.manage` (decisão 8).
+  Rota protegida por `RequirePermission`.
+- **Lista de serviços:** cartões empilhados abaixo de 1024 px e tabela a partir dele; nome, duração,
+  intervalo ("sem intervalo" quando `null`), preço, status (texto, não só cor). Filtro "Mostrar
+  inativos". Estado vazio com "Cadastrar o primeiro serviço".
+- **Formulário de serviço:** nome, descrição, duração (select de 5 em 5 min, rótulo "1 h 30 min"),
+  intervalo após o atendimento (select com "Sem intervalo" e 5 a 60 min, ajuda explicando que o
+  horário fica reservado), preço em reais (`inputmode="decimal"`), ativo. Erro por campo, foco no
+  primeiro inválido, botão com `busy`, aviso de sucesso com `role="status"`.
+- **Lista de profissionais:** nome, membro ligado (ou "Sem acesso ao sistema"), quantidade de serviços,
+  status.
+- **Formulário de profissional:** nome exibido, membro ligado (select com os candidatos da decisão 6 e
+  "Nenhum"), serviços que faz (lista de caixas de seleção em `fieldset` com `legend`, 44 px por item,
+  só serviços ativos), ativo. Salvar grava o profissional e acerta os vínculos (inserir os novos,
+  apagar os desmarcados).
+- **Excluir:** só no formulário de edição, com confirmação em duas etapas como na revogação de
+  convite; se o banco recusar (profissional com agendamento), a mensagem sugere desativar.
+- Escrita direto no Supabase sob RLS (ADR-002: CRUD simples, sem API). Consultas e mutações com
+  TanStack Query, chaves por `tenant_id`.
+- Testes de tela (jsdom): permissões (receptionist não vê os itens e recebe "Acesso não permitido"),
+  criar, editar, validação de preço e duração, estado vazio, desativar, vínculos de serviços.
+
+## Dependências e configuração
+
+- **Nenhuma dependência nova.** `react-hook-form` continua fora: os dois formulários seguem o padrão
+  atual (`useState` + Zod), que já está testado (decisão 9).
+- Nenhum arquivo de configuração muda. Se precisar, paro e peço.
+
+## Passos
+
+| #   | Passo                                                                                                     | Status    |
+| --- | --------------------------------------------------------------------------------------------------------- | --------- |
+| 1   | Plano (este documento) e OK do usuário                                                                    | concluído |
+| 2   | Migration (`services`, `professional_services`, colunas de `professionals`, função de candidatos) e pgTAP | concluído |
+| 3   | Seed, schemas Zod e `money.ts`                                                                            | concluído |
+| 4   | Telas de serviços                                                                                         | concluído |
+| 5   | Telas de profissionais (vínculo com membro e serviços)                                                    | concluído |
+| 6   | Verificação (check, db:test, integração, navegador 375/1440 px, checklist) e encerramento                 | concluído |
+
+Cada passo termina com `npm run check` e `npm run db:test` verdes, commit, `docs/STATE.md`,
+`CHANGELOG.md` e este registro atualizados, e push da branch. Migrations só no Supabase local.
+
+## Regras de negócio (registradas em REGRAS-DE-NEGOCIO.md em 2026-10-25)
+
+- **RN-040 — Serviço:** duração de 5 a 720 min em passos de 5; intervalo opcional de 0 a 240 min em
+  passos de 5; preço em centavos, não negativo, com moeda; nome único na empresa sem diferenciar
+  maiúsculas.
+- **RN-041 — Serviços: membro lê, `services.manage` altera** (mesmo modelo da RN-035).
+- **RN-042 — Profissional e serviço inativos:** continuam no histórico e nas telas de cadastro, mas não
+  são oferecidos em agendamento novo (efeito aplicado nas Sprints 2.3, 2.4 e 3.2).
+- **RN-043 — Profissional faz só serviços da própria empresa** (FK composta); sem vínculo, não é
+  oferecido para aquele serviço (efeito nas Sprints 2.3 e 3.2).
+- **RN-044 — Candidatos ao vínculo:** quem tem `services.manage` vê nome e
+  papel dos membros sem profissional; ninguém mais.
+
+## Decisões do usuário (2026-10-25)
+
+Todas as recomendações aprovadas. Na decisão 3, o usuário confirmou que `services.currency` é quem
+guarda a moeda (sem `tenants.currency`). As opções apresentadas ficam abaixo como registro.
+
+1. **Escopo**: serviços, `professional_services` e colunas de `professionals`, como acima.
+2. **`service_categories` fica para depois** (recomendado: só faz falta com muitos serviços ou no
+   portal, Sprint 3.2). Alternativa: incluir agora, com `category_id` opcional em `services`.
+3. **Moeda**: coluna `currency` em `services` com padrão `BRL` (recomendado, RN-032 pede "centavos com
+   moeda"); a interface mostra só BRL. Alternativa: moeda na empresa (`tenants.currency`).
+4. **Nome de serviço único por empresa**, sem diferenciar maiúsculas (recomendado). Alternativa: nomes
+   repetidos permitidos.
+5. **Duração e preço por profissional** ficam fora do MVP (recomendado). Alternativa: colunas opcionais
+   em `professional_services`.
+6. **Vínculo com membro**: função de candidatos para quem tem `services.manage` (recomendado; mostra ao
+   manager nome e papel dos membros). Alternativa A: só quem tem `members.manage` liga profissional a
+   membro, usando a lista da equipe. Alternativa B: vínculo fica para a Sprint 2.5 (onboarding).
+7. **Página própria para criar/editar** (recomendado). Alternativa: formulário em gaveta (`Sheet`).
+8. **Itens de menu só com `services.manage`** (recomendado; os demais papéis veem serviços e
+   profissionais dentro da agenda). Alternativa: todos veem as listas em modo leitura.
+9. **Sem `react-hook-form`** nesta sprint (recomendado).
+
+## Fora do escopo
+
+- Categorias de serviço (decisão 2), duração/preço por profissional, comissões
+  (`commission_rules`, Fase 4).
+- Unidades (`locations`), horários e disponibilidade (Sprint 2.3).
+- Uso do `buffer_minutes` no período do agendamento (Sprint 2.4).
+- Fotos de profissional e de serviço (exigem Storage e RN-019).
+- Exibição no portal público (Sprint 3.2).
+
+## Registro
+
+### Passo 1 — Plano (2026-10-24)
+
+- PR #22 confirmado na `main` (`ead9e69`, mesclado em 2026-10-25T01:02:40Z). Branch criada a partir
+  dele. Supabase local em execução (Docker) e `.env.local` presente.
+- Este documento. Plano aprovado pelo usuário em 2026-10-25 com todas as recomendações; RN-040 a
+  RN-044 registradas.
+
+### Passo 2 — Migration e pgTAP (2026-10-25)
+
+Sem dependência nova nem mudança de configuração. Tudo só no Supabase local.
+
+Entregue em `supabase/migrations/20261025120000_services_professionals.sql`:
+
+- `public.services` com os `CHECK`s da RN-040 (duração de 5 a 720 em passos de 5, `buffer_minutes`
+  nulo ou de 0 a 240 em passos de 5, preço não negativo, moeda `^[A-Z]{3}$` com padrão `BRL`, nome não
+  branco até 80, descrição até 500) e índice único `(tenant_id, lower(btrim(name)))`.
+- `public.professional_services` com PK `(tenant_id, professional_id, service_id)`, FKs compostas com
+  `on delete cascade` e índice da FK de serviço.
+- `professionals.display_name` (obrigatório, não branco, até 80) e `professionals.is_active`.
+- RLS: SELECT para membro e escrita com `services.manage` nas duas tabelas novas;
+  `professional_services` sem UPDATE. `GRANT` de tabela só `select`/`delete` e de coluna nos campos
+  editáveis; nada para `anon`. Trigger de `tenant_id` imutável nas duas.
+- `public.list_professional_link_candidates(p_tenant_id)`: `security definer`, `STABLE`, `search_path`
+  vazio, `EXECUTE` só para `authenticated`. Devolve `membership_id`, `full_name`, `role` e
+  `professional_id` (profissional já ligado, ou nulo) de todos os membros da empresa, e zero linhas
+  para quem não tem `services.manage`. **Ajuste em relação ao plano:** o plano falava em devolver só
+  os membros sem profissional; a função devolve todos com o profissional ligado, para a tela de edição
+  mostrar o vínculo atual e a lista mostrar quem está ligado a quem. A RN-044 foi ajustada e o
+  ajuste foi confirmado pelo usuário em 2026-10-25.
+
+Ajustes em arquivos existentes, por mudança de schema:
+
+- `supabase/seed.sql`: nome nos 4 profissionais (serviços e vínculos do seed ficam no passo 3).
+- `supabase/tests/rls_specialist.test.sql`: os `insert` em `professionals` passam a informar
+  `display_name`, e a lista de colunas com `INSERT`/`UPDATE` de `authenticated` inclui `display_name` e
+  `is_active`. Nenhum resultado esperado mudou.
+
+Testes novos em `supabase/tests/services_professionals.test.sql` (293 asserções): 228 casos gerados
+(2 empresas × 6 papéis × operação × alvo, incluindo a função de candidatos) e 65 fixos (estrutura,
+políticas, `GRANT`, função, conteúdo dos candidatos, `CHECK`s e limites, nome único sem diferenciar
+maiúsculas, profissional com agendamento não excluído, FKs compostas entre empresas, cascata,
+`tenant_id` imutável, specialist sem alterar o próprio profissional, exclusão da empresa).
+
+Prova de detecção: `services_select_member` trocada para `using (true)` direto no banco local fez
+falhar 14 testes (12 casos "outra empresa" e 2 listagens). Política restaurada com `db:reset`.
+
+Verificação: `npm run db:test` 1340 PASS (14 arquivos), `supabase db lint` sem erros, `npm run check`
+verde (318 testes Vitest; 8 de integração ignorados). `npm run test:integration`: a primeira execução,
+logo após o `db:reset`, estourou o tempo de 10 s no preparo (8 ignorados); a segunda passou com 8.
+Durante a prova de detecção a CLI perdeu a conexão com o Postgres local (`DbConnectError`) até
+`db:stop` + `db:start`.
+
+### Passo 3 — Seed, schemas Zod e `money.ts` (2026-10-25)
+
+Sem dependência nova, sem migration e sem mudança de configuração.
+
+- `supabase/seed.sql`: 3 serviços por empresa (um com intervalo, um sem, um inativo; ids
+  `5eed0000-0000-0000-0006-…`) e 6 vínculos em `professional_services` (o profissional do specialist faz
+  2 serviços, o outro faz 1; o inativo fica sem profissional). Nomes e descrições fictícios.
+- `supabase/tests/seed_rls.test.sql`: `services` e `professional_services` entram na verificação "não
+  vê outra empresa", e uma asserção nova confere 6 serviços (2 inativos, 2 sem intervalo) e 6 vínculos
+  com o seed, ou nenhum sem ele.
+- `src/shared/money.ts`: `parseBrlToCents` (aceita "120", "120,5", "1.234,56" e "R$" no início; recusa
+  negativo, mais de 2 casas, ponto decimal e valores acima de R$ 999.999,99, o teto da interface),
+  `centsToBrlInput` (texto para editar, sem ponto de milhar) e `formatCents` (`Intl.NumberFormat`
+  `pt-BR`).
+- `src/shared/service.ts`: `serviceFormSchema` com os limites da RN-040 (nome até 80, descrição até
+  500, duração de 5 a 720 e intervalo vazio/nulo ou de 0 a 240, ambos em passos de 5, preço em reais
+  convertido em centavos), opções dos selects (duração de 5 a 720; intervalo de 5 a 60 na interface) e
+  `formatMinutes` ("1 h 30 min").
+- `src/shared/professional.ts`: `professionalFormSchema` (nome até 80, membro vazio = sem acesso ao
+  sistema, ids de serviço sem repetição, ativo).
+
+Verificação: `npm run db:reset` com seed (12 usuários, 6 serviços, 6 vínculos), `npm run db:test`
+1341 PASS (14 arquivos), `npm run check` verde (396 testes Vitest; 8 de integração ignorados) e
+`npm run test:integration` 8 passed.
+
+### Passo 4 — Telas de serviços (2026-10-25)
+
+Sem dependência nova, sem migration e sem mudança de configuração. Consultas à skill `ui-ux-pro-max`
+(`--domain ux`): tabela vira cartões no celular, estado vazio com mensagem e ação, retorno de
+carregamento e de sucesso ao enviar, rótulo visível em todo campo.
+
+- `src/modules/services/` (primeiro módulo de negócio; ARCHITECTURE.md atualizado):
+  - `services-api.ts`: `list`, `get`, `create` e `update` direto no Supabase sob RLS com o JWT do
+    usuário (ADR-002). Linhas validadas com Zod. Erros do Postgres viram mensagem da tela, sem repassar
+    o texto do banco: `23505` (nome repetido) vai para o campo de nome, `42501` explica a falta de
+    permissão, `23514`/`22P02` pedem para conferir os dados. Atualizar sem linha devolvida (RLS ou
+    removido) não finge sucesso. Id da URL só vai ao banco com forma de uuid. A moeda fica no padrão
+    `BRL` do banco. Sem exclusão: o caminho é desativar (RN-042).
+  - `services-context.ts`: contexto da API (injetada em `App`, como as outras) e chaves do TanStack
+    Query por `tenant_id` (lista e detalhe sob o mesmo prefixo).
+  - `ServicesListPage.tsx` (`/app/servicos`): tabela com cabeçalhos de linha e coluna a partir de
+    1024 px e cartões abaixo (só um dos dois no DOM, pelo mesmo `useMediaQuery` do shell); duração,
+    intervalo ("Sem intervalo" para nulo ou 0), preço em `pt-BR` e status em texto. Filtro "Mostrar
+    inativos (n)", estado vazio com "Cadastrar o primeiro serviço", aviso para quando só há inativos,
+    erro de carga com "Tentar de novo". O aviso de sucesso vindo do formulário recebe o foco
+    (`role="status"`) e sai do histórico.
+  - `ServiceFormPage.tsx` (`/app/servicos/novo` e `/app/servicos/:id`): nome, descrição, duração
+    (select de 5 em 5 min, rótulo "1 h 30 min", sem valor inicial no cadastro), intervalo após o
+    atendimento ("Sem intervalo" e 5 a 60 min, com ajuda; um valor maior gravado antes entra como
+    opção), preço (`inputmode="decimal"`), ativo. `useState` + Zod, erro junto ao campo, foco no
+    primeiro inválido, botão com `busy`. "Serviço não encontrado" para id inexistente ou de outra
+    empresa.
+- Rotas preguiçosas com `RequirePermission` `services.manage`; item "Serviços" no shell só com essa
+  permissão (owner, admin e manager).
+- `src/components/ui/`: `Textarea`, `TextareaField` e `CheckboxField` (caixa nativa, rótulo inteiro
+  clicável em linha de 44 px). `ShellPage` ganhou `wide` (`max-w-5xl`) para a tabela.
+- Testes: `services-pages.test.tsx` (26 de tela em jsdom: permissão por papel e link direto, estado
+  vazio, tabela e cartões, filtro, erro de carga, criar, nulos, validação de nome/duração/preço,
+  preços inválidos, nome repetido, editar, desativar, intervalo acima de 60, não encontrado, cancelar)
+  e `services-api.test.ts` (12). O fake de `render-app.tsx` passou a dar `services.manage` a owner e
+  admin, como a matriz real; o teste do shell que lista os itens do owner passou a esperar
+  "Serviços".
+
+Achado na verificação no navegador: `navigate('.')` numa rota index deixava `?index` na URL ao tirar
+o aviso do histórico. Corrigido com o caminho explícito e coberto por asserção no teste de criar; a
+volta do `navigate('.')` faz o teste falhar (prova de detecção).
+
+Verificação no navegador (preview, Supabase local, `ana.manager@example.test`):
+
+- 1440 px: tabela com os serviços ativos do seed, item "Serviços" marcado com `aria-current`, sem
+  "Equipe e convites" (manager), sem rolagem horizontal.
+- Criar: preço "12.50" recusado com foco no campo; nome repetido em outra caixa recusado pelo índice
+  único do banco (409) com erro junto ao nome; cadastro aceito, volta à lista com aviso focado.
+- Editar o serviço criado (valores carregados), desmarcar "Serviço ativo" e salvar: sai da lista
+  padrão e aparece como "Inativo" com o filtro.
+- 375 px: cartões, menu em gaveta, sem rolagem horizontal; todos os controles com 44 px ou mais (o
+  link "Pular para o conteúdo" só aparece no foco; a caixa de seleção fica dentro do rótulo de 44 px).
+- Checklist `pro-rules.md`: ícones `lucide-react` (sem emoji), cores só de tokens, status em texto,
+  sem animação nova. Não verificados: paisagem, texto ampliado do sistema (pendência da Sprint 1.4) e
+  modo escuro (fora do escopo desde a Sprint 1.4). Capturas de tela instáveis com a janela do app
+  oculta; a verificação foi feita por leitura do DOM.
+
+### Passo 5 — Telas de profissionais (2026-10-25)
+
+Sem dependência nova, sem migration e sem mudança de configuração. Consultas à skill `ui-ux-pro-max`
+(`--domain ux`): confirmar antes de ação destrutiva, erro junto a cada campo inválido, retorno de
+carregamento e de sucesso. Para o grupo de caixas a base não trouxe resultado; segui o padrão WCAG
+1.3.1 (`fieldset` com `legend`).
+
+- `src/modules/professionals/`:
+  - `professionals-api.ts`: `list`/`get` com o embed `professional_services(service_id)` (FK
+    composta), `listCandidates` pela função `list_professional_link_candidates`, `create`, `update` e
+    `remove` direto no Supabase sob RLS. O profissional e os vínculos vão em chamadas separadas (sem
+    migration nesta etapa): na edição só a diferença vai ao banco (apaga os desmarcados, insere os
+    novos); se os vínculos falharem, o profissional fica salvo e a lista avisa que os serviços não
+    foram atualizados. Erros: `23505` (membro já ligado, índice `(tenant_id, membership_id)`) vai para
+    o campo do membro; na exclusão, `23503` (FK de `appointments`) vira a mensagem que sugere
+    desmarcar "Profissional ativo"; o texto do banco não é repassado.
+  - `ProfessionalsListPage.tsx`: tabela a partir de 1024 px e cartões abaixo; membro ligado com nome
+    e papel (da função de candidatos; se ela falhar, "Com acesso ao sistema"), "Sem acesso ao
+    sistema", "Nenhum serviço"/"1 serviço"/"n serviços", status em texto, filtro de inativos, estado
+    vazio com "Cadastrar o primeiro profissional".
+  - `ProfessionalFormPage.tsx`: nome exibido, membro da equipe ("Nenhum (sem acesso ao sistema)" e os
+    membros ainda sem profissional, mais o atual na edição), serviços que faz (caixas de 44 px em
+    `fieldset`/`legend`) e ativo. O formulário só aparece com serviços e candidatos carregados. Sem
+    serviço ativo, o grupo explica e leva ao cadastro de serviço. Exclusão só na edição, em duas
+    etapas, com o foco indo para "Confirmar exclusão" e voltando para "Excluir profissional" ao
+    cancelar ou quando o banco recusa.
+- **Ajuste em relação ao plano:** o plano dizia "só serviços ativos" no formulário. Serviço inativo a
+  que o profissional já está ligado também aparece, marcado e com "(inativo)" no rótulo: sem isso,
+  salvar apagaria um vínculo que a pessoa não viu. Serviços inativos sem vínculo continuam fora.
+- Peças comuns aos dois módulos: `src/app/components/SavedNotice.tsx` e `src/app/forms/saved-notice.ts`
+  (aviso de "salvo" pelo estado da navegação, antes dentro de serviços) e
+  `src/components/ui/status-badge.tsx`. A tela de serviços passou a usá-las, sem mudar o comportamento
+  (os testes de serviços seguem iguais).
+- Rotas preguiçosas com `RequirePermission` `services.manage`; item "Profissionais" no shell só com
+  essa permissão. `App`, `main.tsx` e o `render-app.tsx` recebem a `ProfessionalsApi` (fake em memória
+  com candidatos que acompanham os vínculos e profissional com agendamento simulado).
+- Testes: `professionals-pages.test.tsx` (24 de tela) e `professionals-api.test.ts` (14). O teste do
+  shell que lista os itens do owner passou a esperar "Profissionais".
+
+Verificação no navegador (preview, Supabase local depois de `db:reset`, `ana.manager@example.test`):
+
+- 1440 px: tabela com os 2 profissionais do Studio Ana (o do specialist com nome e papel do membro, o
+  outro "Sem acesso ao sistema"), item marcado com `aria-current`, sem rolagem horizontal.
+- Novo: o select de membro lista "Nenhum" e os 5 membros sem profissional (o specialist, já ligado,
+  fica fora); os serviços são só os 2 ativos, com rótulos de 44 px. Cadastro com membro e 2 serviços
+  aceito, aviso focado.
+- Editar o criado: valores e vínculos carregados; desmarcar um serviço e salvar deixa "1 serviço".
+- Excluir "Profissional Teste 1" (tem agendamento no seed): o banco recusa (409, FK), a mensagem
+  sugere desativar e o foco volta para "Excluir profissional". Excluir o criado: aceito, volta à lista.
+- 375 px: cartões, menu em gaveta, sem rolagem horizontal, controles com 44 px ou mais (o link "Pular
+  para o conteúdo" só aparece no foco).
+- Checklist `pro-rules.md`: ícones `lucide-react` (sem emoji), cores só de tokens, status em texto,
+  sem animação nova. Não verificados: paisagem, texto ampliado do sistema e modo escuro (fora do
+  escopo desde a Sprint 1.4).
+
+### Passo 6 — Verificação final e encerramento (2026-10-25)
+
+Sem mudança de código. Supabase local com `db:reset` antes dos testes e depois da verificação no
+navegador (os dados criados no teste foram apagados).
+
+| Verificação                                    | Resultado                                                      |
+| ---------------------------------------------- | -------------------------------------------------------------- |
+| `npm ci`                                       | ok, 0 vulnerabilidades                                         |
+| `npm run check`                                | verde: 472 testes Vitest (8 de integração ignorados), build ok |
+| `npm run db:test`                              | 1341 PASS (14 arquivos)                                        |
+| `supabase db lint`                             | sem erros                                                      |
+| `npm run test:integration`                     | 8 passed                                                       |
+| `dist/` contém a service role ou a secret key? | não (35 arquivos varridos pelos valores de `supabase status`)  |
+
+Navegador (preview, Supabase local, usuários do seed do Studio Ana):
+
+- **Owner**, em 375, 768, 1024 e 1440 px, nas 6 telas (`/app/servicos`, `/novo`, `/:id` e o mesmo
+  em `/app/profissionais`): sem rolagem horizontal; nenhum controle com menos de 44 px (o link "Pular
+  para o conteúdo" só aparece no foco e as caixas de seleção ficam dentro de rótulos de 44 px); cartões
+  em 375 e 768, tabela em 1024 e 1440; em 1024 a tabela de serviços cabe (670 px, sem rolagem interna).
+  Menu com "Painel", "Serviços", "Profissionais" e "Equipe e convites".
+- **Manager**, em 375 e 1440 px, nas 6 telas: mesmos resultados; menu sem "Equipe e convites".
+- **Receptionist**: menu só com "Painel"; as 6 rotas abertas por link direto mostram "Acesso não
+  permitido", sem formulário nem tabela.
+- **Teclado** (teclas reais, 375 px): na edição de profissional a ordem é menu, nome, membro, serviços,
+  ativo, salvar, cancelar e excluir, todos com `:focus-visible` e anel de foco (sombra de 2 px branca +
+  3 px `ring`). Formulário de serviço vazio enviado com Enter: erros nos 3 campos e foco no nome;
+  preenchido só com teclado (duração pelas setas) e enviado com Enter: cadastro aceito e foco no aviso.
+  Formulário de profissional com as caixas marcadas por Espaço: aceito. Exclusão em duas etapas por
+  Enter: o foco vai para "Confirmar exclusão"; a recusa do banco (profissional com agendamento) é
+  anunciada e o foco volta para "Excluir profissional".
+- Checklist `pro-rules.md`: ícones `lucide-react` (sem emoji), cores só de tokens, status em texto,
+  alvos de 44 px, sem animação nova, sem rolagem horizontal em 375 px. Não verificados: paisagem,
+  texto ampliado do sistema (pendência desde a Sprint 1.4) e modo escuro (fora do escopo desde a
+  Sprint 1.4).
+- Limitação do ambiente: com o painel do navegador oculto, trocar a largura emulada não dispara
+  `resize` nem o `change` do `matchMedia`, e o shell montado antes da troca continua no modo anterior.
+  Em cada largura as telas foram medidas depois de recarregar ou de navegar para uma tela nova. Não é
+  defeito do app: `useMediaQuery` usa o evento `change` padrão.
+
+## Encerramento
+
+Sprint 2.1 concluída em 2026-10-25: serviços com `buffer_minutes` e profissionais com vínculo a membro e
+serviços, do banco (RLS, `GRANT`, pgTAP) às telas. Ajustes em relação ao plano, todos registrados acima:
+função de candidatos devolve todos os membros (RN-044 ajustada e confirmada), serviço inativo já ligado
+aparece no formulário de profissional, e profissional e vínculos gravados em chamadas separadas com aviso
+quando os vínculos falham. PR aberto para a `main`; o merge fica com o usuário. A Sprint 2.2 (clientes)
+só começa com autorização.

@@ -51,6 +51,58 @@ export const routes: RouteObject[] = [
                 path: 'equipe',
                 lazy: async () => ({ Component: (await import('./pages/TeamPage')).TeamPage }),
               },
+              {
+                path: 'servicos',
+                children: [
+                  {
+                    index: true,
+                    lazy: async () => ({
+                      Component: (await import('@/modules/services/ServicesListPage'))
+                        .ServicesListPage,
+                    }),
+                  },
+                  {
+                    path: 'novo',
+                    lazy: async () => ({
+                      Component: (await import('@/modules/services/ServiceFormPage'))
+                        .ServiceNewPage,
+                    }),
+                  },
+                  {
+                    path: ':id',
+                    lazy: async () => ({
+                      Component: (await import('@/modules/services/ServiceFormPage'))
+                        .ServiceEditPage,
+                    }),
+                  },
+                ],
+              },
+              {
+                path: 'profissionais',
+                children: [
+                  {
+                    index: true,
+                    lazy: async () => ({
+                      Component: (await import('@/modules/professionals/ProfessionalsListPage'))
+                        .ProfessionalsListPage,
+                    }),
+                  },
+                  {
+                    path: 'novo',
+                    lazy: async () => ({
+                      Component: (await import('@/modules/professionals/ProfessionalFormPage'))
+                        .ProfessionalNewPage,
+                    }),
+                  },
+                  {
+                    path: ':id',
+                    lazy: async () => ({
+                      Component: (await import('@/modules/professionals/ProfessionalFormPage'))
+                        .ProfessionalEditPage,
+                    }),
+                  },
+                ],
+              },
             ],
           },
         ],

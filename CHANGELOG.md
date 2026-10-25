@@ -96,6 +96,30 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 1.4, passo 6: verificação final em 375, 768, 1024 e 1440 px (sem rolagem horizontal, alvos de
   44 px, foco visível, gaveta com foco preso) e capturas em `docs/roadmap/sprint-1.4-capturas/`.
   Sprint 1.4 concluída.
+- Sprint 2.1, passo 1: plano de serviços (com `buffer_minutes`) e profissionais em
+  `docs/roadmap/sprint-2.1.md`, aprovado; RN-040 a RN-044.
+- Sprint 2.1, passo 2: tabelas `services` (duração, `buffer_minutes` opcional, preço em centavos e
+  moeda, ativo, nome único por empresa) e `professional_services`, colunas `display_name` e `is_active`
+  em `professionals` e função `public.list_professional_link_candidates`, com RLS, `GRANT` mínimos e
+  293 asserções pgTAP novas.
+- Sprint 2.1, passo 3: seed com 3 serviços por empresa (com intervalo, sem intervalo e inativo) e
+  vínculos profissional × serviço; `src/shared/money.ts` (reais ↔ centavos e formatação pt-BR) e
+  schemas Zod dos formulários de serviço e de profissional, com 78 testes Vitest novos.
+- Sprint 2.1, passo 4: telas de serviços em `src/modules/services/` (primeiro módulo de negócio):
+  lista em `/app/servicos` (tabela a partir de 1024 px, cartões abaixo, filtro "Mostrar inativos",
+  estado vazio), páginas `/app/servicos/novo` e `/app/servicos/:id` com `services.manage`, item
+  "Serviços" no shell, escrita direto no Supabase sob RLS e nome repetido mostrado junto ao campo.
+  Componentes `Textarea`, `TextareaField` e `CheckboxField`; `ShellPage` com largura `wide`.
+- Sprint 2.1, passo 5: telas de profissionais em `src/modules/professionals/`: lista em
+  `/app/profissionais` (membro ligado ou "Sem acesso ao sistema", quantidade de serviços, status,
+  tabela e cartões, filtro de inativos, estado vazio), páginas `/app/profissionais/novo` e
+  `/app/profissionais/:id` com nome exibido, membro da equipe (função `list_professional_link_candidates`),
+  serviços que faz (`fieldset`/`legend`) e ativo; vínculos acertados pela diferença; exclusão em duas
+  etapas com mensagem para desativar quando há agendamento; item "Profissionais" no shell.
+  `SavedNotice` e `StatusBadge` passaram a ser compartilhados pelos dois módulos.
+- Sprint 2.1, passo 6: verificação final (`npm ci`, `check`, `db:test`, `db lint`, integração,
+  `dist/` sem a service role, navegador em 375/768/1024/1440 px com owner, manager e receptionist e
+  teste só com teclado) e encerramento da sprint.
 
 ### Alterado
 

@@ -4,7 +4,9 @@
 -- Conteúdo: 2 empresas; em cada uma, um usuário por papel (RN-020), com auth.users, auth.identities
 -- (login por e-mail), profiles e memberships; 2 profissionais (um ligado ao specialist, um sem ligação);
 -- 3 clientes (um com agendamento com o specialist, um só com o outro profissional, um sem agendamento;
--- RN-027 e RN-028) e 2 agendamentos.
+-- RN-027 e RN-028) e 2 agendamentos. Desde a Sprint 2.1: 3 serviços (um com intervalo, um sem, um
+-- inativo; RN-040 e RN-042) e 3 vínculos profissional × serviço (o profissional do specialist faz 2 dos
+-- 3 serviços, o outro faz 1; RN-043).
 --
 -- Senha de teste, só local: senha-teste-labbeautypro. Não vai para .env nem para homologação/produção.
 -- Ids começam em 5eed0000 para não colidir com os ids de supabase/tests (00000000-…-00000000000a/b).
@@ -75,11 +77,11 @@ from seed_usuario s
 on conflict do nothing;
 
 -- 3. Profissionais: 01 e 03 ligados ao specialist de cada empresa; 02 e 04 sem ligação.
-insert into public.professionals (id, tenant_id, membership_id) values
-  ('5eed0000-0000-0000-0003-000000000001', '5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0002-000000000004'),
-  ('5eed0000-0000-0000-0003-000000000002', '5eed0000-0000-0000-0000-000000000001', null),
-  ('5eed0000-0000-0000-0003-000000000003', '5eed0000-0000-0000-0000-000000000002', '5eed0000-0000-0000-0002-000000000010'),
-  ('5eed0000-0000-0000-0003-000000000004', '5eed0000-0000-0000-0000-000000000002', null)
+insert into public.professionals (id, tenant_id, membership_id, display_name) values
+  ('5eed0000-0000-0000-0003-000000000001', '5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0002-000000000004', 'Profissional Teste 1 (Studio Ana)'),
+  ('5eed0000-0000-0000-0003-000000000002', '5eed0000-0000-0000-0000-000000000001', null, 'Profissional Teste 2 (Studio Ana)'),
+  ('5eed0000-0000-0000-0003-000000000003', '5eed0000-0000-0000-0000-000000000002', '5eed0000-0000-0000-0002-000000000010', 'Profissional Teste 3 (Clinica Bela)'),
+  ('5eed0000-0000-0000-0003-000000000004', '5eed0000-0000-0000-0000-000000000002', null, 'Profissional Teste 4 (Clinica Bela)')
 on conflict do nothing;
 
 -- 4. Clientes: 01 e 04 têm agendamento com o specialist; 02 e 05 só com o outro profissional; 03 e 06 sem.
@@ -98,6 +100,28 @@ insert into public.appointments (id, tenant_id, client_id, professional_id) valu
   ('5eed0000-0000-0000-0005-000000000002', '5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0004-000000000002', '5eed0000-0000-0000-0003-000000000002'),
   ('5eed0000-0000-0000-0005-000000000003', '5eed0000-0000-0000-0000-000000000002', '5eed0000-0000-0000-0004-000000000004', '5eed0000-0000-0000-0003-000000000003'),
   ('5eed0000-0000-0000-0005-000000000004', '5eed0000-0000-0000-0000-000000000002', '5eed0000-0000-0000-0004-000000000005', '5eed0000-0000-0000-0003-000000000004')
+on conflict do nothing;
+
+-- 6. Serviços (Sprint 2.1): em cada empresa, um com intervalo, um sem intervalo e um inativo. Preço em
+-- centavos (RN-032), moeda no padrão BRL.
+insert into public.services (id, tenant_id, name, description, duration_minutes, buffer_minutes, price_cents, is_active) values
+  ('5eed0000-0000-0000-0006-000000000001', '5eed0000-0000-0000-0000-000000000001', 'Corte Teste (Studio Ana)', 'Serviço fictício com intervalo.', 60, 15, 12000, true),
+  ('5eed0000-0000-0000-0006-000000000002', '5eed0000-0000-0000-0000-000000000001', 'Manicure Teste (Studio Ana)', null, 45, null, 4500, true),
+  ('5eed0000-0000-0000-0006-000000000003', '5eed0000-0000-0000-0000-000000000001', 'Escova Teste (Studio Ana)', 'Serviço fictício inativo.', 30, 5, 6000, false),
+  ('5eed0000-0000-0000-0006-000000000004', '5eed0000-0000-0000-0000-000000000002', 'Limpeza de Pele Teste (Clinica Bela)', 'Serviço fictício com intervalo.', 90, 30, 18000, true),
+  ('5eed0000-0000-0000-0006-000000000005', '5eed0000-0000-0000-0000-000000000002', 'Design de Sobrancelha Teste (Clinica Bela)', null, 30, null, 5000, true),
+  ('5eed0000-0000-0000-0006-000000000006', '5eed0000-0000-0000-0000-000000000002', 'Massagem Teste (Clinica Bela)', 'Serviço fictício inativo.', 60, 10, 15000, false)
+on conflict do nothing;
+
+-- 7. Vínculos: o profissional do specialist faz o serviço com intervalo e o sem intervalo; o outro faz
+-- só o com intervalo. O serviço inativo fica sem profissional.
+insert into public.professional_services (tenant_id, professional_id, service_id) values
+  ('5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0003-000000000001', '5eed0000-0000-0000-0006-000000000001'),
+  ('5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0003-000000000001', '5eed0000-0000-0000-0006-000000000002'),
+  ('5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0003-000000000002', '5eed0000-0000-0000-0006-000000000001'),
+  ('5eed0000-0000-0000-0000-000000000002', '5eed0000-0000-0000-0003-000000000003', '5eed0000-0000-0000-0006-000000000004'),
+  ('5eed0000-0000-0000-0000-000000000002', '5eed0000-0000-0000-0003-000000000003', '5eed0000-0000-0000-0006-000000000005'),
+  ('5eed0000-0000-0000-0000-000000000002', '5eed0000-0000-0000-0003-000000000004', '5eed0000-0000-0000-0006-000000000004')
 on conflict do nothing;
 
 drop table seed_usuario;

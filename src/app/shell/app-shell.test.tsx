@@ -51,7 +51,12 @@ describe('App shell — desktop', () => {
     // A permissão members.manage chega depois da empresa; o item Equipe aparece em seguida.
     await within(nav).findByRole('link', { name: 'Equipe e convites' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((link) => link.textContent)).toEqual(['Painel', 'Equipe e convites']);
+    expect(links.map((link) => link.textContent)).toEqual([
+      'Painel',
+      'Serviços',
+      'Profissionais',
+      'Equipe e convites',
+    ]);
     expect(within(nav).getByRole('link', { name: 'Painel' }).getAttribute('aria-current')).toBe(
       'page',
     );

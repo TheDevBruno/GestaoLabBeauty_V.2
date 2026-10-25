@@ -1,6 +1,6 @@
 # Estado do projeto
 
-- **Atualizado em:** 2026-10-24
+- **Atualizado em:** 2026-10-25
 
 ## Objetivo
 
@@ -90,14 +90,38 @@ liberação de recursos por plano.
 - [ ] Prova de detecção no CI: uma política `using (true)` em `tenants` deve falhar o job `database`
       (provada só localmente).
 - [ ] Favicon: `/favicon.ico` responde 404 (sem ícone definido).
-- [ ] Movimento reduzido e texto ampliado do sistema: não verificados no navegador (Sprint 1.4).
+- [ ] Movimento reduzido, texto ampliado do sistema e paisagem: não verificados no navegador
+      (Sprints 1.4 e 2.1).
 - [ ] `vercel.json` com rewrite do SPA para `index.html` no **primeiro deploy** (decisão do usuário).
 - [ ] Supabase CLI: 2.121.0 entra na janela da ADR-001 em 2026-10-28 (instalada: 2.120.0).
 
 ## Próximo passo
 
-**Sprint 1.4 — design system e app shell** (`feat/sprint-1.4-design-system`, a partir da `main` com o
-PR #21 mesclado). Passo 1 concluído: plano em [sprint-1.4.md](roadmap/sprint-1.4.md) aprovado pelo
+**Sprint 2.2 — clientes** (Fase 2, plano §6). Não iniciada: começa só com autorização do usuário e
+depois do merge do PR da Sprint 2.1.
+
+Sprint anterior: **Sprint 2.1 — serviços (com `buffer_minutes`) e profissionais**
+(`feat/sprint-2.1-servicos-profissionais`, a partir da `main` em `ead9e69`). **Concluída em
+2026-10-25**, com PR aberto para o usuário revisar e mesclar (não é ponto de aprovação obrigatória).
+Passo 1 concluído: plano em [sprint-2.1.md](roadmap/sprint-2.1.md) aprovado pelo usuário em 2026-10-25
+com todas as recomendações (sem categorias, moeda em `services.currency`, nome único por empresa, sem
+preço por profissional, função de candidatos ao vínculo, páginas próprias, menu só com
+`services.manage`, sem `react-hook-form`); RN-040 a RN-044. Passo 2 concluído: migration com `services`,
+`professional_services`, nome e ativo em `professionals` e função de candidatos ao vínculo; pgTAP 1340
+PASS. Passo 3 concluído: seed com serviços e vínculos, `src/shared/money.ts` e schemas Zod de serviço
+e de profissional; pgTAP 1341 PASS, 396 testes Vitest. Passo 4 concluído: telas de serviços em
+`src/modules/services/` (lista com tabela e cartões, filtro de inativos, estado vazio, criar e editar
+em páginas próprias com `services.manage`, item "Serviços" no shell); 434 testes Vitest, pgTAP 1341
+PASS, verificado no navegador em 375 e 1440 px. Passo 5 concluído: telas de profissionais em
+`src/modules/professionals/` (membro ligado pela função de candidatos, serviços que faz, vínculos pela
+diferença, exclusão em duas etapas com recusa do banco quando há agendamento, item "Profissionais" no
+shell); 472 testes Vitest, verificado no navegador em 375 e 1440 px. Passo 6 concluído: `npm ci`,
+`check` (472 testes), `db:test` 1341 PASS, `db lint` sem erros, `test:integration` 8 passed, `dist/`
+sem a service role; navegador em 375, 768, 1024 e 1440 px com owner, manager e receptionist e teste só
+com teclado (registro em [sprint-2.1.md](roadmap/sprint-2.1.md#passo-6--verificação-final-e-encerramento-2026-10-25)).
+
+Sprint anterior: **Sprint 1.4 — design system e app shell** (`feat/sprint-1.4-design-system`, PR #22
+mesclado em 2026-10-25). Passo 1 concluído: plano em [sprint-1.4.md](roadmap/sprint-1.4.md) aprovado pelo
 usuário em 2026-10-23 (dependências, `components.json`, Inter auto-hospedada, dark mode fora e remoção
 dos componentes provisórios). Passo 2 concluído: dependências do design system, `components.json`,
 `cn()`, tokens em três camadas (primitivo, semântico, componente), Inter auto-hospedada e teste de
