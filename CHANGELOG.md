@@ -105,6 +105,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 2.1, passo 3: seed com 3 serviços por empresa (com intervalo, sem intervalo e inativo) e
   vínculos profissional × serviço; `src/shared/money.ts` (reais ↔ centavos e formatação pt-BR) e
   schemas Zod dos formulários de serviço e de profissional, com 78 testes Vitest novos.
+- Sprint 2.1, passo 4: telas de serviços em `src/modules/services/` (primeiro módulo de negócio):
+  lista em `/app/servicos` (tabela a partir de 1024 px, cartões abaixo, filtro "Mostrar inativos",
+  estado vazio), páginas `/app/servicos/novo` e `/app/servicos/:id` com `services.manage`, item
+  "Serviços" no shell, escrita direto no Supabase sob RLS e nome repetido mostrado junto ao campo.
+  Componentes `Textarea`, `TextareaField` e `CheckboxField`; `ShellPage` com largura `wide`.
 
 ### Alterado
 

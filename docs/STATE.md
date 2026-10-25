@@ -104,7 +104,10 @@ preço por profissional, função de candidatos ao vínculo, páginas próprias,
 `services.manage`, sem `react-hook-form`); RN-040 a RN-044. Passo 2 concluído: migration com `services`,
 `professional_services`, nome e ativo em `professionals` e função de candidatos ao vínculo; pgTAP 1340
 PASS. Passo 3 concluído: seed com serviços e vínculos, `src/shared/money.ts` e schemas Zod de serviço
-e de profissional; pgTAP 1341 PASS, 396 testes Vitest. Próximo: passo 4 (telas de serviços).
+e de profissional; pgTAP 1341 PASS, 396 testes Vitest. Passo 4 concluído: telas de serviços em
+`src/modules/services/` (lista com tabela e cartões, filtro de inativos, estado vazio, criar e editar
+em páginas próprias com `services.manage`, item "Serviços" no shell); 434 testes Vitest, pgTAP 1341
+PASS, verificado no navegador em 375 e 1440 px. Próximo: passo 5 (telas de profissionais).
 
 Sprint anterior: **Sprint 1.4 — design system e app shell** (`feat/sprint-1.4-design-system`, PR #22
 mesclado em 2026-10-25). Passo 1 concluído: plano em [sprint-1.4.md](roadmap/sprint-1.4.md) aprovado pelo

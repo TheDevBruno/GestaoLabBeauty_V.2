@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { Input } from './input';
 import { Label } from './label';
 import { NativeSelect } from './native-select';
+import { Textarea } from './textarea';
 
 // Peças do Field do shadcn/ui e os campos prontos das telas. Regras: label visível, dica e erro ligados
 // ao controle por aria-describedby, erro logo abaixo do controle e aria-invalid quando há erro. O erro
@@ -117,4 +118,69 @@ function SelectField({ name, label, options, hint, error, ...selectProps }: Sele
   );
 }
 
-export { Field, FieldDescription, FieldError, InputField, SelectField };
+interface TextareaFieldProps extends Omit<ComponentProps<'textarea'>, 'id' | 'name'> {
+  name: string;
+  label: string;
+  hint?: string | undefined;
+  error?: string | undefined;
+}
+
+function TextareaField({ name, label, hint, error, ...textareaProps }: TextareaFieldProps) {
+  const ids = useFieldIds(hint, error);
+  return (
+    <FieldFrame ids={ids} label={label} hint={hint} error={error}>
+      <Textarea
+        id={ids.id}
+        name={name}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={ids.describedBy}
+        {...textareaProps}
+      />
+    </FieldFrame>
+  );
+}
+
+interface CheckboxFieldProps extends Omit<ComponentProps<'input'>, 'id' | 'name' | 'type'> {
+  name: string;
+  label: string;
+  hint?: string | undefined;
+}
+
+// Caixa de seleção nativa: o rótulo inteiro é clicável e a linha tem 44 px de altura, então o alvo
+// não depende do tamanho da caixa. A dica fica fora do rótulo, ligada por aria-describedby.
+function CheckboxField({ name, label, hint, className, ...inputProps }: CheckboxFieldProps) {
+  const ids = useFieldIds(hint, undefined);
+  return (
+    <Field className={className}>
+      <label
+        htmlFor={ids.id}
+        className="flex min-h-control cursor-pointer items-center gap-3 self-start text-base font-medium text-foreground"
+      >
+        <input
+          id={ids.id}
+          name={name}
+          type="checkbox"
+          aria-describedby={ids.describedBy}
+          className="size-5 shrink-0 cursor-pointer rounded-sm accent-primary outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2"
+          {...inputProps}
+        />
+        {label}
+      </label>
+      {hint ? (
+        <FieldDescription id={ids.hintId} className="-mt-2">
+          {hint}
+        </FieldDescription>
+      ) : null}
+    </Field>
+  );
+}
+
+export {
+  CheckboxField,
+  Field,
+  FieldDescription,
+  FieldError,
+  InputField,
+  SelectField,
+  TextareaField,
+};

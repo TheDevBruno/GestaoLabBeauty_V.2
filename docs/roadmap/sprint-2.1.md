@@ -157,9 +157,9 @@ retorno de carregamento e de sucesso ao salvar, rótulo visível e erro junto ao
 | #   | Passo                                                                                                     | Status    |
 | --- | --------------------------------------------------------------------------------------------------------- | --------- |
 | 1   | Plano (este documento) e OK do usuário                                                                    | concluído |
-| 2   | Migration (`services`, `professional_services`, colunas de `professionals`, função de candidatos) e pgTAP | pendente  |
+| 2   | Migration (`services`, `professional_services`, colunas de `professionals`, função de candidatos) e pgTAP | concluído |
 | 3   | Seed, schemas Zod e `money.ts`                                                                            | concluído |
-| 4   | Telas de serviços                                                                                         | pendente  |
+| 4   | Telas de serviços                                                                                         | concluído |
 | 5   | Telas de profissionais (vínculo com membro e serviços)                                                    | pendente  |
 | 6   | Verificação (check, db:test, integração, navegador 375/1440 px, checklist) e encerramento                 | pendente  |
 
@@ -288,3 +288,60 @@ Sem dependência nova, sem migration e sem mudança de configuração.
 Verificação: `npm run db:reset` com seed (12 usuários, 6 serviços, 6 vínculos), `npm run db:test`
 1341 PASS (14 arquivos), `npm run check` verde (396 testes Vitest; 8 de integração ignorados) e
 `npm run test:integration` 8 passed.
+
+### Passo 4 — Telas de serviços (2026-10-25)
+
+Sem dependência nova, sem migration e sem mudança de configuração. Consultas à skill `ui-ux-pro-max`
+(`--domain ux`): tabela vira cartões no celular, estado vazio com mensagem e ação, retorno de
+carregamento e de sucesso ao enviar, rótulo visível em todo campo.
+
+- `src/modules/services/` (primeiro módulo de negócio; ARCHITECTURE.md atualizado):
+  - `services-api.ts`: `list`, `get`, `create` e `update` direto no Supabase sob RLS com o JWT do
+    usuário (ADR-002). Linhas validadas com Zod. Erros do Postgres viram mensagem da tela, sem repassar
+    o texto do banco: `23505` (nome repetido) vai para o campo de nome, `42501` explica a falta de
+    permissão, `23514`/`22P02` pedem para conferir os dados. Atualizar sem linha devolvida (RLS ou
+    removido) não finge sucesso. Id da URL só vai ao banco com forma de uuid. A moeda fica no padrão
+    `BRL` do banco. Sem exclusão: o caminho é desativar (RN-042).
+  - `services-context.ts`: contexto da API (injetada em `App`, como as outras) e chaves do TanStack
+    Query por `tenant_id` (lista e detalhe sob o mesmo prefixo).
+  - `ServicesListPage.tsx` (`/app/servicos`): tabela com cabeçalhos de linha e coluna a partir de
+    1024 px e cartões abaixo (só um dos dois no DOM, pelo mesmo `useMediaQuery` do shell); duração,
+    intervalo ("Sem intervalo" para nulo ou 0), preço em `pt-BR` e status em texto. Filtro "Mostrar
+    inativos (n)", estado vazio com "Cadastrar o primeiro serviço", aviso para quando só há inativos,
+    erro de carga com "Tentar de novo". O aviso de sucesso vindo do formulário recebe o foco
+    (`role="status"`) e sai do histórico.
+  - `ServiceFormPage.tsx` (`/app/servicos/novo` e `/app/servicos/:id`): nome, descrição, duração
+    (select de 5 em 5 min, rótulo "1 h 30 min", sem valor inicial no cadastro), intervalo após o
+    atendimento ("Sem intervalo" e 5 a 60 min, com ajuda; um valor maior gravado antes entra como
+    opção), preço (`inputmode="decimal"`), ativo. `useState` + Zod, erro junto ao campo, foco no
+    primeiro inválido, botão com `busy`. "Serviço não encontrado" para id inexistente ou de outra
+    empresa.
+- Rotas preguiçosas com `RequirePermission` `services.manage`; item "Serviços" no shell só com essa
+  permissão (owner, admin e manager).
+- `src/components/ui/`: `Textarea`, `TextareaField` e `CheckboxField` (caixa nativa, rótulo inteiro
+  clicável em linha de 44 px). `ShellPage` ganhou `wide` (`max-w-5xl`) para a tabela.
+- Testes: `services-pages.test.tsx` (26 de tela em jsdom: permissão por papel e link direto, estado
+  vazio, tabela e cartões, filtro, erro de carga, criar, nulos, validação de nome/duração/preço,
+  preços inválidos, nome repetido, editar, desativar, intervalo acima de 60, não encontrado, cancelar)
+  e `services-api.test.ts` (12). O fake de `render-app.tsx` passou a dar `services.manage` a owner e
+  admin, como a matriz real; o teste do shell que lista os itens do owner passou a esperar
+  "Serviços".
+
+Achado na verificação no navegador: `navigate('.')` numa rota index deixava `?index` na URL ao tirar
+o aviso do histórico. Corrigido com o caminho explícito e coberto por asserção no teste de criar; a
+volta do `navigate('.')` faz o teste falhar (prova de detecção).
+
+Verificação no navegador (preview, Supabase local, `ana.manager@example.test`):
+
+- 1440 px: tabela com os serviços ativos do seed, item "Serviços" marcado com `aria-current`, sem
+  "Equipe e convites" (manager), sem rolagem horizontal.
+- Criar: preço "12.50" recusado com foco no campo; nome repetido em outra caixa recusado pelo índice
+  único do banco (409) com erro junto ao nome; cadastro aceito, volta à lista com aviso focado.
+- Editar o serviço criado (valores carregados), desmarcar "Serviço ativo" e salvar: sai da lista
+  padrão e aparece como "Inativo" com o filtro.
+- 375 px: cartões, menu em gaveta, sem rolagem horizontal; todos os controles com 44 px ou mais (o
+  link "Pular para o conteúdo" só aparece no foco; a caixa de seleção fica dentro do rótulo de 44 px).
+- Checklist `pro-rules.md`: ícones `lucide-react` (sem emoji), cores só de tokens, status em texto,
+  sem animação nova. Não verificados: paisagem, texto ampliado do sistema (pendência da Sprint 1.4) e
+  modo escuro (fora do escopo desde a Sprint 1.4). Capturas de tela instáveis com a janela do app
+  oculta; a verificação foi feita por leitura do DOM.

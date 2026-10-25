@@ -1,4 +1,10 @@
-import { ChevronsUpDownIcon, LayoutDashboardIcon, MenuIcon, UsersIcon } from 'lucide-react';
+import {
+  ChevronsUpDownIcon,
+  LayoutDashboardIcon,
+  MenuIcon,
+  ScissorsIcon,
+  UsersIcon,
+} from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { memberRoleLabels } from '@/shared/roles';
@@ -86,6 +92,7 @@ function ShellNavigation({ onNavigate }: { onNavigate?: () => void }) {
   const { state: auth } = useAuth();
   const { state } = useActiveTenant();
   const canManageMembers = usePermission('members.manage') === 'allowed';
+  const canManageServices = usePermission('services.manage') === 'allowed';
   if (state.status !== 'active') return null;
   const { membership, memberships } = state;
 
@@ -107,6 +114,11 @@ function ShellNavigation({ onNavigate }: { onNavigate?: () => void }) {
           <ShellNavItem to="/app" end icon={<LayoutDashboardIcon />} onNavigate={onNavigate}>
             Painel
           </ShellNavItem>
+          {canManageServices ? (
+            <ShellNavItem to="/app/servicos" icon={<ScissorsIcon />} onNavigate={onNavigate}>
+              Serviços
+            </ShellNavItem>
+          ) : null}
           {canManageMembers ? (
             <ShellNavItem to="/app/equipe" icon={<UsersIcon />} onNavigate={onNavigate}>
               Equipe e convites

@@ -40,7 +40,7 @@ Visão geral aprovada na Fase 0. As decisões detalhadas estão em [docs/decisio
 | `src/app/`           | Rotas, layouts, providers e guards                 | Sprint 1.1 |
 | `src/styles/`        | CSS global e tokens                                | Sprint 1.1 |
 | `src/components/ui/` | Design system (shadcn/ui, tokens, `cn()`)          | Sprint 1.4 |
-| `src/modules/`       | Módulos de negócio (agenda, clientes, financeiro…) | Fase 2     |
+| `src/modules/`       | Módulos de negócio (agenda, clientes, financeiro…) | Sprint 2.1 |
 | `src/lib/`           | Clientes Supabase e TanStack Query, formatação     | Sprint 1.3 |
 | `src/shared/`        | Schemas Zod e tipos compartilhados com `server/`   | Sprint 1.3 |
 | `server/`            | API Hono, serviços, adaptadores externos           | Sprint 1.3 |

@@ -6,6 +6,7 @@ import { createSupabaseInvitationsApi } from '@/lib/invitations-api';
 import { createQueryClient } from '@/lib/query-client';
 import { supabase } from '@/lib/supabase';
 import { createSupabaseTenancyApi } from '@/lib/tenancy-api';
+import { createSupabaseServicesApi } from '@/modules/services/services-api';
 import '@/styles/index.css';
 
 const rootElement = document.getElementById('root');
@@ -16,6 +17,7 @@ if (!rootElement) {
 const api = createSupabaseAuthApi(supabase);
 const tenancyApi = createSupabaseTenancyApi(supabase);
 const invitationsApi = createSupabaseInvitationsApi(supabase);
+const servicesApi = createSupabaseServicesApi(supabase);
 const queryClient = createQueryClient();
 
 createRoot(rootElement).render(
@@ -24,6 +26,7 @@ createRoot(rootElement).render(
       api={api}
       tenancyApi={tenancyApi}
       invitationsApi={invitationsApi}
+      servicesApi={servicesApi}
       queryClient={queryClient}
     />
   </StrictMode>,

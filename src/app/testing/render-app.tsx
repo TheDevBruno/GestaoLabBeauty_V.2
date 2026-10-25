@@ -7,6 +7,8 @@ import type { AuthApi, AuthSession } from '@/lib/auth-api';
 import type { InvitationsApi, PendingInvitation } from '@/lib/invitations-api';
 import type { TenancyApi, TenantMembership } from '@/lib/tenancy-api';
 import type { MemberRole } from '@/shared/roles';
+import type { ServicesApi, Service } from '@/modules/services/services-api';
+import { ServicesApiContext } from '@/modules/services/services-context';
 import { AuthProvider } from '@/app/auth/AuthProvider';
 import { SessionCacheGuard } from '@/app/auth/SessionCacheGuard';
 import { routes } from '@/app/routes';
@@ -78,8 +80,8 @@ export function createFakeAuthApi(initial: AuthSession | null = null) {
 
 // Matriz do plano §8 resumida ao que os testes de tela usam.
 const PERMISSIONS: Record<MemberRole, string[]> = {
-  owner: ['members.manage', 'tenant.settings'],
-  admin: ['members.manage', 'tenant.settings'],
+  owner: ['members.manage', 'tenant.settings', 'services.manage'],
+  admin: ['members.manage', 'tenant.settings', 'services.manage'],
   manager: ['services.manage'],
   specialist: ['appointments.read'],
   receptionist: ['appointments.read'],
@@ -144,11 +146,83 @@ export function createFakeInvitationsApi(initial: PendingInvitation[] = []) {
   return { api };
 }
 
+let serviceSeq = 0;
+
+export function service(name: string, overrides: Partial<Service> = {}): Service {
+  serviceSeq += 1;
+  return {
+    id: `00000000-0000-4000-8000-${String(serviceSeq).padStart(12, '0')}`,
+    name,
+    description: null,
+    durationMinutes: 60,
+    bufferMinutes: null,
+    priceCents: 12000,
+    currency: 'BRL',
+    isActive: true,
+    ...overrides,
+  };
+}
+
+// ServicesApi em memória, com o nome único por empresa sem diferenciar maiúsculas (RN-040), como o
+// índice do banco. Os ids novos seguem a forma de uuid.
+export function createFakeServicesApi(initial: Service[] = []) {
+  let services = initial;
+  let next = 1;
+  const duplicate = (name: string, exceptId?: string) =>
+    services.some((item) => item.id !== exceptId && item.name.toLowerCase() === name.toLowerCase());
+  const api = {
+    list: vi.fn<ServicesApi['list']>(() =>
+      Promise.resolve([...services].sort((a, b) => a.name.localeCompare(b.name))),
+    ),
+    get: vi.fn<ServicesApi['get']>((_tenantId, id) =>
+      Promise.resolve(services.find((item) => item.id === id) ?? null),
+    ),
+    create: vi.fn<ServicesApi['create']>((_tenantId, input) => {
+      if (duplicate(input.name)) {
+        return Promise.resolve({
+          ok: false,
+          message: 'Confira os dados do serviço.',
+          fieldErrors: { name: 'Já existe um serviço com este nome nesta empresa.' },
+        });
+      }
+      const created: Service = {
+        id: `10000000-0000-4000-8000-${String(next++).padStart(12, '0')}`,
+        name: input.name,
+        description: input.description,
+        durationMinutes: input.durationMinutes,
+        bufferMinutes: input.bufferMinutes,
+        priceCents: input.price,
+        currency: 'BRL',
+        isActive: input.isActive,
+      };
+      services = [...services, created];
+      return Promise.resolve({ ok: true, service: created });
+    }),
+    update: vi.fn<ServicesApi['update']>((_tenantId, id, input) => {
+      const current = services.find((item) => item.id === id);
+      if (!current) return Promise.resolve({ ok: false, message: 'Serviço não encontrado.' });
+      const updated: Service = {
+        ...current,
+        name: input.name,
+        description: input.description,
+        durationMinutes: input.durationMinutes,
+        bufferMinutes: input.bufferMinutes,
+        priceCents: input.price,
+        isActive: input.isActive,
+      };
+      services = services.map((item) => (item.id === id ? updated : item));
+      return Promise.resolve({ ok: true, service: updated });
+    }),
+  } satisfies ServicesApi;
+  return { api };
+}
+
 export function renderAt(
   path: string,
   api: AuthApi,
   tenancyApi: TenancyApi = createFakeTenancyApi().api,
   invitationsApi: InvitationsApi = createFakeInvitationsApi().api,
+  servicesApi: ServicesApi = createFakeServicesApi().api,
 ) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -159,7 +233,9 @@ export function renderAt(
         <SessionCacheGuard />
         <TenancyApiContext value={tenancyApi}>
           <InvitationsApiContext value={invitationsApi}>
-            <RouterProvider router={router} />
+            <ServicesApiContext value={servicesApi}>
+              <RouterProvider router={router} />
+            </ServicesApiContext>
           </InvitationsApiContext>
         </TenancyApiContext>
       </AuthProvider>
