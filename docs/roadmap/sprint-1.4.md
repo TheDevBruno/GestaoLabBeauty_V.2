@@ -1,7 +1,7 @@
 # Sprint 1.4 — Design system e app shell
 
 - **Início:** 2026-10-23
-- **Status:** em andamento (plano aprovado pelo usuário em 2026-10-23)
+- **Status:** concluída em 2026-10-24 (plano aprovado pelo usuário em 2026-10-23)
 - **Branch:** `feat/sprint-1.4-design-system`
 
 ## Objetivo
@@ -380,3 +380,47 @@ Verificação: `npm run check` verde (318 testes Vitest), `npm run db:test` PASS
 `/cadastro`, `/convite`, 404 e redirecionamento de `/app/equipe` sem sessão no preview `vite`; no
 `npm run preview` do build, login com o owner do seed, `/app/equipe` e `/app` carregam os chunks
 sob demanda; nenhum erro no console.
+
+### Passo 6 — Verificação e encerramento (2026-10-24)
+
+Sem dependência nova nem mudança de configuração neste passo.
+
+Verificações:
+
+- `npm run check` verde (318 testes Vitest; 8 de integração ignorados), `npm run db:test` 1047 PASS e
+  `npm run test:integration` 8 passed (API + Supabase local; o banco não mudou na sprint).
+- Navegador: Chrome controlado por `playwright-core` instalado **fora do repositório** (scratchpad), contra
+  o `vite` dev e o Supabase local, com o owner sintético do seed. O painel embutido do app estava oculto e
+  não desenha capturas, por isso o script. Para cada largura (375, 768, 1024 e 1440 px): `/entrar`,
+  `/convite#<token>` (token de formato válido, estado sem sessão), `/app` e `/app/equipe`, mais a gaveta
+  em 375 e 768 px. Resultado em todas: sem rolagem horizontal, nenhum controle abaixo de 44 × 44 px
+  (links dentro de parágrafo excluídos), um único `main` e um único `h1`, e Tab de ponta a ponta com
+  anel de foco visível em todas as paradas (4 em `/entrar`, 2 no convite, 2 em `/app` na barra e 4 na
+  lateral, 6 a 8 em `/app/equipe`). A gaveta prende o foco (4 paradas) e Esc devolve o foco ao botão
+  "Abrir menu". Nenhum erro no console, exceto o 404 de `/favicon.ico` na primeira carga (não há favicon;
+  pendência).
+- Fluxo de convite completo (criar, abrir o link com a conta convidada, aceitar) continua coberto pelos
+  testes de tela e pelo `test:integration`; no navegador, só o estado do link de convite sem sessão.
+- Capturas em [sprint-1.4-capturas/](sprint-1.4-capturas/): `375-` e `1440-` de `entrar`, `convite`,
+  `painel` e `equipe`, mais `375-gaveta`.
+- Não testados: leitor de tela e texto ampliado no sistema.
+
+Checklist `pro-rules.md` (escrito para app nativo; aplicado ao que vale na web):
+
+- Ícones: Lucide, um só traço, decorativos com `aria-hidden`, botão de ícone com `aria-label`; nenhum
+  emoji como ícone. OK.
+- Alvos de 44 px, estado desabilitado com `disabled`, sem deslocamento de layout no estado pressionado.
+  OK (medido).
+- Tokens semânticos em todas as telas, sem hex cru em componente; contraste dos tokens coberto por teste
+  (4,5:1 texto, 3:1 componentes). OK.
+- Formulários com rótulo visível, erro junto ao campo (`aria-describedby`, `aria-invalid`). OK.
+- Teclado: Tab, Esc e foco devolvido na gaveta; link "Pular para o conteúdo". OK.
+- 375 px sem rolagem horizontal; 768 e 1024 px no shell. OK.
+- Movimento reduzido: `src/styles/index.css` tem a regra global `prefers-reduced-motion: reduce`; não
+  verificada no navegador com a preferência ligada.
+- Dark mode: fora do escopo (decisão do usuário); itens de tema escuro não se aplicam.
+- Escala de texto do sistema: não testada.
+
+Encerramento da sprint: entregue o design system (`src/components/ui/`, tokens em três camadas, Inter
+auto-hospedada), o app shell em `/app/*` e a divisão de código (maior chunk 214 kB). Pendências levadas
+adiante: favicon, `vercel.json` (primeiro deploy), verificação de movimento reduzido e de texto ampliado.

@@ -89,6 +89,8 @@ liberação de recursos por plano.
 - [ ] Confirmar as regras marcadas "a confirmar" em [REGRAS-DE-NEGOCIO.md](REGRAS-DE-NEGOCIO.md).
 - [ ] Prova de detecção no CI: uma política `using (true)` em `tenants` deve falhar o job `database`
       (provada só localmente).
+- [ ] Favicon: `/favicon.ico` responde 404 (sem ícone definido).
+- [ ] Movimento reduzido e texto ampliado do sistema: não verificados no navegador (Sprint 1.4).
 - [ ] `vercel.json` com rewrite do SPA para `index.html` no **primeiro deploy** (decisão do usuário).
 - [ ] Supabase CLI: 2.121.0 entra na janela da ADR-001 em 2026-10-28 (instalada: 2.120.0).
 
@@ -105,7 +107,11 @@ provisórios apagados. Passo 4 concluído: app shell em `/app/*` (navegação la
 1024 px e gaveta abaixo, empresa ativa, troca de empresa por menu, papel, conta e sair); 318 testes
 Vitest, pgTAP 1047 PASS. Passo 5 concluído: rotas
 preguiçosas e fornecedores separados em `vite.config.ts` (autorizado); maior chunk 214 kB, sem aviso de
-500 kB. Próximo: passo 6 (verificação e encerramento da sprint).
+500 kB. Passo 6 concluído: `check`, `db:test` (1047) e `test:integration` (8) verdes; navegador em 375,
+768, 1024 e 1440 px sem rolagem horizontal, alvos de 44 px e foco visível (registro e capturas em
+[sprint-1.4.md](roadmap/sprint-1.4.md)). **Sprint 1.4 concluída em 2026-10-24**, com PR aberto para o
+usuário revisar e mesclar (a Sprint 1.4 não é ponto de aprovação obrigatória). Próximo: Sprint 2.1
+(serviços com `buffer_minutes` e profissionais), só depois do merge do PR e com autorização.
 
 Requisito local: Docker em execução e `npm run db:start`. O `.env.local` precisa também de
 `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` (valores em `npx supabase status`) para
