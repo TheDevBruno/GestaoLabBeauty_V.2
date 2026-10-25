@@ -33,7 +33,7 @@
     "hono": "4.13.13",
     "lucide-react": "1.54.0",
     "radix-ui": "1.7.0",
-    "react": "19.3.0",
+    "react": "19.3.1",
     "react-dom": "19.3.0",
     "react-router": "8.4.0",
     "tailwind-merge": "3.7.0",
