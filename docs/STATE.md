@@ -103,7 +103,11 @@ usuário em 2026-10-25 com todas as recomendações (nome, telefone E.164, e-mai
 contatos não únicos; busca sem acento com a extensão `unaccent`, `search_name` por trigger e
 `public.search_clients`; notas e consentimentos fora; arquivar no lugar de excluir; páginas próprias;
 menu para quem tem `clients.read`; "Carregar mais" de 50 em 50); RN-045 a RN-047 e complemento da
-RN-037. Próximo: passo 2 (migration e pgTAP).
+RN-037. Passo 2 concluído: migration `20261025140000_clients.sql` (colunas `phone`, `email`,
+`birth_date`, `is_active`, limite de 120 no nome, `search_name` por trigger com `unaccent`,
+`private.search_text` e `public.search_clients` com `security invoker`) e `clients.test.sql` com 248
+asserções; pgTAP 1589 PASS, `db lint` sem erros. Próximo: passo 3 (seed, schemas Zod, `phone.ts` e
+normalização da busca).
 
 Sprint anterior: **Sprint 2.1 — serviços (com `buffer_minutes`) e profissionais**
 (`feat/sprint-2.1-servicos-profissionais`, a partir da `main` em `ead9e69`). **Concluída em

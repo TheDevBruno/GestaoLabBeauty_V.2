@@ -123,6 +123,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 2.2, passo 1: plano de clientes em `docs/roadmap/sprint-2.2.md` (diagnóstico de `clients`,
   modelo com telefone E.164, e-mail, nascimento e arquivamento, busca sem acento com `unaccent` e
   `search_clients`, telas por papel), aprovado; RN-045 a RN-047 e complemento da RN-037.
+- Sprint 2.2, passo 2: colunas `phone` (E.164), `email`, `birth_date` e `is_active` em `clients`, limite
+  de 120 no nome, extensão `unaccent`, `search_name` mantida por trigger, `private.search_text` e
+  `public.search_clients` (busca sem acento por nome ou telefone, `security invoker`, paginada), com
+  `GRANT` de colunas e 248 asserções pgTAP novas.
 
 ### Alterado
 

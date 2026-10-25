@@ -177,7 +177,7 @@ padrão da própria skill para autocompletar ("debounced fetch").
 | #   | Passo                                                                                             | Status    |
 | --- | ------------------------------------------------------------------------------------------------- | --------- |
 | 1   | Plano (este documento) e OK do usuário                                                            | concluído |
-| 2   | Migration (colunas, `CHECK`s, trigger de busca, `unaccent`, `search_clients`) e pgTAP             | pendente  |
+| 2   | Migration (colunas, `CHECK`s, trigger de busca, `unaccent`, `search_clients`) e pgTAP             | concluído |
 | 3   | Seed, schemas Zod, `phone.ts` e normalização da busca                                             | pendente  |
 | 4   | Lista de clientes com busca, filtro e paginação; item "Clientes" no shell                         | pendente  |
 | 5   | Cadastro, edição, arquivar e ficha de leitura                                                     | pendente  |
@@ -268,3 +268,64 @@ ficam abaixo como registro.
   e leitura das migrations, testes e módulos de referência.
 - Este documento. Plano aprovado pelo usuário em 2026-10-25 com todas as recomendações e a extensão
   `unaccent`; RN-045 a RN-047 e o complemento da RN-037 registrados.
+
+### Passo 2 — Migration e pgTAP (2026-10-25)
+
+Sem dependência npm nova e sem mudança de configuração. Extensão `unaccent` autorizada no passo 1. Tudo
+só no Supabase local.
+
+Entregue em `supabase/migrations/20261025140000_clients.sql`:
+
+- `create extension unaccent with schema extensions`.
+- `private.search_text(text)`: `lower(extensions.unaccent('extensions.unaccent'::regdictionary, …))`,
+  `IMMUTABLE`, `security invoker`, `search_path` vazio, `EXECUTE` só para `authenticated`. O dicionário
+  explícito tira a dependência do `search_path`.
+- `clients`: `phone` (`^\+[1-9][0-9]{7,14}$`), `email` (minúsculo, até 254, forma `x@y.z` sem
+  espaços), `birth_date` (`>= 1900-01-01`), `is_active` (padrão `true`), limite de 120 no nome e
+  `search_name not null`.
+- Trigger `clients_set_search_name` (`private.set_client_search_name`) recalcula `search_name` em todo
+  `INSERT` e `UPDATE`.
+- Índices `(tenant_id, phone)` parcial (telefone não nulo) e `(tenant_id, search_name, id)`.
+- `GRANT insert`/`update` de `phone`, `email`, `birth_date` e `is_active`; `search_name` sem `GRANT` de
+  escrita. Políticas inalteradas.
+- `public.search_clients(p_tenant_id, p_query, p_include_inactive, p_limit, p_offset)`: `security
+invoker`, `STABLE`, `search_path` vazio, `EXECUTE` só para `authenticated`. Devolve `setof clients`
+  (o PostgREST trata como tabela). Termo cortado em 100 caracteres, normalizado por `search_text`, com
+  `\`, `%` e `_` escapados; 3 ou mais dígitos (sem espaço, parênteses, ponto, hífen e `+`) buscam também
+  no telefone. Ordem `search_name, id`. Limite nulo vira 50, abaixo de 1 vira 1 e acima de 100 vira
+  100; deslocamento negativo vira 0.
+
+Ajustes em relação ao plano:
+
+- **Função `private.search_text`** separada: a mesma normalização serve ao trigger e à busca. Ela não
+  precisou de `security definer`: o Supabase já concede `USAGE` em `extensions` e `EXECUTE` do
+  `unaccent` a `authenticated` (conferido no banco local).
+- **Trigger em todo `INSERT`/`UPDATE`**, não só em `update of full_name`: assim nem um `UPDATE` direto
+  de `search_name` (por quem ignora `GRANT`) a desalinha do nome.
+- **Índice `(tenant_id, search_name, id)`** a mais, para a ordem e a paginação da lista.
+
+Ajuste em teste existente, por mudança de schema: `rls_specialist.test.sql` passa a esperar as colunas
+novas na lista de `INSERT`/`UPDATE` de `authenticated`. Nenhum resultado de política mudou.
+
+Testes novos em `supabase/tests/clients.test.sql` (248 asserções): 168 casos gerados (2 empresas × 6
+papéis × leitura, cadastro completo, alteração e arquivamento, `search_name` não gravável, exclusão
+negada e busca, nos alvos com e sem agendamento com o specialist e na outra empresa) e 80 fixos
+(estrutura, índices, trigger, extensão, políticas inalteradas, `GRANT`, propriedades das funções,
+`CHECK`s nos limites, `search_name` no cadastro, na troca de nome e contra escrita direta, busca sem
+acento e sem maiúsculas, arquivados, telefone parcial e com máscara, menos de 3 dígitos, `%` e `_`
+como texto, ordem e paginação, limites, recorte do specialist, financial, usuário sem vínculo, `anon` e
+outra empresa).
+
+Provas de detecção, direto no banco local:
+
+- `search_clients` trocada para `security definer`: 19 testes falharam (propriedade da função, 12
+  buscas na outra empresa, 2 do specialist em cliente que não atendeu e 4 do bloco de recorte).
+- Busca sem o escape de `\`, `%` e `_`: 2 testes falharam (`%` e `_` como texto). O teste do `\` não
+  detecta essa troca: sem escape, o padrão `%\%` passa a exigir `%` no fim do nome, e nenhum nome
+  termina assim.
+- Função restaurada com `db:reset`.
+
+Verificação: `npm run db:test` 1589 PASS (15 arquivos), `supabase db lint` sem erros, `npm run check`
+verde (472 testes Vitest; 8 de integração ignorados). Na primeira tentativa de `db:reset` a CLI perdeu
+a conexão com o Postgres local (`DbConnectError`), como no passo 2 da Sprint 2.1; resolvido com
+`db:stop` + `db:start` e novo `db:reset`.
