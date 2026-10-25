@@ -1,7 +1,8 @@
 # Sprint 2.1 — Serviços (com `buffer_minutes`) e profissionais
 
 - **Início:** 2026-10-24
-- **Status:** em andamento (plano aprovado pelo usuário em 2026-10-25)
+- **Status:** concluída em 2026-10-25 (plano aprovado pelo usuário em 2026-10-25; não é ponto de
+  aprovação obrigatória)
 - **Branch:** `feat/sprint-2.1-servicos-profissionais` (a partir da `main` em `ead9e69`, merge do PR #22)
 
 ## Objetivo
@@ -161,7 +162,7 @@ retorno de carregamento e de sucesso ao salvar, rótulo visível e erro junto ao
 | 3   | Seed, schemas Zod e `money.ts`                                                                            | concluído |
 | 4   | Telas de serviços                                                                                         | concluído |
 | 5   | Telas de profissionais (vínculo com membro e serviços)                                                    | concluído |
-| 6   | Verificação (check, db:test, integração, navegador 375/1440 px, checklist) e encerramento                 | pendente  |
+| 6   | Verificação (check, db:test, integração, navegador 375/1440 px, checklist) e encerramento                 | concluído |
 
 Cada passo termina com `npm run check` e `npm run db:test` verdes, commit, `docs/STATE.md`,
 `CHANGELOG.md` e este registro atualizados, e push da branch. Migrations só no Supabase local.
@@ -400,3 +401,52 @@ Verificação no navegador (preview, Supabase local depois de `db:reset`, `ana.m
 - Checklist `pro-rules.md`: ícones `lucide-react` (sem emoji), cores só de tokens, status em texto,
   sem animação nova. Não verificados: paisagem, texto ampliado do sistema e modo escuro (fora do
   escopo desde a Sprint 1.4).
+
+### Passo 6 — Verificação final e encerramento (2026-10-25)
+
+Sem mudança de código. Supabase local com `db:reset` antes dos testes e depois da verificação no
+navegador (os dados criados no teste foram apagados).
+
+| Verificação                                    | Resultado                                                      |
+| ---------------------------------------------- | -------------------------------------------------------------- |
+| `npm ci`                                       | ok, 0 vulnerabilidades                                         |
+| `npm run check`                                | verde: 472 testes Vitest (8 de integração ignorados), build ok |
+| `npm run db:test`                              | 1341 PASS (14 arquivos)                                        |
+| `supabase db lint`                             | sem erros                                                      |
+| `npm run test:integration`                     | 8 passed                                                       |
+| `dist/` contém a service role ou a secret key? | não (35 arquivos varridos pelos valores de `supabase status`)  |
+
+Navegador (preview, Supabase local, usuários do seed do Studio Ana):
+
+- **Owner**, em 375, 768, 1024 e 1440 px, nas 6 telas (`/app/servicos`, `/novo`, `/:id` e o mesmo
+  em `/app/profissionais`): sem rolagem horizontal; nenhum controle com menos de 44 px (o link "Pular
+  para o conteúdo" só aparece no foco e as caixas de seleção ficam dentro de rótulos de 44 px); cartões
+  em 375 e 768, tabela em 1024 e 1440; em 1024 a tabela de serviços cabe (670 px, sem rolagem interna).
+  Menu com "Painel", "Serviços", "Profissionais" e "Equipe e convites".
+- **Manager**, em 375 e 1440 px, nas 6 telas: mesmos resultados; menu sem "Equipe e convites".
+- **Receptionist**: menu só com "Painel"; as 6 rotas abertas por link direto mostram "Acesso não
+  permitido", sem formulário nem tabela.
+- **Teclado** (teclas reais, 375 px): na edição de profissional a ordem é menu, nome, membro, serviços,
+  ativo, salvar, cancelar e excluir, todos com `:focus-visible` e anel de foco (sombra de 2 px branca +
+  3 px `ring`). Formulário de serviço vazio enviado com Enter: erros nos 3 campos e foco no nome;
+  preenchido só com teclado (duração pelas setas) e enviado com Enter: cadastro aceito e foco no aviso.
+  Formulário de profissional com as caixas marcadas por Espaço: aceito. Exclusão em duas etapas por
+  Enter: o foco vai para "Confirmar exclusão"; a recusa do banco (profissional com agendamento) é
+  anunciada e o foco volta para "Excluir profissional".
+- Checklist `pro-rules.md`: ícones `lucide-react` (sem emoji), cores só de tokens, status em texto,
+  alvos de 44 px, sem animação nova, sem rolagem horizontal em 375 px. Não verificados: paisagem,
+  texto ampliado do sistema (pendência desde a Sprint 1.4) e modo escuro (fora do escopo desde a
+  Sprint 1.4).
+- Limitação do ambiente: com o painel do navegador oculto, trocar a largura emulada não dispara
+  `resize` nem o `change` do `matchMedia`, e o shell montado antes da troca continua no modo anterior.
+  Em cada largura as telas foram medidas depois de recarregar ou de navegar para uma tela nova. Não é
+  defeito do app: `useMediaQuery` usa o evento `change` padrão.
+
+## Encerramento
+
+Sprint 2.1 concluída em 2026-10-25: serviços com `buffer_minutes` e profissionais com vínculo a membro e
+serviços, do banco (RLS, `GRANT`, pgTAP) às telas. Ajustes em relação ao plano, todos registrados acima:
+função de candidatos devolve todos os membros (RN-044 ajustada e confirmada), serviço inativo já ligado
+aparece no formulário de profissional, e profissional e vínculos gravados em chamadas separadas com aviso
+quando os vínculos falham. PR aberto para a `main`; o merge fica com o usuário. A Sprint 2.2 (clientes)
+só começa com autorização.

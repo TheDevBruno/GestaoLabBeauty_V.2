@@ -117,6 +117,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   serviços que faz (`fieldset`/`legend`) e ativo; vínculos acertados pela diferença; exclusão em duas
   etapas com mensagem para desativar quando há agendamento; item "Profissionais" no shell.
   `SavedNotice` e `StatusBadge` passaram a ser compartilhados pelos dois módulos.
+- Sprint 2.1, passo 6: verificação final (`npm ci`, `check`, `db:test`, `db lint`, integração,
+  `dist/` sem a service role, navegador em 375/768/1024/1440 px com owner, manager e receptionist e
+  teste só com teclado) e encerramento da sprint.
 
 ### Alterado
 
