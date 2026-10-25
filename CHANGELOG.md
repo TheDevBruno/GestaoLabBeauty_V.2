@@ -131,6 +131,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   mais no Studio Ana (nomes com acento, um arquivado); `src/shared/phone.ts` (formato brasileiro ↔
   E.164) e `src/shared/client.ts` (schema do formulário de cliente e termo de busca), com 68 testes
   Vitest novos.
+- Sprint 2.2, passo 4: lista de clientes em `/app/clientes` (`src/modules/clients/`): busca por nome ou
+  telefone pela função `search_clients` com espera de 300 ms e termo em `?q=`, "Mostrar arquivados",
+  contagem em `role="status"`, tabela a partir de 1024 px e cartões abaixo, "Carregar mais" de 50 em 50
+  com foco no primeiro novo, estados vazio, sem resultado e erro; item "Clientes" no shell para quem
+  tem `clients.read` e "Novo cliente" só para quem cadastra. `StatusBadge` com rótulos configuráveis e
+  `SavedNotice` mantendo a busca da URL. 38 testes Vitest novos.
 
 ### Alterado
 

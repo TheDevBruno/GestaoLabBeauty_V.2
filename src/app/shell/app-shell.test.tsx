@@ -53,6 +53,7 @@ describe('App shell — desktop', () => {
     const links = within(nav).getAllByRole('link');
     expect(links.map((link) => link.textContent)).toEqual([
       'Painel',
+      'Clientes',
       'Serviços',
       'Profissionais',
       'Equipe e convites',

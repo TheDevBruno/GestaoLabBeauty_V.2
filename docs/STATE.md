@@ -109,8 +109,12 @@ RN-037. Passo 2 concluído: migration `20261025140000_clients.sql` (colunas `pho
 asserções; pgTAP 1589 PASS, `db lint` sem erros. Passo 3 concluído: seed com contato nos clientes e 12
 clientes a mais no Studio Ana (acentos, um arquivado), `src/shared/phone.ts` (formato brasileiro ↔
 E.164) e `src/shared/client.ts` (schema do formulário, nascimento até hoje, termo de busca); pgTAP 1590
-PASS, 540 testes Vitest, integração 8 passed. Próximo: passo 4 (lista de clientes com busca, filtro e
-paginação; item "Clientes" no shell).
+PASS, 540 testes Vitest, integração 8 passed. Passo 4 concluído: lista em `/app/clientes`
+(`src/modules/clients/`) com busca sem acento por nome ou telefone, termo em `?q=`, "Mostrar
+arquivados", contagem anunciada, tabela e cartões e "Carregar mais" de 50 em 50; item "Clientes" no
+shell para os 6 papéis; "Novo cliente" só para quem cadastra; 578 testes Vitest, verificado no
+navegador com owner, specialist e financial em 375 e 1440 px. Próximo: passo 5 (cadastro, edição,
+arquivar e ficha de leitura).
 
 Sprint anterior: **Sprint 2.1 — serviços (com `buffer_minutes`) e profissionais**
 (`feat/sprint-2.1-servicos-profissionais`, a partir da `main` em `ead9e69`). **Concluída em

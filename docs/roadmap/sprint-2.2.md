@@ -179,7 +179,7 @@ padrão da própria skill para autocompletar ("debounced fetch").
 | 1   | Plano (este documento) e OK do usuário                                                            | concluído |
 | 2   | Migration (colunas, `CHECK`s, trigger de busca, `unaccent`, `search_clients`) e pgTAP             | concluído |
 | 3   | Seed, schemas Zod, `phone.ts` e normalização da busca                                             | concluído |
-| 4   | Lista de clientes com busca, filtro e paginação; item "Clientes" no shell                         | pendente  |
+| 4   | Lista de clientes com busca, filtro e paginação; item "Clientes" no shell                         | concluído |
 | 5   | Cadastro, edição, arquivar e ficha de leitura                                                     | pendente  |
 | 6   | Verificação (check, db:test, integração, navegador 375/1440 px por papel, teclado) e encerramento | pendente  |
 
@@ -363,3 +363,67 @@ Testes: `phone.test.ts` e `client.test.ts` (68 testes Vitest novos).
 
 Verificação: `npm run db:reset` com seed, `npm run db:test` 1590 PASS (15 arquivos), `npm run check`
 verde (540 testes Vitest; 8 de integração ignorados) e `npm run test:integration` 8 passed.
+
+### Passo 4 — Lista de clientes (2026-10-25)
+
+Sem dependência nova, sem migration e sem mudança de configuração. Consultas à skill `ui-ux-pro-max`
+(`--domain ux`): contagem anunciada numa única região `role="status"` com o contexto ("3 clientes
+encontrados para …", não um número solto), busca sem resultado com sugestão em vez de "0 resultados",
+rótulo visível no campo e nome acessível no botão só com ícone. Para o foco no "Carregar mais" a base
+não trouxe resultado próprio; segui o padrão geral (foco no primeiro item novo).
+
+- `src/modules/clients/`:
+  - `clients-api.ts`: `search` pela RPC `search_clients` (termo vazio vai como `null`, pede 51 linhas
+    para saber se há outra página de 50 sem contar a tabela) e `get` (id só com forma de uuid). Linhas
+    validadas com Zod; erro do banco vira `ClientError` sem o texto do banco.
+  - `clients-context.ts`: contexto da API e chaves do TanStack Query sob `['clients', tenantId]`.
+  - `ClientsListPage.tsx` (`/app/clientes`, `RequirePermission` `clients.read`): campo de busca com
+    rótulo visível, `type="search"`, 300 ms de espera depois da última tecla e Enter para buscar na
+    hora; termo normalizado em `?q=` (`replace`, sem encher o histórico); botão "Limpar busca" de
+    44 px que devolve o foco ao campo; "Mostrar arquivados"; contagem em `role="status"` com
+    `aria-atomic`; tabela a partir de 1024 px e cartões abaixo, telefone formatado, "Não informado"
+    para contato vazio e status em texto ("Ativo"/"Arquivado"); `useInfiniteQuery` com "Carregar mais
+    clientes" de 50 em 50 e foco no primeiro cliente novo; a lista anterior fica na tela enquanto a
+    busca nova carrega. Estados: carregando, erro com "Tentar de novo", sem resultado (sugestão,
+    lembrete dos arquivados e "Limpar busca"), vazio com "Cadastrar o primeiro cliente" só para quem
+    cadastra e vazio próprio do specialist.
+  - "Novo cliente" só com `clients.write` e fora do specialist (RN-036): owner, admin, manager e
+    receptionist.
+- Item "Clientes" no shell, logo depois de "Painel", para quem tem `clients.read` (os 6 papéis).
+  `App`, `main.tsx` e `render-app.tsx` recebem a `ClientsApi`; o fake aplica as regras de
+  `search_clients` (sem acento, telefone com 3 ou mais dígitos, arquivados, ordem e páginas) e a matriz
+  `clients.*` do plano §8 entrou nas permissões falsas.
+- Ajustes em peças comuns: `StatusBadge` aceita rótulos (`activeLabel`/`inactiveLabel`, padrão
+  "Ativo"/"Inativo"); `SavedNotice` mantém a busca da URL ao tirar o aviso do histórico. O teste do
+  shell que lista os itens do owner passou a esperar "Clientes".
+- **Fica para o passo 5:** as rotas `/app/clientes/novo` e `/app/clientes/:id`. Até lá o botão "Novo
+  cliente" leva à página de não encontrado, e a lista não tem link para abrir o cliente.
+
+Testes: `clients-api.test.ts` (11) e `clients-pages.test.tsx` (27: menu nos 6 papéis, "Novo cliente"
+por papel, texto do specialist, tabela e cartões, arquivados, erro, busca com espera e sem chamar o
+banco a cada letra, Enter, telefone, termo da URL, limpar, sem resultado, "Carregar mais" com foco e
+os três estados vazios). Prova de detecção: sem a exclusão do specialist em "Novo cliente", 1 teste
+falhou.
+
+Verificação no navegador (preview, Supabase local depois de `db:reset`, usuários do seed do Studio
+Ana; leitura do DOM porque o painel oculto não aceita cliques reais):
+
+- **Owner**, 1440 px: tabela com os 14 ativos em ordem sem acento ("Ângela" antes de "Beatriz"),
+  "14 clientes ativos.", item "Clientes" com `aria-current`. "joao" acha "João Pereira Teste" e grava
+  `?q=joao`; "(11) 90000-001" acha os 7 ativos com esse trecho do telefone (o arquivado fica fora);
+  "zzz" mostra a mensagem com sugestão; "sonia" com "Mostrar arquivados" traz "Sônia Prado Teste
+  (arquivada)" como "Arquivado". 375 px: 14 cartões, sem rolagem horizontal, nenhum controle abaixo
+  de 44 px, botão de limpar 44 × 44 dentro do campo.
+- **Specialist**, 375 e 1440 px: só "Cliente Teste 1 (Studio Ana)", texto do recorte, sem "Novo
+  cliente", menu com "Painel" e "Clientes"; "joao" não acha ninguém.
+- **Financial**, 1440 e 375 px: os 14 ativos, sem "Novo cliente", sem rolagem horizontal, controles de
+  44 px.
+- Não verificado no navegador: "Carregar mais" (o seed tem 15 clientes; coberto pelo teste de tela),
+  paisagem, texto ampliado do sistema e modo escuro (fora do escopo desde a Sprint 1.4).
+- Checklist `pro-rules.md`: ícones `lucide-react` (sem emoji), cores só de tokens, status em texto,
+  alvos de 44 px, sem animação nova.
+- Ambiente: uma tentativa de subir um segundo Vite na porta 5173 refez o cache de dependências e o
+  servidor já aberto passou a responder 504 ("Outdated Optimize Dep"); resolvido reiniciando o Vite.
+
+Verificação: `npm run check` verde (578 testes Vitest; 8 de integração ignorados), `npm run db:test`
+1590 PASS.

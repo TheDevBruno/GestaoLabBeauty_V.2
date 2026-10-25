@@ -78,6 +78,18 @@ export const routes: RouteObject[] = [
                 ],
               },
               {
+                path: 'clientes',
+                children: [
+                  {
+                    index: true,
+                    lazy: async () => ({
+                      Component: (await import('@/modules/clients/ClientsListPage'))
+                        .ClientsListPage,
+                    }),
+                  },
+                ],
+              },
+              {
                 path: 'profissionais',
                 children: [
                   {

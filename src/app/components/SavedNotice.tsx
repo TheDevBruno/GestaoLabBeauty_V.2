@@ -9,14 +9,14 @@ export function SavedNotice() {
   const navigate = useNavigate();
   const [notice] = useState(() => readSavedNotice(location.state));
   const ref = useRef<HTMLParagraphElement>(null);
-  const { pathname } = location;
+  const { pathname, search } = location;
 
   useEffect(() => {
     if (notice === null) return;
     ref.current?.focus();
-    // Caminho explícito: `navigate('.')` numa rota index acrescenta "?index" à URL.
-    void navigate(pathname, { replace: true, state: null });
-  }, [notice, navigate, pathname]);
+    // Caminho explícito: `navigate('.')` numa rota index acrescenta "?index" à URL. A busca (?q=) fica.
+    void navigate({ pathname, search }, { replace: true, state: null });
+  }, [notice, navigate, pathname, search]);
 
   if (notice === null) return null;
   return (

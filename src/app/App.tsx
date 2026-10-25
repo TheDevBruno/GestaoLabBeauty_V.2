@@ -4,6 +4,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router';
 import type { AuthApi } from '@/lib/auth-api';
 import type { InvitationsApi } from '@/lib/invitations-api';
 import type { TenancyApi } from '@/lib/tenancy-api';
+import type { ClientsApi } from '@/modules/clients/clients-api';
+import { ClientsApiContext } from '@/modules/clients/clients-context';
 import type { ProfessionalsApi } from '@/modules/professionals/professionals-api';
 import { ProfessionalsApiContext } from '@/modules/professionals/professionals-context';
 import type { ServicesApi } from '@/modules/services/services-api';
@@ -22,6 +24,7 @@ export function App({
   invitationsApi,
   servicesApi,
   professionalsApi,
+  clientsApi,
   queryClient,
 }: {
   api: AuthApi;
@@ -29,6 +32,7 @@ export function App({
   invitationsApi: InvitationsApi;
   servicesApi: ServicesApi;
   professionalsApi: ProfessionalsApi;
+  clientsApi: ClientsApi;
   queryClient: QueryClient;
 }) {
   const [router] = useState(() => createBrowserRouter(routes));
@@ -40,7 +44,9 @@ export function App({
           <InvitationsApiContext value={invitationsApi}>
             <ServicesApiContext value={servicesApi}>
               <ProfessionalsApiContext value={professionalsApi}>
-                <RouterProvider router={router} />
+                <ClientsApiContext value={clientsApi}>
+                  <RouterProvider router={router} />
+                </ClientsApiContext>
               </ProfessionalsApiContext>
             </ServicesApiContext>
           </InvitationsApiContext>
