@@ -77,6 +77,32 @@ export const routes: RouteObject[] = [
                   },
                 ],
               },
+              {
+                path: 'profissionais',
+                children: [
+                  {
+                    index: true,
+                    lazy: async () => ({
+                      Component: (await import('@/modules/professionals/ProfessionalsListPage'))
+                        .ProfessionalsListPage,
+                    }),
+                  },
+                  {
+                    path: 'novo',
+                    lazy: async () => ({
+                      Component: (await import('@/modules/professionals/ProfessionalFormPage'))
+                        .ProfessionalNewPage,
+                    }),
+                  },
+                  {
+                    path: ':id',
+                    lazy: async () => ({
+                      Component: (await import('@/modules/professionals/ProfessionalFormPage'))
+                        .ProfessionalEditPage,
+                    }),
+                  },
+                ],
+              },
             ],
           },
         ],

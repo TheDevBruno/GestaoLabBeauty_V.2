@@ -3,6 +3,7 @@ import {
   LayoutDashboardIcon,
   MenuIcon,
   ScissorsIcon,
+  UserRoundIcon,
   UsersIcon,
 } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
@@ -117,6 +118,11 @@ function ShellNavigation({ onNavigate }: { onNavigate?: () => void }) {
           {canManageServices ? (
             <ShellNavItem to="/app/servicos" icon={<ScissorsIcon />} onNavigate={onNavigate}>
               Serviços
+            </ShellNavItem>
+          ) : null}
+          {canManageServices ? (
+            <ShellNavItem to="/app/profissionais" icon={<UserRoundIcon />} onNavigate={onNavigate}>
+              Profissionais
             </ShellNavItem>
           ) : null}
           {canManageMembers ? (

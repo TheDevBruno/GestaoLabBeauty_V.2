@@ -107,7 +107,11 @@ PASS. Passo 3 concluído: seed com serviços e vínculos, `src/shared/money.ts` 
 e de profissional; pgTAP 1341 PASS, 396 testes Vitest. Passo 4 concluído: telas de serviços em
 `src/modules/services/` (lista com tabela e cartões, filtro de inativos, estado vazio, criar e editar
 em páginas próprias com `services.manage`, item "Serviços" no shell); 434 testes Vitest, pgTAP 1341
-PASS, verificado no navegador em 375 e 1440 px. Próximo: passo 5 (telas de profissionais).
+PASS, verificado no navegador em 375 e 1440 px. Passo 5 concluído: telas de profissionais em
+`src/modules/professionals/` (membro ligado pela função de candidatos, serviços que faz, vínculos pela
+diferença, exclusão em duas etapas com recusa do banco quando há agendamento, item "Profissionais" no
+shell); 472 testes Vitest, verificado no navegador em 375 e 1440 px. Próximo: passo 6 (verificação
+final e encerramento da sprint).
 
 Sprint anterior: **Sprint 1.4 — design system e app shell** (`feat/sprint-1.4-design-system`, PR #22
 mesclado em 2026-10-25). Passo 1 concluído: plano em [sprint-1.4.md](roadmap/sprint-1.4.md) aprovado pelo

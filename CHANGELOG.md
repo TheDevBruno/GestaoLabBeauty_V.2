@@ -110,6 +110,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   estado vazio), páginas `/app/servicos/novo` e `/app/servicos/:id` com `services.manage`, item
   "Serviços" no shell, escrita direto no Supabase sob RLS e nome repetido mostrado junto ao campo.
   Componentes `Textarea`, `TextareaField` e `CheckboxField`; `ShellPage` com largura `wide`.
+- Sprint 2.1, passo 5: telas de profissionais em `src/modules/professionals/`: lista em
+  `/app/profissionais` (membro ligado ou "Sem acesso ao sistema", quantidade de serviços, status,
+  tabela e cartões, filtro de inativos, estado vazio), páginas `/app/profissionais/novo` e
+  `/app/profissionais/:id` com nome exibido, membro da equipe (função `list_professional_link_candidates`),
+  serviços que faz (`fieldset`/`legend`) e ativo; vínculos acertados pela diferença; exclusão em duas
+  etapas com mensagem para desativar quando há agendamento; item "Profissionais" no shell.
+  `SavedNotice` e `StatusBadge` passaram a ser compartilhados pelos dois módulos.
 
 ### Alterado
 

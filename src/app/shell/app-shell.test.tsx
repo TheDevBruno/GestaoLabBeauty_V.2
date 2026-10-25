@@ -54,6 +54,7 @@ describe('App shell — desktop', () => {
     expect(links.map((link) => link.textContent)).toEqual([
       'Painel',
       'Serviços',
+      'Profissionais',
       'Equipe e convites',
     ]);
     expect(within(nav).getByRole('link', { name: 'Painel' }).getAttribute('aria-current')).toBe(

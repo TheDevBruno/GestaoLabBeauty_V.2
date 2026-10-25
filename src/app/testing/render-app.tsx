@@ -7,6 +7,12 @@ import type { AuthApi, AuthSession } from '@/lib/auth-api';
 import type { InvitationsApi, PendingInvitation } from '@/lib/invitations-api';
 import type { TenancyApi, TenantMembership } from '@/lib/tenancy-api';
 import type { MemberRole } from '@/shared/roles';
+import type {
+  LinkCandidate,
+  Professional,
+  ProfessionalsApi,
+} from '@/modules/professionals/professionals-api';
+import { ProfessionalsApiContext } from '@/modules/professionals/professionals-context';
 import type { ServicesApi, Service } from '@/modules/services/services-api';
 import { ServicesApiContext } from '@/modules/services/services-context';
 import { AuthProvider } from '@/app/auth/AuthProvider';
@@ -217,12 +223,104 @@ export function createFakeServicesApi(initial: Service[] = []) {
   return { api };
 }
 
+let professionalSeq = 0;
+
+export function professional(
+  displayName: string,
+  overrides: Partial<Professional> = {},
+): Professional {
+  professionalSeq += 1;
+  return {
+    id: `20000000-0000-4000-8000-${String(professionalSeq).padStart(12, '0')}`,
+    displayName,
+    membershipId: null,
+    isActive: true,
+    serviceIds: [],
+    ...overrides,
+  };
+}
+
+export function linkCandidate(
+  membershipId: string,
+  fullName: string | null,
+  role: MemberRole,
+  professionalId: string | null = null,
+): LinkCandidate {
+  return { membershipId, fullName, role, professionalId };
+}
+
+// ProfessionalsApi em memória. Os candidatos acompanham os vínculos com membros, como a função do
+// banco; `withAppointments` simula o profissional que o banco recusa excluir (FK de appointments).
+export function createFakeProfessionalsApi(
+  initial: Professional[] = [],
+  members: LinkCandidate[] = [],
+  withAppointments: string[] = [],
+) {
+  let professionals = initial;
+  let next = 1;
+  const memberTaken = (membershipId: string | null, exceptId?: string) =>
+    membershipId !== null &&
+    professionals.some((item) => item.id !== exceptId && item.membershipId === membershipId);
+  const taken = {
+    ok: false as const,
+    message: 'Confira os dados do profissional.',
+    fieldErrors: { membershipId: 'Este membro já está ligado a outro profissional.' },
+  };
+  const api = {
+    list: vi.fn<ProfessionalsApi['list']>(() =>
+      Promise.resolve(
+        [...professionals].sort((a, b) => a.displayName.localeCompare(b.displayName)),
+      ),
+    ),
+    get: vi.fn<ProfessionalsApi['get']>((_tenantId, id) =>
+      Promise.resolve(professionals.find((item) => item.id === id) ?? null),
+    ),
+    listCandidates: vi.fn<ProfessionalsApi['listCandidates']>(() =>
+      Promise.resolve(
+        members.map((member) => ({
+          ...member,
+          professionalId:
+            professionals.find((item) => item.membershipId === member.membershipId)?.id ?? null,
+        })),
+      ),
+    ),
+    create: vi.fn<ProfessionalsApi['create']>((_tenantId, input) => {
+      if (memberTaken(input.membershipId)) return Promise.resolve(taken);
+      const created: Professional = {
+        id: `30000000-0000-4000-8000-${String(next++).padStart(12, '0')}`,
+        ...input,
+      };
+      professionals = [...professionals, created];
+      return Promise.resolve({ ok: true, professional: created, linksSaved: true });
+    }),
+    update: vi.fn<ProfessionalsApi['update']>((_tenantId, current, input) => {
+      if (memberTaken(input.membershipId, current.id)) return Promise.resolve(taken);
+      const updated: Professional = { id: current.id, ...input };
+      professionals = professionals.map((item) => (item.id === current.id ? updated : item));
+      return Promise.resolve({ ok: true, professional: updated, linksSaved: true });
+    }),
+    remove: vi.fn<ProfessionalsApi['remove']>((_tenantId, id) => {
+      if (withAppointments.includes(id)) {
+        return Promise.resolve({
+          ok: false,
+          message:
+            'Este profissional tem agendamentos e não pode ser excluído. Desmarque “Profissional ativo” e salve para tirá-lo da agenda nova.',
+        });
+      }
+      professionals = professionals.filter((item) => item.id !== id);
+      return Promise.resolve({ ok: true });
+    }),
+  } satisfies ProfessionalsApi;
+  return { api };
+}
+
 export function renderAt(
   path: string,
   api: AuthApi,
   tenancyApi: TenancyApi = createFakeTenancyApi().api,
   invitationsApi: InvitationsApi = createFakeInvitationsApi().api,
   servicesApi: ServicesApi = createFakeServicesApi().api,
+  professionalsApi: ProfessionalsApi = createFakeProfessionalsApi().api,
 ) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -234,7 +332,9 @@ export function renderAt(
         <TenancyApiContext value={tenancyApi}>
           <InvitationsApiContext value={invitationsApi}>
             <ServicesApiContext value={servicesApi}>
-              <RouterProvider router={router} />
+              <ProfessionalsApiContext value={professionalsApi}>
+                <RouterProvider router={router} />
+              </ProfessionalsApiContext>
             </ServicesApiContext>
           </InvitationsApiContext>
         </TenancyApiContext>

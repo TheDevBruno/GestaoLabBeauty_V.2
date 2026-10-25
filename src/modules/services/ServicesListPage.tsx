@@ -1,18 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { PlusIcon } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { useState } from 'react';
+import { Link } from 'react-router';
 import { formatCents } from '@/shared/money';
 import { formatMinutes } from '@/shared/service';
 import { Button } from '@/components/ui/button';
 import { CheckboxField } from '@/components/ui/field';
-import { cn } from '@/lib/utils';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { SavedNotice } from '@/app/components/SavedNotice';
 import { RequirePermission } from '@/app/guards/RequirePermission';
 import { ShellPage } from '@/app/shell/ShellPage';
 import { useMediaQuery } from '@/app/shell/use-media-query';
 import { useActiveTenant } from '@/app/tenancy/tenancy-context';
 import type { Service } from './services-api';
-import { readServicesNotice, servicesQueryKey, useServicesApi } from './services-context';
+import { servicesQueryKey, useServicesApi } from './services-context';
 
 // Mesmo ponto de troca do app shell: tabela a partir de 1024 px, cartões abaixo. Só um dos dois fica
 // no DOM, para o leitor de tela não encontrar a lista duas vezes.
@@ -109,35 +110,6 @@ function ServicesList() {
   );
 }
 
-// Aviso de "salvo" deixado pela página do formulário. Recebe o foco ao aparecer, para o leitor de tela
-// anunciar, e sai do histórico para não voltar ao recarregar a página.
-function SavedNotice() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [notice] = useState(() => readServicesNotice(location.state));
-  const ref = useRef<HTMLParagraphElement>(null);
-  const { pathname } = location;
-
-  useEffect(() => {
-    if (notice === null) return;
-    ref.current?.focus();
-    // Caminho explícito: `navigate('.')` numa rota index acrescenta "?index" à URL.
-    void navigate(pathname, { replace: true, state: null });
-  }, [notice, navigate, pathname]);
-
-  if (notice === null) return null;
-  return (
-    <p
-      ref={ref}
-      role="status"
-      tabIndex={-1}
-      className="mb-6 rounded-lg border border-success bg-card px-4 py-3 text-base text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring"
-    >
-      {notice}
-    </p>
-  );
-}
-
 function EmptyState() {
   return (
     <div className="mt-6 flex flex-col items-start gap-4 rounded-xl border border-dashed p-6">
@@ -164,20 +136,6 @@ function bufferText(service: Service): string {
   return service.bufferMinutes === null || service.bufferMinutes === 0
     ? 'Sem intervalo'
     : formatMinutes(service.bufferMinutes);
-}
-
-// Status em texto, não só cor (WCAG 1.4.1).
-function StatusBadge({ active }: { active: boolean }) {
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-medium',
-        active ? 'border-success text-success' : 'border-border text-muted-foreground',
-      )}
-    >
-      {active ? 'Ativo' : 'Inativo'}
-    </span>
-  );
 }
 
 function EditButton({ service }: { service: Service }) {

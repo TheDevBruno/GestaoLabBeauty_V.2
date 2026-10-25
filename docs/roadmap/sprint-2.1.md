@@ -160,7 +160,7 @@ retorno de carregamento e de sucesso ao salvar, rótulo visível e erro junto ao
 | 2   | Migration (`services`, `professional_services`, colunas de `professionals`, função de candidatos) e pgTAP | concluído |
 | 3   | Seed, schemas Zod e `money.ts`                                                                            | concluído |
 | 4   | Telas de serviços                                                                                         | concluído |
-| 5   | Telas de profissionais (vínculo com membro e serviços)                                                    | pendente  |
+| 5   | Telas de profissionais (vínculo com membro e serviços)                                                    | concluído |
 | 6   | Verificação (check, db:test, integração, navegador 375/1440 px, checklist) e encerramento                 | pendente  |
 
 Cada passo termina com `npm run check` e `npm run db:test` verdes, commit, `docs/STATE.md`,
@@ -345,3 +345,58 @@ Verificação no navegador (preview, Supabase local, `ana.manager@example.test`)
   sem animação nova. Não verificados: paisagem, texto ampliado do sistema (pendência da Sprint 1.4) e
   modo escuro (fora do escopo desde a Sprint 1.4). Capturas de tela instáveis com a janela do app
   oculta; a verificação foi feita por leitura do DOM.
+
+### Passo 5 — Telas de profissionais (2026-10-25)
+
+Sem dependência nova, sem migration e sem mudança de configuração. Consultas à skill `ui-ux-pro-max`
+(`--domain ux`): confirmar antes de ação destrutiva, erro junto a cada campo inválido, retorno de
+carregamento e de sucesso. Para o grupo de caixas a base não trouxe resultado; segui o padrão WCAG
+1.3.1 (`fieldset` com `legend`).
+
+- `src/modules/professionals/`:
+  - `professionals-api.ts`: `list`/`get` com o embed `professional_services(service_id)` (FK
+    composta), `listCandidates` pela função `list_professional_link_candidates`, `create`, `update` e
+    `remove` direto no Supabase sob RLS. O profissional e os vínculos vão em chamadas separadas (sem
+    migration nesta etapa): na edição só a diferença vai ao banco (apaga os desmarcados, insere os
+    novos); se os vínculos falharem, o profissional fica salvo e a lista avisa que os serviços não
+    foram atualizados. Erros: `23505` (membro já ligado, índice `(tenant_id, membership_id)`) vai para
+    o campo do membro; na exclusão, `23503` (FK de `appointments`) vira a mensagem que sugere
+    desmarcar "Profissional ativo"; o texto do banco não é repassado.
+  - `ProfessionalsListPage.tsx`: tabela a partir de 1024 px e cartões abaixo; membro ligado com nome
+    e papel (da função de candidatos; se ela falhar, "Com acesso ao sistema"), "Sem acesso ao
+    sistema", "Nenhum serviço"/"1 serviço"/"n serviços", status em texto, filtro de inativos, estado
+    vazio com "Cadastrar o primeiro profissional".
+  - `ProfessionalFormPage.tsx`: nome exibido, membro da equipe ("Nenhum (sem acesso ao sistema)" e os
+    membros ainda sem profissional, mais o atual na edição), serviços que faz (caixas de 44 px em
+    `fieldset`/`legend`) e ativo. O formulário só aparece com serviços e candidatos carregados. Sem
+    serviço ativo, o grupo explica e leva ao cadastro de serviço. Exclusão só na edição, em duas
+    etapas, com o foco indo para "Confirmar exclusão" e voltando para "Excluir profissional" ao
+    cancelar ou quando o banco recusa.
+- **Ajuste em relação ao plano:** o plano dizia "só serviços ativos" no formulário. Serviço inativo a
+  que o profissional já está ligado também aparece, marcado e com "(inativo)" no rótulo: sem isso,
+  salvar apagaria um vínculo que a pessoa não viu. Serviços inativos sem vínculo continuam fora.
+- Peças comuns aos dois módulos: `src/app/components/SavedNotice.tsx` e `src/app/forms/saved-notice.ts`
+  (aviso de "salvo" pelo estado da navegação, antes dentro de serviços) e
+  `src/components/ui/status-badge.tsx`. A tela de serviços passou a usá-las, sem mudar o comportamento
+  (os testes de serviços seguem iguais).
+- Rotas preguiçosas com `RequirePermission` `services.manage`; item "Profissionais" no shell só com
+  essa permissão. `App`, `main.tsx` e o `render-app.tsx` recebem a `ProfessionalsApi` (fake em memória
+  com candidatos que acompanham os vínculos e profissional com agendamento simulado).
+- Testes: `professionals-pages.test.tsx` (24 de tela) e `professionals-api.test.ts` (14). O teste do
+  shell que lista os itens do owner passou a esperar "Profissionais".
+
+Verificação no navegador (preview, Supabase local depois de `db:reset`, `ana.manager@example.test`):
+
+- 1440 px: tabela com os 2 profissionais do Studio Ana (o do specialist com nome e papel do membro, o
+  outro "Sem acesso ao sistema"), item marcado com `aria-current`, sem rolagem horizontal.
+- Novo: o select de membro lista "Nenhum" e os 5 membros sem profissional (o specialist, já ligado,
+  fica fora); os serviços são só os 2 ativos, com rótulos de 44 px. Cadastro com membro e 2 serviços
+  aceito, aviso focado.
+- Editar o criado: valores e vínculos carregados; desmarcar um serviço e salvar deixa "1 serviço".
+- Excluir "Profissional Teste 1" (tem agendamento no seed): o banco recusa (409, FK), a mensagem
+  sugere desativar e o foco volta para "Excluir profissional". Excluir o criado: aceito, volta à lista.
+- 375 px: cartões, menu em gaveta, sem rolagem horizontal, controles com 44 px ou mais (o link "Pular
+  para o conteúdo" só aparece no foco).
+- Checklist `pro-rules.md`: ícones `lucide-react` (sem emoji), cores só de tokens, status em texto,
+  sem animação nova. Não verificados: paisagem, texto ampliado do sistema e modo escuro (fora do
+  escopo desde a Sprint 1.4).

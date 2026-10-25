@@ -17,15 +17,3 @@ export function servicesQueryKey(tenantId: string) {
 export function serviceQueryKey(tenantId: string, serviceId: string) {
   return ['services', tenantId, serviceId] as const;
 }
-
-// Aviso que a página de formulário deixa para a lista mostrar depois de salvar.
-export interface ServicesNotice {
-  notice: string;
-}
-
-export function readServicesNotice(state: unknown): string | null {
-  if (typeof state === 'object' && state !== null && 'notice' in state) {
-    return typeof state.notice === 'string' ? state.notice : null;
-  }
-  return null;
-}

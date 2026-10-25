@@ -15,16 +15,12 @@ import { CheckboxField, InputField, SelectField, TextareaField } from '@/compone
 import { TextLink } from '@/components/ui/text-link';
 import { type FieldErrors, fieldErrorsFrom, firstInvalidField } from '@/app/forms/field-errors';
 import { focusField } from '@/app/forms/focus-field';
+import type { SavedNoticeState } from '@/app/forms/saved-notice';
 import { RequirePermission } from '@/app/guards/RequirePermission';
 import { ShellPage } from '@/app/shell/ShellPage';
 import { useActiveTenant } from '@/app/tenancy/tenancy-context';
 import type { Service } from './services-api';
-import {
-  serviceQueryKey,
-  servicesQueryKey,
-  type ServicesNotice,
-  useServicesApi,
-} from './services-context';
+import { serviceQueryKey, servicesQueryKey, useServicesApi } from './services-context';
 
 const FIELDS = ['name', 'description', 'durationMinutes', 'bufferMinutes', 'price'] as const;
 
@@ -182,7 +178,7 @@ function ServiceForm({ service }: { service: Service | null }) {
     const notice = isEdit
       ? `Alterações em “${result.service.name}” salvas.`
       : `Serviço “${result.service.name}” cadastrado.`;
-    void navigate('/app/servicos', { state: { notice } satisfies ServicesNotice });
+    void navigate('/app/servicos', { state: { notice } satisfies SavedNoticeState });
   }
 
   return (
