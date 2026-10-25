@@ -103,7 +103,8 @@ com todas as recomendações (sem categorias, moeda em `services.currency`, nome
 preço por profissional, função de candidatos ao vínculo, páginas próprias, menu só com
 `services.manage`, sem `react-hook-form`); RN-040 a RN-044. Passo 2 concluído: migration com `services`,
 `professional_services`, nome e ativo em `professionals` e função de candidatos ao vínculo; pgTAP 1340
-PASS. Próximo: passo 3 (seed, schemas Zod e `money.ts`).
+PASS. Passo 3 concluído: seed com serviços e vínculos, `src/shared/money.ts` e schemas Zod de serviço
+e de profissional; pgTAP 1341 PASS, 396 testes Vitest. Próximo: passo 4 (telas de serviços).
 
 Sprint anterior: **Sprint 1.4 — design system e app shell** (`feat/sprint-1.4-design-system`, PR #22
 mesclado em 2026-10-25). Passo 1 concluído: plano em [sprint-1.4.md](roadmap/sprint-1.4.md) aprovado pelo

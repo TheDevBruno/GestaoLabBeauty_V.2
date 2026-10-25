@@ -3,7 +3,7 @@
 -- existentes fica vazia e as verificações passam sem comparar nada; por isso o teste de completude
 -- exige 0 ou 12 usuários, nunca um seed pela metade.
 begin;
-select plan(3);
+select plan(4);
 
 select is(
   array(
@@ -62,6 +62,8 @@ begin
       union all select tenant_id from public.professionals
       union all select tenant_id from public.clients
       union all select tenant_id from public.appointments
+      union all select tenant_id from public.services
+      union all select tenant_id from public.professional_services
     ) x
     where x.tenant_id <> r.tenant_id;
     select count(*) into v_perfis from public.profiles where id <> r.user_id;
@@ -91,6 +93,22 @@ select is(
 select ok(
   (select count(*) from auth.users u join seed_usuario s on s.user_id = u.id) in (0, 12),
   'seed: completo (12 usuários) ou ausente; nunca pela metade'
+);
+
+-- Sprint 2.1: com o seed, 6 serviços (2 inativos, 2 sem intervalo) e 6 vínculos; sem ele, nenhum.
+select is(
+  array[
+    (select count(*) from public.services where id::text like '5eed0000-%'),
+    (select count(*) from public.services where id::text like '5eed0000-%' and not is_active),
+    (select count(*) from public.services where id::text like '5eed0000-%' and buffer_minutes is null),
+    (select count(*) from public.professional_services where tenant_id::text like '5eed0000-%')
+  ],
+  case
+    when (select count(*) from auth.users u join seed_usuario s on s.user_id = u.id) = 12
+      then array[6, 2, 2, 6]::bigint[]
+    else array[0, 0, 0, 0]::bigint[]
+  end,
+  'seed: serviços e vínculos completos com o seed (6, 2 inativos, 2 sem intervalo, 6 vínculos) ou ausentes'
 );
 
 select * from finish();

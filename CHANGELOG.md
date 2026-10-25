@@ -102,6 +102,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   moeda, ativo, nome único por empresa) e `professional_services`, colunas `display_name` e `is_active`
   em `professionals` e função `public.list_professional_link_candidates`, com RLS, `GRANT` mínimos e
   293 asserções pgTAP novas.
+- Sprint 2.1, passo 3: seed com 3 serviços por empresa (com intervalo, sem intervalo e inativo) e
+  vínculos profissional × serviço; `src/shared/money.ts` (reais ↔ centavos e formatação pt-BR) e
+  schemas Zod dos formulários de serviço e de profissional, com 78 testes Vitest novos.
 
 ### Alterado
 

@@ -158,7 +158,7 @@ retorno de carregamento e de sucesso ao salvar, rótulo visível e erro junto ao
 | --- | --------------------------------------------------------------------------------------------------------- | --------- |
 | 1   | Plano (este documento) e OK do usuário                                                                    | concluído |
 | 2   | Migration (`services`, `professional_services`, colunas de `professionals`, função de candidatos) e pgTAP | pendente  |
-| 3   | Seed, schemas Zod e `money.ts`                                                                            | pendente  |
+| 3   | Seed, schemas Zod e `money.ts`                                                                            | concluído |
 | 4   | Telas de serviços                                                                                         | pendente  |
 | 5   | Telas de profissionais (vínculo com membro e serviços)                                                    | pendente  |
 | 6   | Verificação (check, db:test, integração, navegador 375/1440 px, checklist) e encerramento                 | pendente  |
@@ -263,3 +263,28 @@ verde (318 testes Vitest; 8 de integração ignorados). `npm run test:integratio
 logo após o `db:reset`, estourou o tempo de 10 s no preparo (8 ignorados); a segunda passou com 8.
 Durante a prova de detecção a CLI perdeu a conexão com o Postgres local (`DbConnectError`) até
 `db:stop` + `db:start`.
+
+### Passo 3 — Seed, schemas Zod e `money.ts` (2026-10-25)
+
+Sem dependência nova, sem migration e sem mudança de configuração.
+
+- `supabase/seed.sql`: 3 serviços por empresa (um com intervalo, um sem, um inativo; ids
+  `5eed0000-0000-0000-0006-…`) e 6 vínculos em `professional_services` (o profissional do specialist faz
+  2 serviços, o outro faz 1; o inativo fica sem profissional). Nomes e descrições fictícios.
+- `supabase/tests/seed_rls.test.sql`: `services` e `professional_services` entram na verificação "não
+  vê outra empresa", e uma asserção nova confere 6 serviços (2 inativos, 2 sem intervalo) e 6 vínculos
+  com o seed, ou nenhum sem ele.
+- `src/shared/money.ts`: `parseBrlToCents` (aceita "120", "120,5", "1.234,56" e "R$" no início; recusa
+  negativo, mais de 2 casas, ponto decimal e valores acima de R$ 999.999,99, o teto da interface),
+  `centsToBrlInput` (texto para editar, sem ponto de milhar) e `formatCents` (`Intl.NumberFormat`
+  `pt-BR`).
+- `src/shared/service.ts`: `serviceFormSchema` com os limites da RN-040 (nome até 80, descrição até
+  500, duração de 5 a 720 e intervalo vazio/nulo ou de 0 a 240, ambos em passos de 5, preço em reais
+  convertido em centavos), opções dos selects (duração de 5 a 720; intervalo de 5 a 60 na interface) e
+  `formatMinutes` ("1 h 30 min").
+- `src/shared/professional.ts`: `professionalFormSchema` (nome até 80, membro vazio = sem acesso ao
+  sistema, ids de serviço sem repetição, ativo).
+
+Verificação: `npm run db:reset` com seed (12 usuários, 6 serviços, 6 vínculos), `npm run db:test`
+1341 PASS (14 arquivos), `npm run check` verde (396 testes Vitest; 8 de integração ignorados) e
+`npm run test:integration` 8 passed.
