@@ -96,6 +96,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 1.4, passo 6: verificação final em 375, 768, 1024 e 1440 px (sem rolagem horizontal, alvos de
   44 px, foco visível, gaveta com foco preso) e capturas em `docs/roadmap/sprint-1.4-capturas/`.
   Sprint 1.4 concluída.
+- Sprint 2.1, passo 1: plano de serviços (com `buffer_minutes`) e profissionais em
+  `docs/roadmap/sprint-2.1.md`, aprovado; RN-040 a RN-044.
 
 ### Alterado
 

@@ -350,6 +350,63 @@ Regra nova ou alterada deve ser registrada aqui com a origem.
 - **Status:** confirmada. O primeiro agendamento de um cliente com o specialist é feito pela recepção
   ou pela gestão.
 
+## Serviços e profissionais
+
+### RN-040 — Dados do serviço
+
+| Dado        | Quando                                                         | Então                                              |
+| ----------- | -------------------------------------------------------------- | -------------------------------------------------- |
+| Um serviço  | A duração é gravada                                            | Fica entre 5 e 720 min, em passos de 5             |
+| Um serviço  | O intervalo (`buffer_minutes`) é gravado                       | É vazio (sem intervalo) ou de 0 a 240 min, passo 5 |
+| Um serviço  | O preço é gravado                                              | Em centavos, não negativo, com moeda (`BRL`)       |
+| Uma empresa | Cadastra um serviço com o nome de outro (ignorando maiúsculas) | O cadastro é recusado (nome único na empresa)      |
+
+- **Origem:** plano §5, ajuste 6; plano §7; RN-032; decisões do usuário em 2026-10-25 (Sprint 2.1).
+  A moeda fica em `services.currency` (padrão `BRL`); a empresa não tem moeda própria.
+- **Status:** confirmada. O uso do intervalo no período do agendamento é a RN-003 (Sprint 2.4).
+
+### RN-041 — Serviços: membro lê, `services.manage` altera
+
+| Dado      | Quando                                                          | Então                             |
+| --------- | --------------------------------------------------------------- | --------------------------------- |
+| Um membro | Consulta os serviços da empresa                                 | Vê todos                          |
+| Um membro | Cria, altera ou exclui um serviço ou o vínculo com profissional | Só consegue com `services.manage` |
+
+- **Origem:** plano §8 (`services.manage`); mesmo modelo da RN-035; decisão do usuário em 2026-10-25.
+- **Status:** confirmada.
+
+### RN-042 — Profissional e serviço inativos
+
+| Dado                               | Quando                          | Então                                     |
+| ---------------------------------- | ------------------------------- | ----------------------------------------- |
+| Um profissional ou serviço inativo | Alguém consulta o cadastro      | Continua aparecendo, marcado como inativo |
+| Um profissional ou serviço inativo | Um agendamento novo é oferecido | Não é oferecido (Sprints 2.3, 2.4 e 3.2)  |
+| Um profissional com agendamento    | Alguém tenta excluí-lo          | O banco recusa; o caminho é desativar     |
+
+- **Origem:** decisão do usuário em 2026-10-25 (Sprint 2.1).
+- **Status:** confirmada.
+
+### RN-043 — Profissional faz só serviços da própria empresa
+
+| Dado                                       | Quando                                 | Então                                      |
+| ------------------------------------------ | -------------------------------------- | ------------------------------------------ |
+| Um profissional                            | É ligado a um serviço de outra empresa | O banco recusa (FK composta)               |
+| Um profissional sem vínculo com um serviço | Esse serviço é agendado                | O profissional não é oferecido (2.3 e 3.2) |
+
+- **Origem:** ADR-003 §2; decisão do usuário em 2026-10-25 (Sprint 2.1).
+- **Status:** confirmada. Duração e preço são os do serviço, iguais para todos os profissionais.
+
+### RN-044 — Candidatos ao vínculo de profissional
+
+| Dado                            | Quando                           | Então                                                   |
+| ------------------------------- | -------------------------------- | ------------------------------------------------------- |
+| Um membro com `services.manage` | Liga um profissional a um membro | Vê nome e papel dos membros da empresa sem profissional |
+| Um membro sem `services.manage` | Pede a lista de candidatos       | Não recebe nenhum nome                                  |
+
+- **Origem:** decisão do usuário em 2026-10-25 (Sprint 2.1). Exceção controlada à leitura só do
+  próprio perfil: os nomes saem por função, nunca pela tabela `profiles`.
+- **Status:** confirmada.
+
 ## Administração global
 
 ### RN-030 — Admin global fora dos papéis da empresa

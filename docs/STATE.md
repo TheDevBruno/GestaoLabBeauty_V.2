@@ -1,6 +1,6 @@
 # Estado do projeto
 
-- **Atualizado em:** 2026-10-24
+- **Atualizado em:** 2026-10-25
 
 ## Objetivo
 
@@ -96,8 +96,16 @@ liberação de recursos por plano.
 
 ## Próximo passo
 
-**Sprint 1.4 — design system e app shell** (`feat/sprint-1.4-design-system`, a partir da `main` com o
-PR #21 mesclado). Passo 1 concluído: plano em [sprint-1.4.md](roadmap/sprint-1.4.md) aprovado pelo
+**Sprint 2.1 — serviços (com `buffer_minutes`) e profissionais**
+(`feat/sprint-2.1-servicos-profissionais`, a partir da `main` em `ead9e69`, com o PR #22 mesclado).
+Passo 1 concluído: plano em [sprint-2.1.md](roadmap/sprint-2.1.md) aprovado pelo usuário em 2026-10-25
+com todas as recomendações (sem categorias, moeda em `services.currency`, nome único por empresa, sem
+preço por profissional, função de candidatos ao vínculo, páginas próprias, menu só com
+`services.manage`, sem `react-hook-form`); RN-040 a RN-044. Próximo: passo 2 (migration e pgTAP, só
+no banco local).
+
+Sprint anterior: **Sprint 1.4 — design system e app shell** (`feat/sprint-1.4-design-system`, PR #22
+mesclado em 2026-10-25). Passo 1 concluído: plano em [sprint-1.4.md](roadmap/sprint-1.4.md) aprovado pelo
 usuário em 2026-10-23 (dependências, `components.json`, Inter auto-hospedada, dark mode fora e remoção
 dos componentes provisórios). Passo 2 concluído: dependências do design system, `components.json`,
 `cn()`, tokens em três camadas (primitivo, semântico, componente), Inter auto-hospedada e teste de
