@@ -94,11 +94,25 @@ liberação de recursos por plano.
       (Sprints 1.4 e 2.1).
 - [ ] `vercel.json` com rewrite do SPA para `index.html` no **primeiro deploy** (decisão do usuário).
 - [ ] Supabase CLI: 2.121.0 entra na janela da ADR-001 em 2026-10-28 (instalada: 2.120.0).
+- [ ] Links sozinhos feitos com `TextLink` ficam com 20 px de altura, fora do alvo de 44 px: "Voltar ao
+      painel" do `RequirePermission` e os "Voltar para…" de serviço e profissional não encontrados
+      (Sprints 1.4 e 2.1). Em clientes já viraram botão (Sprint 2.2).
+- [ ] Confirmar se o specialist pode arquivar os clientes que vê (RN-046 permite; bloquear exige
+      trigger).
 
 ## Próximo passo
 
-**Sprint 2.2 — clientes** (`feat/sprint-2.2-clientes`, a partir da `main` em `5848ff1`, merge do PR
-#23). Em andamento. Passo 1 concluído: plano em [sprint-2.2.md](roadmap/sprint-2.2.md) aprovado pelo
+**Sprint 2.3 — disponibilidade** (Fase 2, plano §6). Não iniciada: começa só com autorização do
+usuário e depois do merge do PR da Sprint 2.2.
+
+Sprint anterior: **Sprint 2.2 — clientes** (`feat/sprint-2.2-clientes`, a partir da `main` em
+`5848ff1`, merge do PR #23). **Concluída em 2026-10-25**, com PR aberto para o usuário revisar e
+mesclar (não é ponto de aprovação obrigatória). Passo 6 concluído: `npm ci`, `check` (609 testes),
+`db:test` 1590 PASS, `db lint` sem erros, `test:integration` 8 passed, `dist/` sem a service role;
+navegador em 375, 768, 1024 e 1440 px com owner, manager, receptionist, specialist e financial e teste
+só com teclado; "Voltar para clientes" virou botão de 44 px (registro em
+[sprint-2.2.md](roadmap/sprint-2.2.md#passo-6--verificação-final-e-encerramento-2026-10-25)). Passo 1
+concluído: plano em [sprint-2.2.md](roadmap/sprint-2.2.md) aprovado pelo
 usuário em 2026-10-25 com todas as recomendações (nome, telefone E.164, e-mail, nascimento e ativo;
 contatos não únicos; busca sem acento com a extensão `unaccent`, `search_name` por trigger e
 `public.search_clients`; notas e consentimentos fora; arquivar no lugar de excluir; páginas próprias;
@@ -117,8 +131,7 @@ navegador com owner, specialist e financial em 375 e 1440 px. Passo 5 concluído
 `/app/clientes/novo` (sem o specialist) e edição em `/app/clientes/:id` com arquivar e reativar pelo
 "Cliente ativo", ficha de leitura para o financial, "Cliente não encontrado" sem revelar o motivo,
 "Abrir" na lista e volta mantendo `?q=`; 609 testes Vitest, verificado no navegador com owner,
-receptionist, specialist e financial em 375 e 1440 px. Próximo: passo 6 (verificação final e
-encerramento).
+receptionist, specialist e financial em 375 e 1440 px.
 
 Sprint anterior: **Sprint 2.1 — serviços (com `buffer_minutes`) e profissionais**
 (`feat/sprint-2.1-servicos-profissionais`, a partir da `main` em `ead9e69`). **Concluída em

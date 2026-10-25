@@ -13,7 +13,6 @@ import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckboxField, InputField } from '@/components/ui/field';
 import { StatusBadge } from '@/components/ui/status-badge';
-import { TextLink } from '@/components/ui/text-link';
 import { type FieldErrors, fieldErrorsFrom, firstInvalidField } from '@/app/forms/field-errors';
 import { focusField } from '@/app/forms/focus-field';
 import type { SavedNoticeState } from '@/app/forms/saved-notice';
@@ -114,9 +113,7 @@ function ClientEditContent() {
         <p className="text-base text-foreground">
           Este cliente não existe ou não está disponível para você nesta empresa.
         </p>
-        <p className="mt-6 text-base">
-          <TextLink to={listPath}>Voltar para clientes</TextLink>
-        </p>
+        <BackToList listPath={listPath} />
       </ShellPage>
     );
   }
@@ -157,10 +154,18 @@ function ClientDetails({ client, listPath }: { client: Client; listPath: string 
       <p className="mt-4 text-base text-muted-foreground">
         Seu papel nesta empresa permite consultar clientes, mas não alterar.
       </p>
-      <p className="mt-6 text-base">
-        <TextLink to={listPath}>Voltar para clientes</TextLink>
-      </p>
+      <BackToList listPath={listPath} />
     </ShellPage>
+  );
+}
+
+// Link sozinho na página, não dentro de frase: vai como botão de contorno, com o alvo de 44 px (o
+// TextLink é para links em linha).
+function BackToList({ listPath }: { listPath: string }) {
+  return (
+    <Button asChild variant="outline" className="mt-6">
+      <Link to={listPath}>Voltar para clientes</Link>
+    </Button>
   );
 }
 

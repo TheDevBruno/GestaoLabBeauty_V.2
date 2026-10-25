@@ -1,8 +1,8 @@
 # Sprint 2.2 — Clientes
 
 - **Início:** 2026-10-25
-- **Status:** em andamento; plano aprovado pelo usuário em 2026-10-25 (não é ponto de aprovação
-  obrigatória)
+- **Status:** concluída em 2026-10-25 (plano aprovado pelo usuário em 2026-10-25; não é ponto de
+  aprovação obrigatória)
 - **Branch:** `feat/sprint-2.2-clientes` (a partir da `main` em `5848ff1`, merge do PR #23)
 
 ## Objetivo
@@ -181,7 +181,7 @@ padrão da própria skill para autocompletar ("debounced fetch").
 | 3   | Seed, schemas Zod, `phone.ts` e normalização da busca                                             | concluído |
 | 4   | Lista de clientes com busca, filtro e paginação; item "Clientes" no shell                         | concluído |
 | 5   | Cadastro, edição, arquivar e ficha de leitura                                                     | concluído |
-| 6   | Verificação (check, db:test, integração, navegador 375/1440 px por papel, teclado) e encerramento | pendente  |
+| 6   | Verificação (check, db:test, integração, navegador 375/1440 px por papel, teclado) e encerramento | concluído |
 
 Cada passo termina com `npm run check` e `npm run db:test` verdes, commit, `docs/STATE.md`,
 `CHANGELOG.md` e este registro atualizados, e push da branch. Migrations só no Supabase local.
@@ -491,3 +491,74 @@ eventos por script, porque o painel oculto não aceita cliques reais):
 
 Verificação: `npm run check` verde (609 testes Vitest; 8 de integração ignorados), `npm run db:test`
 1590 PASS.
+
+### Passo 6 — Verificação final e encerramento (2026-10-25)
+
+Sem dependência nova, sem migration e sem mudança de configuração. O Vite foi parado antes do `npm ci`
+e subido de novo para o navegador.
+
+| Verificação                                    | Resultado                                                                |
+| ---------------------------------------------- | ------------------------------------------------------------------------ |
+| `npm ci`                                       | ok, 0 vulnerabilidades                                                   |
+| `npm run check`                                | verde: 609 testes Vitest (8 de integração ignorados), build ok           |
+| `npm run db:test`                              | 1590 PASS (15 arquivos)                                                  |
+| `supabase db lint`                             | sem erros                                                                |
+| `npm run test:integration`                     | 8 passed                                                                 |
+| `dist/` contém a service role ou a secret key? | não (40 arquivos varridos por service role, secret key, JWT secret e S3) |
+
+O `db:lint` logo depois do `db:reset` e um `db:reset` no fim perderam a conexão com o Postgres local
+(`DbConnectError`, como nos passos anteriores); repetidos depois de `db:stop` + `db:start`, com os
+resultados acima.
+
+Navegador (preview, Supabase local, usuários do seed do Studio Ana; medição por script em cada largura
+depois de recarregar):
+
+- **Owner, manager e receptionist**, em 375, 768, 1024 e 1440 px, nas 3 telas (`/app/clientes`,
+  `/novo` e `/:id` da Joana): sem rolagem horizontal e nenhum controle abaixo de 44 px; cartões em 375
+  e 768 (14) com o menu em gaveta, tabela em 1024 e 1440 com navegação lateral, e a tabela cabe sem
+  rolagem interna em 1024.
+- **Specialist**, nas 4 larguras: lista só com o Cliente Teste 1, edição dele aberta, `/novo` com
+  "Acesso não permitido".
+- **Financial**, nas 4 larguras: 14 clientes, ficha de leitura, `/novo` negado.
+- **Achado e correção:** "Voltar para clientes" (ficha e "Cliente não encontrado") usava o `TextLink`,
+  feito para links dentro de frase, e ficava com 20 px de altura. Virou botão de contorno de 44 px
+  (`BackToList`); medido de novo em 375 px sem nenhum controle abaixo de 44 px. O mesmo padrão existe
+  no "Voltar ao painel" do `RequirePermission` e nas telas de não encontrado de serviços e
+  profissionais, fora desta sprint: ficou em pendência no `STATE.md`.
+- **Teclado** (teclas reais, receptionist, 375 px), todos com `:focus-visible` e anel de foco:
+  - Lista: "Pular para o conteúdo", "Abrir menu", "Novo cliente", busca, "Limpar busca", "Mostrar
+    arquivados" e "Abrir <nome>", nessa ordem. "joana" + Enter grava `?q=joana` e anuncia "1 cliente
+    encontrado"; Espaço marca "Mostrar arquivados"; Enter em "Limpar busca" esvazia o campo e a URL e
+    devolve o foco ao campo; Enter em "Abrir" leva à edição com `?q=joana`.
+  - Cadastro: Enter no formulário vazio mostra "Informe o nome do cliente." com o foco no nome; nome,
+    telefone e e-mail preenchidos só com teclado e Enter cadastram, com o foco no aviso.
+  - Edição: ordem nome, telefone, e-mail, data (no Chrome o campo de data tem 4 paradas: dia, mês, ano
+    e o botão do calendário), "Cliente ativo", "Salvar alterações" e "Cancelar". Espaço desmarca
+    "Cliente ativo" e Enter em "Salvar" arquiva, com o aviso focado e a busca mantida.
+  - Data de nascimento digitada tecla a tecla em 1440 px ("15031990" vira 1990-03-15). Na emulação de
+    celular o Chrome trata o campo como seletor e não aceita digitação; ali a data se escolhe pelo
+    seletor nativo.
+- Checklist `pro-rules.md` (aplicado ao que vale para web): ícones `lucide-react` com `aria-hidden` ao
+  lado de texto, botão só de ícone ("Limpar busca") com nome acessível, status em texto, cores só de
+  tokens, alvos de 44 px, ordem de foco igual à ordem visual, estado desabilitado do botão `busy`, sem
+  animação nova.
+- Não verificados: paisagem, texto ampliado do sistema e modo escuro (fora do escopo desde a Sprint
+  1.4); "Carregar mais" com dados reais (o seed tem 15 clientes; coberto por teste de tela).
+- Os dados criados no navegador foram apagados com `db:reset` no fim.
+
+Pendências conferidas:
+
+- `autocomplete="off"` no lugar de `tel`/`email` (ajuste do passo 5): mantido e registrado.
+- Specialist pode arquivar cliente que vê (RN-046, risco do plano): mantido; entrou em pendência no
+  `STATE.md` para o usuário confirmar.
+
+## Encerramento
+
+Sprint 2.2 concluída em 2026-10-25: clientes com telefone em E.164, e-mail, nascimento e arquivamento,
+busca sem acento por nome ou telefone, lista paginada, cadastro, edição e ficha de leitura, do banco
+(RLS inalterada, `GRANT` de colunas, `unaccent`, `search_clients` com `security invoker`, pgTAP) às
+telas. Ajustes em relação ao plano, todos registrados acima: `private.search_text` separada e sem
+`security definer`, trigger de `search_name` em todo `INSERT`/`UPDATE`, índice
+`(tenant_id, search_name, id)` a mais, `autocomplete="off"` nos campos do cliente e "Voltar para
+clientes" como botão. PR aberto para a `main`; o merge fica com o usuário. A Sprint 2.3
+(disponibilidade) só começa com autorização.

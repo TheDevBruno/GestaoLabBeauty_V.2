@@ -141,6 +141,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   `/app/clientes/:id` com arquivar e reativar pelo "Cliente ativo"; ficha de leitura para quem só tem
   `clients.read`; "Cliente não encontrado" sem revelar o motivo; botão "Abrir" na lista e volta
   mantendo a busca. `RequirePermission` ganhou `deny`. 31 testes Vitest novos.
+- Sprint 2.2, passo 6: verificação final (`npm ci`, `check`, `db:test`, `db lint`, integração, `dist/`
+  sem a service role, navegador em 375/768/1024/1440 px com os 5 papéis de operação e teste só com
+  teclado) e encerramento da sprint.
+
+### Corrigido
+
+- Clientes: "Voltar para clientes" na ficha de leitura e em "Cliente não encontrado" passou a ser
+  botão de 44 px (antes link de texto com 20 px de altura).
 
 ### Alterado
 
