@@ -40,6 +40,29 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        // Separa fornecedores do código do app: o chunk de entrada fica pequeno e os fornecedores
+        // mudam menos, então o cache do navegador os reaproveita entre deploys.
+        codeSplitting: {
+          groups: [
+            { name: 'vendor-supabase', test: /node_modules[/]@supabase[/]/, priority: 30 },
+            {
+              name: 'vendor-router-query',
+              test: /node_modules[/](react-router|@tanstack|cookie|set-cookie-parser)[/]/,
+              priority: 20,
+            },
+            {
+              name: 'vendor-react',
+              test: /node_modules[/](react|react-dom|scheduler)[/]/,
+              priority: 10,
+            },
+          ],
+        },
+      },
+    },
+  },
   test: {
     include: ['src/**/*.test.{ts,tsx}', 'server/**/*.test.ts'],
     environment: 'node',

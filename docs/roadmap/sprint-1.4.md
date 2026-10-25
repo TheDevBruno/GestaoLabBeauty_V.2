@@ -346,3 +346,37 @@ marcado, um único `main`, nenhum controle abaixo de 44 px e sem rolagem horizon
 barra superior (botão do menu com 44 × 44 px), gaveta de 319 px em 375 px com o foco dentro, todos os
 controles com 44 px e sem rolagem horizontal. O bundle foi a 808 kB (posicionamento do menu do Radix);
 o passo 5 divide por rota.
+
+### Passo 5 — Divisão de código (2026-10-24)
+
+Mudança de configuração autorizada pelo usuário: `vite.config.ts` ganhou `build.rolldownOptions.output.
+codeSplitting.groups`. `chunkSizeWarningLimit` não foi tocado.
+
+- `src/app/routes.tsx`: `lazy` em `/entrar`, `/cadastro`, `/convite`, shell, `/app`, `/app/equipe` e 404.
+  `RequireSession` e `RequireTenant` ficam no chunk de entrada (decidem o que carregar); `RequireTenant`
+  agora envolve um `Outlet` e o shell só é baixado com empresa ativa. Cada rota de primeiro nível tem
+  `HydrateFallback` (`RouteFallback`, `LoadingScreen` com `role="status"`).
+- Os testes de tela continuaram verdes sem edição (nenhum `findBy` novo foi necessário).
+
+Tamanhos (`npm run build`, minificado / gzip):
+
+| Chunk                 | Antes           | Só `lazy`       | `lazy` + fornecedores |
+| --------------------- | --------------- | --------------- | --------------------- |
+| `index` (entrada)     | 808,41 / 239,96 | 564,73 / 162,00 | 106,53 / 32,50        |
+| `vendor-supabase`     | —               | —               | 214,48 / 55,19        |
+| `vendor-react`        | —               | —               | 210,56 / 65,71        |
+| `vendor-router-query` | —               | —               | 136,45 / 43,28        |
+| `AppShell`            | —               | 91,81 / 30,80   | 91,94 / 30,88         |
+| `utils`               | —               | 121,14 / 39,26  | 27,56 / 8,73          |
+| `TeamPage`            | —               | 9,27 / 3,42     | 7,12 / 2,66           |
+| `InvitePage`          | —               | 3,07 / 1,31     | 3,09 / 1,32           |
+| `SignupPage`          | —               | 2,20 / 1,09     | 2,22 / 1,10           |
+| `LoginPage`           | —               | 1,58 / 0,87     | 1,60 / 0,88           |
+| `HomePage`, 404 etc.  | —               | < 1             | < 1                   |
+
+Maior chunk: 214,48 kB; sem aviso do Vite.
+
+Verificação: `npm run check` verde (318 testes Vitest), `npm run db:test` PASS. Navegador: `/entrar`,
+`/cadastro`, `/convite`, 404 e redirecionamento de `/app/equipe` sem sessão no preview `vite`; no
+`npm run preview` do build, login com o owner do seed, `/app/equipe` e `/app` carregam os chunks
+sob demanda; nenhum erro no console.

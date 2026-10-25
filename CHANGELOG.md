@@ -90,6 +90,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 1.4, passo 4: app shell em `/app/*` (`src/app/shell/`): navegação lateral a partir de 1024 px
   e gaveta abaixo, empresa ativa e papel, troca de empresa por menu, conta, sair, link para pular para
   o conteúdo e `aria-current` no item atual.
+- Sprint 1.4, passo 5: divisão de código. Páginas e shell carregam por rota (`lazy` do React Router) com
+  `RouteFallback` (`role="status"`); `vite.config.ts` separa fornecedores em `vendor-react`,
+  `vendor-router-query` e `vendor-supabase` (autorizado pelo usuário). Maior chunk: 214 kB (era 808 kB).
 
 ### Alterado
 

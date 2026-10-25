@@ -1,6 +1,6 @@
 # Estado do projeto
 
-- **Atualizado em:** 2026-10-23
+- **Atualizado em:** 2026-10-24
 
 ## Objetivo
 
@@ -89,8 +89,6 @@ liberação de recursos por plano.
 - [ ] Confirmar as regras marcadas "a confirmar" em [REGRAS-DE-NEGOCIO.md](REGRAS-DE-NEGOCIO.md).
 - [ ] Prova de detecção no CI: uma política `using (true)` em `tenants` deve falhar o job `database`
       (provada só localmente).
-- [ ] Bundle de 678 kB (aviso de 500 kB do Vite): divisão de código por rota na **Sprint 1.4**
-      (decisão do usuário).
 - [ ] `vercel.json` com rewrite do SPA para `index.html` no **primeiro deploy** (decisão do usuário).
 - [ ] Supabase CLI: 2.121.0 entra na janela da ADR-001 em 2026-10-28 (instalada: 2.120.0).
 
@@ -105,7 +103,9 @@ contraste dos tokens. Passo 3 concluído: componentes base em `src/components/ui
 shadcn/ui, ajustados a 44 px, foco sólido e tokens), telas migradas sem mudar os testes de tela e
 provisórios apagados. Passo 4 concluído: app shell em `/app/*` (navegação lateral a partir de
 1024 px e gaveta abaixo, empresa ativa, troca de empresa por menu, papel, conta e sair); 318 testes
-Vitest, pgTAP 1047 PASS. Próximo: passo 5 (divisão de código por rota; bundle em 808 kB).
+Vitest, pgTAP 1047 PASS. Passo 5 concluído: rotas
+preguiçosas e fornecedores separados em `vite.config.ts` (autorizado); maior chunk 214 kB, sem aviso de
+500 kB. Próximo: passo 6 (verificação e encerramento da sprint).
 
 Requisito local: Docker em execução e `npm run db:start`. O `.env.local` precisa também de
 `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` (valores em `npx supabase status`) para
