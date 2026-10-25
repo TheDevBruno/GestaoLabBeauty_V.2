@@ -120,6 +120,35 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Sprint 2.1, passo 6: verificação final (`npm ci`, `check`, `db:test`, `db lint`, integração,
   `dist/` sem a service role, navegador em 375/768/1024/1440 px com owner, manager e receptionist e
   teste só com teclado) e encerramento da sprint.
+- Sprint 2.2, passo 1: plano de clientes em `docs/roadmap/sprint-2.2.md` (diagnóstico de `clients`,
+  modelo com telefone E.164, e-mail, nascimento e arquivamento, busca sem acento com `unaccent` e
+  `search_clients`, telas por papel), aprovado; RN-045 a RN-047 e complemento da RN-037.
+- Sprint 2.2, passo 2: colunas `phone` (E.164), `email`, `birth_date` e `is_active` em `clients`, limite
+  de 120 no nome, extensão `unaccent`, `search_name` mantida por trigger, `private.search_text` e
+  `public.search_clients` (busca sem acento por nome ou telefone, `security invoker`, paginada), com
+  `GRANT` de colunas e 248 asserções pgTAP novas.
+- Sprint 2.2, passo 3: seed com telefone, e-mail e nascimento fictícios nos clientes e 12 clientes a
+  mais no Studio Ana (nomes com acento, um arquivado); `src/shared/phone.ts` (formato brasileiro ↔
+  E.164) e `src/shared/client.ts` (schema do formulário de cliente e termo de busca), com 68 testes
+  Vitest novos.
+- Sprint 2.2, passo 4: lista de clientes em `/app/clientes` (`src/modules/clients/`): busca por nome ou
+  telefone pela função `search_clients` com espera de 300 ms e termo em `?q=`, "Mostrar arquivados",
+  contagem em `role="status"`, tabela a partir de 1024 px e cartões abaixo, "Carregar mais" de 50 em 50
+  com foco no primeiro novo, estados vazio, sem resultado e erro; item "Clientes" no shell para quem
+  tem `clients.read` e "Novo cliente" só para quem cadastra. `StatusBadge` com rótulos configuráveis e
+  `SavedNotice` mantendo a busca da URL. 38 testes Vitest novos.
+- Sprint 2.2, passo 5: cadastro de cliente em `/app/clientes/novo` (negado ao specialist) e edição em
+  `/app/clientes/:id` com arquivar e reativar pelo "Cliente ativo"; ficha de leitura para quem só tem
+  `clients.read`; "Cliente não encontrado" sem revelar o motivo; botão "Abrir" na lista e volta
+  mantendo a busca. `RequirePermission` ganhou `deny`. 31 testes Vitest novos.
+- Sprint 2.2, passo 6: verificação final (`npm ci`, `check`, `db:test`, `db lint`, integração, `dist/`
+  sem a service role, navegador em 375/768/1024/1440 px com os 5 papéis de operação e teste só com
+  teclado) e encerramento da sprint.
+
+### Corrigido
+
+- Clientes: "Voltar para clientes" na ficha de leitura e em "Cliente não encontrado" passou a ser
+  botão de 44 px (antes link de texto com 20 px de altura).
 
 ### Alterado
 

@@ -1,7 +1,16 @@
 import { cn } from '@/lib/utils';
 
-// Status ativo/inativo em texto, não só cor (WCAG 1.4.1).
-function StatusBadge({ active }: { active: boolean }) {
+// Status ativo/inativo em texto, não só cor (WCAG 1.4.1). Os rótulos mudam por cadastro (cliente
+// inativo é "Arquivado", RN-046).
+function StatusBadge({
+  active,
+  activeLabel = 'Ativo',
+  inactiveLabel = 'Inativo',
+}: {
+  active: boolean;
+  activeLabel?: string;
+  inactiveLabel?: string;
+}) {
   return (
     <span
       data-slot="status-badge"
@@ -10,7 +19,7 @@ function StatusBadge({ active }: { active: boolean }) {
         active ? 'border-success text-success' : 'border-border text-muted-foreground',
       )}
     >
-      {active ? 'Ativo' : 'Inativo'}
+      {active ? activeLabel : inactiveLabel}
     </span>
   );
 }

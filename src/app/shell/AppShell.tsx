@@ -1,5 +1,6 @@
 import {
   ChevronsUpDownIcon,
+  ContactRoundIcon,
   LayoutDashboardIcon,
   MenuIcon,
   ScissorsIcon,
@@ -94,6 +95,7 @@ function ShellNavigation({ onNavigate }: { onNavigate?: () => void }) {
   const { state } = useActiveTenant();
   const canManageMembers = usePermission('members.manage') === 'allowed';
   const canManageServices = usePermission('services.manage') === 'allowed';
+  const canReadClients = usePermission('clients.read') === 'allowed';
   if (state.status !== 'active') return null;
   const { membership, memberships } = state;
 
@@ -115,6 +117,11 @@ function ShellNavigation({ onNavigate }: { onNavigate?: () => void }) {
           <ShellNavItem to="/app" end icon={<LayoutDashboardIcon />} onNavigate={onNavigate}>
             Painel
           </ShellNavItem>
+          {canReadClients ? (
+            <ShellNavItem to="/app/clientes" icon={<ContactRoundIcon />} onNavigate={onNavigate}>
+              Clientes
+            </ShellNavItem>
+          ) : null}
           {canManageServices ? (
             <ShellNavItem to="/app/servicos" icon={<ScissorsIcon />} onNavigate={onNavigate}>
               Serviços

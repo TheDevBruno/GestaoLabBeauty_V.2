@@ -7,6 +7,8 @@ import type { AuthApi, AuthSession } from '@/lib/auth-api';
 import type { InvitationsApi, PendingInvitation } from '@/lib/invitations-api';
 import type { TenancyApi, TenantMembership } from '@/lib/tenancy-api';
 import type { MemberRole } from '@/shared/roles';
+import { type Client, type ClientsApi, CLIENTS_PAGE_SIZE } from '@/modules/clients/clients-api';
+import { ClientsApiContext } from '@/modules/clients/clients-context';
 import type {
   LinkCandidate,
   Professional,
@@ -85,13 +87,14 @@ export function createFakeAuthApi(initial: AuthSession | null = null) {
 }
 
 // Matriz do plano §8 resumida ao que os testes de tela usam.
+const CLIENTS_FULL = ['clients.read', 'clients.write', 'clients.notes.private'];
 const PERMISSIONS: Record<MemberRole, string[]> = {
-  owner: ['members.manage', 'tenant.settings', 'services.manage'],
-  admin: ['members.manage', 'tenant.settings', 'services.manage'],
-  manager: ['services.manage'],
-  specialist: ['appointments.read'],
-  receptionist: ['appointments.read'],
-  financial: ['finance.read'],
+  owner: ['members.manage', 'tenant.settings', 'services.manage', ...CLIENTS_FULL],
+  admin: ['members.manage', 'tenant.settings', 'services.manage', ...CLIENTS_FULL],
+  manager: ['services.manage', ...CLIENTS_FULL],
+  specialist: ['appointments.read', ...CLIENTS_FULL],
+  receptionist: ['appointments.read', 'clients.read', 'clients.write'],
+  financial: ['finance.read', 'clients.read'],
 };
 
 export function membership(tenant: 'A' | 'B', role: MemberRole = 'owner'): TenantMembership {
@@ -314,6 +317,77 @@ export function createFakeProfessionalsApi(
   return { api };
 }
 
+let clientSeq = 0;
+
+export function client(fullName: string, overrides: Partial<Client> = {}): Client {
+  clientSeq += 1;
+  return {
+    id: `40000000-0000-4000-8000-${String(clientSeq).padStart(12, '0')}`,
+    fullName,
+    phone: null,
+    email: null,
+    birthDate: null,
+    isActive: true,
+    ...overrides,
+  };
+}
+
+// Sem acento e minúsculo, como private.search_text no banco.
+const searchText = (value: string) => value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+
+// ClientsApi em memória com as regras de public.search_clients (RN-047): nome sem acento nem
+// maiúsculas, 3 ou mais dígitos também no telefone, arquivados só com o filtro, ordem por nome e
+// páginas de CLIENTS_PAGE_SIZE. O recorte do specialist fica a cargo de quem monta a lista inicial.
+export function createFakeClientsApi(initial: Client[] = []) {
+  let clients = initial;
+  let next = 1;
+  const api = {
+    search: vi.fn<ClientsApi['search']>((_tenantId, { query, includeArchived, offset }) => {
+      const name = searchText(query.trim());
+      const digits = query.replace(/[\s().+-]/g, '');
+      const matches = clients
+        .filter((item) => includeArchived || item.isActive)
+        .filter(
+          (item) =>
+            name === '' ||
+            searchText(item.fullName).includes(name) ||
+            (/^\d{3,}$/.test(digits) && (item.phone ?? '').includes(digits)),
+        )
+        .sort((a, b) => searchText(a.fullName).localeCompare(searchText(b.fullName)));
+      const page = matches.slice(offset, offset + CLIENTS_PAGE_SIZE + 1);
+      return Promise.resolve({
+        clients: page.slice(0, CLIENTS_PAGE_SIZE),
+        hasMore: page.length > CLIENTS_PAGE_SIZE,
+      });
+    }),
+    get: vi.fn<ClientsApi['get']>((_tenantId, id) =>
+      Promise.resolve(clients.find((item) => item.id === id) ?? null),
+    ),
+    create: vi.fn<ClientsApi['create']>((_tenantId, input) => {
+      const created: Client = {
+        id: `50000000-0000-4000-8000-${String(next++).padStart(12, '0')}`,
+        ...input,
+      };
+      clients = [...clients, created];
+      return Promise.resolve({ ok: true, client: created });
+    }),
+    // Cliente fora da lista (outra empresa ou fora do recorte) não é alterado, como a RLS.
+    update: vi.fn<ClientsApi['update']>((_tenantId, id, input) => {
+      if (!clients.some((item) => item.id === id)) {
+        return Promise.resolve({
+          ok: false,
+          message:
+            'Este cliente não existe mais ou não está disponível para você nesta empresa. Volte à lista.',
+        });
+      }
+      const updated: Client = { id, ...input };
+      clients = clients.map((item) => (item.id === id ? updated : item));
+      return Promise.resolve({ ok: true, client: updated });
+    }),
+  } satisfies ClientsApi;
+  return { api };
+}
+
 export function renderAt(
   path: string,
   api: AuthApi,
@@ -321,6 +395,7 @@ export function renderAt(
   invitationsApi: InvitationsApi = createFakeInvitationsApi().api,
   servicesApi: ServicesApi = createFakeServicesApi().api,
   professionalsApi: ProfessionalsApi = createFakeProfessionalsApi().api,
+  clientsApi: ClientsApi = createFakeClientsApi().api,
 ) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -333,7 +408,9 @@ export function renderAt(
           <InvitationsApiContext value={invitationsApi}>
             <ServicesApiContext value={servicesApi}>
               <ProfessionalsApiContext value={professionalsApi}>
-                <RouterProvider router={router} />
+                <ClientsApiContext value={clientsApi}>
+                  <RouterProvider router={router} />
+                </ClientsApiContext>
               </ProfessionalsApiContext>
             </ServicesApiContext>
           </InvitationsApiContext>

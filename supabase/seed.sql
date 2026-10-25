@@ -6,7 +6,8 @@
 -- 3 clientes (um com agendamento com o specialist, um só com o outro profissional, um sem agendamento;
 -- RN-027 e RN-028) e 2 agendamentos. Desde a Sprint 2.1: 3 serviços (um com intervalo, um sem, um
 -- inativo; RN-040 e RN-042) e 3 vínculos profissional × serviço (o profissional do specialist faz 2 dos
--- 3 serviços, o outro faz 1; RN-043).
+-- 3 serviços, o outro faz 1; RN-043). Desde a Sprint 2.2: contato e nascimento nos clientes e 12 clientes
+-- a mais no Studio Ana, um deles arquivado (RN-045 a RN-047).
 --
 -- Senha de teste, só local: senha-teste-labbeautypro. Não vai para .env nem para homologação/produção.
 -- Ids começam em 5eed0000 para não colidir com os ids de supabase/tests (00000000-…-00000000000a/b).
@@ -85,13 +86,28 @@ insert into public.professionals (id, tenant_id, membership_id, display_name) va
 on conflict do nothing;
 
 -- 4. Clientes: 01 e 04 têm agendamento com o specialist; 02 e 05 só com o outro profissional; 03 e 06 sem.
-insert into public.clients (id, tenant_id, full_name) values
-  ('5eed0000-0000-0000-0004-000000000001', '5eed0000-0000-0000-0000-000000000001', 'Cliente Teste 1 (Studio Ana)'),
-  ('5eed0000-0000-0000-0004-000000000002', '5eed0000-0000-0000-0000-000000000001', 'Cliente Teste 2 (Studio Ana)'),
-  ('5eed0000-0000-0000-0004-000000000003', '5eed0000-0000-0000-0000-000000000001', 'Cliente Teste 3 (Studio Ana)'),
-  ('5eed0000-0000-0000-0004-000000000004', '5eed0000-0000-0000-0000-000000000002', 'Cliente Teste 4 (Clinica Bela)'),
-  ('5eed0000-0000-0000-0004-000000000005', '5eed0000-0000-0000-0000-000000000002', 'Cliente Teste 5 (Clinica Bela)'),
-  ('5eed0000-0000-0000-0004-000000000006', '5eed0000-0000-0000-0000-000000000002', 'Cliente Teste 6 (Clinica Bela)')
+-- Desde a Sprint 2.2 (RN-045 a RN-047): contato e nascimento fictícios, alguns vazios; 07 a 18 só no
+-- Studio Ana, sem agendamento, com acentos no nome para a busca e o 18 arquivado. Telefones em E.164 na
+-- faixa +55 11 90000-xxxx (DDD 21 na Clinica Bela) e e-mails em @example.test.
+insert into public.clients (id, tenant_id, full_name, phone, email, birth_date, is_active) values
+  ('5eed0000-0000-0000-0004-000000000001', '5eed0000-0000-0000-0000-000000000001', 'Cliente Teste 1 (Studio Ana)', '+5511900000001', 'cliente1@example.test', '1990-03-15', true),
+  ('5eed0000-0000-0000-0004-000000000002', '5eed0000-0000-0000-0000-000000000001', 'Cliente Teste 2 (Studio Ana)', '+5511900000002', null, null, true),
+  ('5eed0000-0000-0000-0004-000000000003', '5eed0000-0000-0000-0000-000000000001', 'Cliente Teste 3 (Studio Ana)', null, null, null, true),
+  ('5eed0000-0000-0000-0004-000000000004', '5eed0000-0000-0000-0000-000000000002', 'Cliente Teste 4 (Clinica Bela)', '+5521900000004', 'cliente4@example.test', '1985-07-02', true),
+  ('5eed0000-0000-0000-0004-000000000005', '5eed0000-0000-0000-0000-000000000002', 'Cliente Teste 5 (Clinica Bela)', '+5521900000005', null, '2001-11-30', true),
+  ('5eed0000-0000-0000-0004-000000000006', '5eed0000-0000-0000-0000-000000000002', 'Cliente Teste 6 (Clinica Bela)', null, 'cliente6@example.test', null, true),
+  ('5eed0000-0000-0000-0004-000000000007', '5eed0000-0000-0000-0000-000000000001', 'Joana Conceição Teste', '+5511900000007', 'joana.teste@example.test', '1992-01-20', true),
+  ('5eed0000-0000-0000-0004-000000000008', '5eed0000-0000-0000-0000-000000000001', 'João Pereira Teste', '+5511900000008', null, '1979-06-08', true),
+  ('5eed0000-0000-0000-0004-000000000009', '5eed0000-0000-0000-0000-000000000001', 'Márcia Antunes Teste', '+5511900000009', 'marcia.teste@example.test', null, true),
+  ('5eed0000-0000-0000-0004-000000000010', '5eed0000-0000-0000-0000-000000000001', 'Lúcia Ribeiro Teste', '+5511900000010', null, '1965-09-12', true),
+  ('5eed0000-0000-0000-0004-000000000011', '5eed0000-0000-0000-0000-000000000001', 'Ângela Souza Teste', '+5511900000011', 'angela.teste@example.test', '1988-12-25', true),
+  ('5eed0000-0000-0000-0004-000000000012', '5eed0000-0000-0000-0000-000000000001', 'Íris Carvalho Teste', null, 'iris.teste@example.test', '2000-02-29', true),
+  ('5eed0000-0000-0000-0004-000000000013', '5eed0000-0000-0000-0000-000000000001', 'Otávio Nunes Teste', '+5511900000013', null, null, true),
+  ('5eed0000-0000-0000-0004-000000000014', '5eed0000-0000-0000-0000-000000000001', 'Débora Lima Teste', '+5511900000014', 'debora.teste@example.test', '1995-04-03', true),
+  ('5eed0000-0000-0000-0004-000000000015', '5eed0000-0000-0000-0000-000000000001', 'Beatriz Gonçalves Teste', '+5511900000015', null, '1983-08-17', true),
+  ('5eed0000-0000-0000-0004-000000000016', '5eed0000-0000-0000-0000-000000000001', 'Renée Martins Teste', '+5511900000016', 'renee.teste@example.test', null, true),
+  ('5eed0000-0000-0000-0004-000000000017', '5eed0000-0000-0000-0000-000000000001', 'Cauã Barbosa Teste', '+5511900000017', null, '2004-10-05', true),
+  ('5eed0000-0000-0000-0004-000000000018', '5eed0000-0000-0000-0000-000000000001', 'Sônia Prado Teste (arquivada)', '+5511900000018', 'sonia.teste@example.test', '1958-05-21', false)
 on conflict do nothing;
 
 -- 5. Agendamentos: 01 e 03 com o profissional do specialist; 02 e 04 com o outro profissional.

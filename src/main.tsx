@@ -6,6 +6,7 @@ import { createSupabaseInvitationsApi } from '@/lib/invitations-api';
 import { createQueryClient } from '@/lib/query-client';
 import { supabase } from '@/lib/supabase';
 import { createSupabaseTenancyApi } from '@/lib/tenancy-api';
+import { createSupabaseClientsApi } from '@/modules/clients/clients-api';
 import { createSupabaseProfessionalsApi } from '@/modules/professionals/professionals-api';
 import { createSupabaseServicesApi } from '@/modules/services/services-api';
 import '@/styles/index.css';
@@ -20,6 +21,7 @@ const tenancyApi = createSupabaseTenancyApi(supabase);
 const invitationsApi = createSupabaseInvitationsApi(supabase);
 const servicesApi = createSupabaseServicesApi(supabase);
 const professionalsApi = createSupabaseProfessionalsApi(supabase);
+const clientsApi = createSupabaseClientsApi(supabase);
 const queryClient = createQueryClient();
 
 createRoot(rootElement).render(
@@ -30,6 +32,7 @@ createRoot(rootElement).render(
       invitationsApi={invitationsApi}
       servicesApi={servicesApi}
       professionalsApi={professionalsApi}
+      clientsApi={clientsApi}
       queryClient={queryClient}
     />
   </StrictMode>,
