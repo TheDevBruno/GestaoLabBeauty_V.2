@@ -113,8 +113,12 @@ PASS, 540 testes Vitest, integração 8 passed. Passo 4 concluído: lista em `/a
 (`src/modules/clients/`) com busca sem acento por nome ou telefone, termo em `?q=`, "Mostrar
 arquivados", contagem anunciada, tabela e cartões e "Carregar mais" de 50 em 50; item "Clientes" no
 shell para os 6 papéis; "Novo cliente" só para quem cadastra; 578 testes Vitest, verificado no
-navegador com owner, specialist e financial em 375 e 1440 px. Próximo: passo 5 (cadastro, edição,
-arquivar e ficha de leitura).
+navegador com owner, specialist e financial em 375 e 1440 px. Passo 5 concluído: cadastro em
+`/app/clientes/novo` (sem o specialist) e edição em `/app/clientes/:id` com arquivar e reativar pelo
+"Cliente ativo", ficha de leitura para o financial, "Cliente não encontrado" sem revelar o motivo,
+"Abrir" na lista e volta mantendo `?q=`; 609 testes Vitest, verificado no navegador com owner,
+receptionist, specialist e financial em 375 e 1440 px. Próximo: passo 6 (verificação final e
+encerramento).
 
 Sprint anterior: **Sprint 2.1 — serviços (com `buffer_minutes`) e profissionais**
 (`feat/sprint-2.1-servicos-profissionais`, a partir da `main` em `ead9e69`). **Concluída em

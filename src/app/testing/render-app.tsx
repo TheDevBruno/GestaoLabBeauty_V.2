@@ -339,7 +339,8 @@ const searchText = (value: string) => value.normalize('NFD').replace(/\p{M}/gu, 
 // maiúsculas, 3 ou mais dígitos também no telefone, arquivados só com o filtro, ordem por nome e
 // páginas de CLIENTS_PAGE_SIZE. O recorte do specialist fica a cargo de quem monta a lista inicial.
 export function createFakeClientsApi(initial: Client[] = []) {
-  const clients = initial;
+  let clients = initial;
+  let next = 1;
   const api = {
     search: vi.fn<ClientsApi['search']>((_tenantId, { query, includeArchived, offset }) => {
       const name = searchText(query.trim());
@@ -362,6 +363,27 @@ export function createFakeClientsApi(initial: Client[] = []) {
     get: vi.fn<ClientsApi['get']>((_tenantId, id) =>
       Promise.resolve(clients.find((item) => item.id === id) ?? null),
     ),
+    create: vi.fn<ClientsApi['create']>((_tenantId, input) => {
+      const created: Client = {
+        id: `50000000-0000-4000-8000-${String(next++).padStart(12, '0')}`,
+        ...input,
+      };
+      clients = [...clients, created];
+      return Promise.resolve({ ok: true, client: created });
+    }),
+    // Cliente fora da lista (outra empresa ou fora do recorte) não é alterado, como a RLS.
+    update: vi.fn<ClientsApi['update']>((_tenantId, id, input) => {
+      if (!clients.some((item) => item.id === id)) {
+        return Promise.resolve({
+          ok: false,
+          message:
+            'Este cliente não existe mais ou não está disponível para você nesta empresa. Volte à lista.',
+        });
+      }
+      const updated: Client = { id, ...input };
+      clients = clients.map((item) => (item.id === id ? updated : item));
+      return Promise.resolve({ ok: true, client: updated });
+    }),
   } satisfies ClientsApi;
   return { api };
 }

@@ -87,6 +87,18 @@ export const routes: RouteObject[] = [
                         .ClientsListPage,
                     }),
                   },
+                  {
+                    path: 'novo',
+                    lazy: async () => ({
+                      Component: (await import('@/modules/clients/ClientFormPage')).ClientNewPage,
+                    }),
+                  },
+                  {
+                    path: ':id',
+                    lazy: async () => ({
+                      Component: (await import('@/modules/clients/ClientFormPage')).ClientEditPage,
+                    }),
+                  },
                 ],
               },
               {

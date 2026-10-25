@@ -137,6 +137,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   com foco no primeiro novo, estados vazio, sem resultado e erro; item "Clientes" no shell para quem
   tem `clients.read` e "Novo cliente" só para quem cadastra. `StatusBadge` com rótulos configuráveis e
   `SavedNotice` mantendo a busca da URL. 38 testes Vitest novos.
+- Sprint 2.2, passo 5: cadastro de cliente em `/app/clientes/novo` (negado ao specialist) e edição em
+  `/app/clientes/:id` com arquivar e reativar pelo "Cliente ativo"; ficha de leitura para quem só tem
+  `clients.read`; "Cliente não encontrado" sem revelar o motivo; botão "Abrir" na lista e volta
+  mantendo a busca. `RequirePermission` ganhou `deny`. 31 testes Vitest novos.
 
 ### Alterado
 

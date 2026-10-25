@@ -4,17 +4,21 @@ import { ShellPage } from '@/app/shell/ShellPage';
 import { usePermission } from '@/app/tenancy/usePermission';
 
 // Guarda de tela por permissão (plano §8), para páginas dentro do app shell. É conveniência de
-// interface: a RLS nega os dados a quem não tem a permissão, com ou sem esta guarda.
+// interface: a RLS nega os dados a quem não tem a permissão, com ou sem esta guarda. `deny` nega mesmo
+// com a permissão, para regras que a matriz não expressa (o specialist não cadastra cliente, RN-036).
 export function RequirePermission({
   permission,
   title,
+  deny = false,
   children,
 }: {
   permission: string;
   title: string;
+  deny?: boolean;
   children: ReactNode;
 }) {
-  const result = usePermission(permission);
+  const permissionResult = usePermission(permission);
+  const result = deny && permissionResult !== 'loading' ? 'denied' : permissionResult;
   if (result === 'loading') {
     return (
       <ShellPage title={title}>

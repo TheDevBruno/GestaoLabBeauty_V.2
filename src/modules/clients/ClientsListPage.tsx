@@ -1,7 +1,7 @@
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 import { PlusIcon, SearchIcon, XIcon } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useLocation, useSearchParams } from 'react-router';
 import { normalizeClientSearch } from '@/shared/client';
 import { formatPhone } from '@/shared/phone';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,7 @@ function ClientsList() {
   const canCreate = usePermission('clients.write') === 'allowed' && !isSpecialist;
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const term = normalizeClientSearch(searchParams.get('q') ?? '');
   const [draft, setDraft] = useState(() => searchParams.get('q') ?? '');
   const [includeArchived, setIncludeArchived] = useState(false);
@@ -119,7 +120,7 @@ function ClientsList() {
         </p>
         {canCreate ? (
           <Button asChild className="self-start sm:self-auto">
-            <Link to="/app/clientes/novo">
+            <Link to={`/app/clientes/novo${location.search}`}>
               <PlusIcon aria-hidden="true" />
               Novo cliente
             </Link>
@@ -335,7 +336,19 @@ function ContactText({ value }: { value: string | null }) {
 }
 
 function ClientStatus({ client }: { client: Client }) {
-  return <StatusBadge active={client.isActive} activeLabel="Ativo" inactiveLabel="Arquivado" />;
+  return <StatusBadge active={client.isActive} inactiveLabel="Arquivado" />;
+}
+
+// Abre a edição ou a ficha de leitura; a busca (?q=) vai junto para a volta mantê-la.
+function OpenButton({ client }: { client: Client }) {
+  const { search } = useLocation();
+  return (
+    <Button asChild variant="outline">
+      <Link to={`/app/clientes/${client.id}${search}`} aria-label={`Abrir ${client.fullName}`}>
+        Abrir
+      </Link>
+    </Button>
+  );
 }
 
 // O nome recebe o foco ao "Carregar mais" (tabIndex -1: focável só por script).
@@ -361,6 +374,9 @@ function ClientsTable({ clients }: { clients: Client[] }) {
             <th scope="col" className="px-4 py-3 font-medium">
               Status
             </th>
+            <th scope="col" className="px-4 py-3 font-medium">
+              <span className="sr-only">Ações</span>
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y">
@@ -382,6 +398,9 @@ function ClientsTable({ clients }: { clients: Client[] }) {
               </td>
               <td className="px-4 py-3">
                 <ClientStatus client={client} />
+              </td>
+              <td className="px-4 py-2 text-right">
+                <OpenButton client={client} />
               </td>
             </tr>
           ))}
@@ -416,6 +435,9 @@ function ClientsCards({ clients }: { clients: Client[] }) {
               <ContactText value={client.email} />
             </dd>
           </dl>
+          <div className="mt-4">
+            <OpenButton client={client} />
+          </div>
         </li>
       ))}
     </ul>

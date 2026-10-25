@@ -180,7 +180,7 @@ padrão da própria skill para autocompletar ("debounced fetch").
 | 2   | Migration (colunas, `CHECK`s, trigger de busca, `unaccent`, `search_clients`) e pgTAP             | concluído |
 | 3   | Seed, schemas Zod, `phone.ts` e normalização da busca                                             | concluído |
 | 4   | Lista de clientes com busca, filtro e paginação; item "Clientes" no shell                         | concluído |
-| 5   | Cadastro, edição, arquivar e ficha de leitura                                                     | pendente  |
+| 5   | Cadastro, edição, arquivar e ficha de leitura                                                     | concluído |
 | 6   | Verificação (check, db:test, integração, navegador 375/1440 px por papel, teclado) e encerramento | pendente  |
 
 Cada passo termina com `npm run check` e `npm run db:test` verdes, commit, `docs/STATE.md`,
@@ -426,4 +426,68 @@ Ana; leitura do DOM porque o painel oculto não aceita cliques reais):
   servidor já aberto passou a responder 504 ("Outdated Optimize Dep"); resolvido reiniciando o Vite.
 
 Verificação: `npm run check` verde (578 testes Vitest; 8 de integração ignorados), `npm run db:test`
+1590 PASS.
+
+### Passo 5 — Cadastro, edição, arquivar e ficha de leitura (2026-10-25)
+
+Sem dependência nova, sem migration e sem mudança de configuração. Consultas à skill `ui-ux-pro-max`
+(`--domain ux`): erro específico abaixo de cada campo ligado por `aria-describedby` (o `field.tsx` já
+faz), não indicar só por cor e data no formato local. O projeto segue o padrão das sprints anteriores
+de levar o foco ao primeiro campo inválido, sem resumo de erros no topo.
+
+- `clients-api.ts`: `create` e `update` direto em `clients` sob RLS (colunas `full_name`, `phone`,
+  `email`, `birth_date`, `is_active`; o `tenant_id` só no cadastro). Atualizar sem linha devolvida (RLS,
+  fora do recorte ou removido) não finge sucesso. Erros: `42501` explica a falta de permissão;
+  `23514`, `22P02`, `22007` e `22008` pedem para conferir os dados; o resto vira mensagem genérica. O
+  texto do banco nunca é repassado.
+- `ClientFormPage.tsx`:
+  - `ClientNewPage` (`/app/clientes/novo`): `clients.write`, negado ao specialist (RN-036) por um
+    `deny` novo no `RequirePermission`; specialist e financial veem "Acesso não permitido".
+  - `ClientEditPage` (`/app/clientes/:id`, `clients.read`): formulário para quem tem `clients.write`
+    (o specialist só nos clientes que vê); ficha de leitura em `<dl>` para quem só tem `clients.read`
+    (status, telefone formatado, e-mail, nascimento em DD/MM/AAAA, "Não informado" nos vazios);
+    "Cliente não encontrado" com o mesmo texto para id inexistente, outra empresa ou fora do recorte.
+  - Campos: nome completo, telefone (`type="tel"`, `inputmode="tel"`, valor inicial com
+    `formatPhone`, dica com exemplo), e-mail (`type="email"`), nascimento (`type="date"`, `min`
+    1900-01-01, `max` hoje) e "Cliente ativo" só na edição, com dica explicando o arquivamento. O
+    cadastro sempre grava o cliente ativo.
+  - `useState` + `clientFormSchema`, erro junto ao campo, foco no primeiro inválido, botão `busy`,
+    erro do banco em `Alert`. Ao salvar, invalida `['clients', tenantId]` e volta à lista com o
+    aviso ("cadastrado", "arquivado", "reativado" ou "Alterações … salvas"), mantendo `?q=`.
+- Lista: botão "Abrir" com nome acessível "Abrir <nome>" na tabela e nos cartões; os links "Abrir" e
+  "Novo cliente" levam a busca (`?q=`) junto, e o formulário a devolve em "Cancelar" e ao salvar.
+- Rotas preguiçosas `novo` e `:id` em `/app/clientes`. O fake do `render-app.tsx` ganhou `create` e
+  `update` (cliente fora da lista não é alterado, como a RLS).
+- **Ajuste em relação ao plano:** o plano pedia `autocomplete="tel"` e `autocomplete="email"`. Os
+  campos usam `autocomplete="off"`: os dados são do cliente, e o navegador sugeriria o nome, o telefone
+  e o e-mail de quem está preenchendo (a WCAG 1.3.5 vale para dados da própria pessoa).
+
+Testes: `clients-api.test.ts` (+10: cadastro, alteração, sem linha devolvida, id inválido, códigos de
+erro) e `clients-form.test.tsx` (21: cadastro por papel, negado a specialist e financial, normalização,
+volta com a busca, nulos, erros junto ao campo e foco, tipos e limites dos campos, edição com valores
+carregados, arquivar e reativar, specialist editando o cliente que vê, erro do banco, não encontrado
+por papel, ficha de leitura, "Abrir" e "Novo cliente" com a busca). Prova de detecção: sem o `deny` do
+specialist no cadastro, 1 teste falhou.
+
+Verificação no navegador (preview, Supabase local, usuários do seed do Studio Ana; leitura do DOM e
+eventos por script, porque o painel oculto não aceita cliques reais):
+
+- **Receptionist**, 1440 px: cadastro vazio com telefone "98765" recusado com erro no nome e no
+  telefone e foco no nome; cadastro de "Cliente Navegador Teste" com "(11) 90000-0099" e e-mail com
+  maiúsculas aceito, volta para `?q=navegador` com o aviso focado e o e-mail em minúsculas. Abrir pela
+  lista mostra os valores (telefone formatado); desmarcar "Cliente ativo" arquiva (aviso "arquivado",
+  some da lista, aparece como "Arquivado" com o filtro); marcar de novo reativa. 375 px: edição e
+  cadastro sem rolagem horizontal e sem controle abaixo de 44 px.
+- **Specialist**, 375 px: edita o Cliente Teste 1 (aviso de alterações salvas); o Cliente Teste 2
+  (fora do recorte) mostra "Cliente não encontrado"; `/novo` mostra "Acesso não permitido".
+- **Financial**, 375 e 1440 px: ficha de "João Pereira Teste" (status, telefone, "Não informado" no
+  e-mail, nascimento 08/06/1979), sem formulário e sem rolagem horizontal; `/novo` negado.
+- **Owner**, 1440 e 375 px: troca de e-mail para maiúsculas e de telefone para "+55 11 3456-7890" grava
+  "renee.novo@example.test" e "(11) 3456-7890", com a busca mantida; botão "Abrir" com 72 × 44 px.
+- Os dados criados no navegador foram apagados com `db:reset` no fim.
+- Não verificados: paisagem, texto ampliado do sistema e modo escuro (fora do escopo desde a Sprint
+  1.4). Checklist `pro-rules.md`: ícones `lucide-react`, cores só de tokens, status em texto, alvos de
+  44 px, sem animação nova.
+
+Verificação: `npm run check` verde (609 testes Vitest; 8 de integração ignorados), `npm run db:test`
 1590 PASS.

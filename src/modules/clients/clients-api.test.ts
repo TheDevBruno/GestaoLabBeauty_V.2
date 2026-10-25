@@ -6,7 +6,24 @@ import {
   createSupabaseClientsApi,
   isClientId,
   parseClientRows,
+  saveErrorResult,
 } from './clients-api';
+
+const INPUT = {
+  fullName: 'Cliente 1',
+  phone: '+5511900000001',
+  email: null,
+  birthDate: '1990-03-15',
+  isActive: true,
+};
+
+const DB_ROW = {
+  full_name: 'Cliente 1',
+  phone: '+5511900000001',
+  email: null,
+  birth_date: '1990-03-15',
+  is_active: true,
+};
 
 const TENANT = '00000000-0000-4000-8000-00000000000a';
 const CLIENT_ID = '5eed0000-0000-0000-0004-000000000001';
@@ -32,7 +49,7 @@ interface QueryResult {
 function fakeClient(result: QueryResult) {
   const calls: [string, unknown[]][] = [];
   const builder: Record<string, unknown> = {};
-  for (const method of ['select', 'eq']) {
+  for (const method of ['select', 'eq', 'insert', 'update']) {
     builder[method] = (...args: unknown[]) => {
       calls.push([method, args]);
       return builder;
@@ -168,5 +185,70 @@ describe('createSupabaseClientsApi.get', () => {
     await expect(createSupabaseClientsApi(client).get(TENANT, CLIENT_ID)).rejects.toThrow(
       'Não foi possível carregar o cliente.',
     );
+  });
+});
+
+describe('createSupabaseClientsApi.create', () => {
+  it('insere com a empresa e as colunas editáveis', async () => {
+    const { client, calls } = fakeClient({ data: [row(1)], error: null });
+    const result = await createSupabaseClientsApi(client).create(TENANT, INPUT);
+    expect(result).toEqual({ ok: true, client: parseClientRows([row(1)])[0] });
+    expect(calls).toEqual([
+      ['from', ['clients']],
+      ['insert', [{ tenant_id: TENANT, ...DB_ROW }]],
+      ['select', ['id, full_name, phone, email, birth_date, is_active']],
+    ]);
+  });
+
+  it('recusa da RLS (specialist cadastrando) vira mensagem de permissão', async () => {
+    const { client } = fakeClient({ data: null, error: { code: '42501', message: 'segredo' } });
+    expect(await createSupabaseClientsApi(client).create(TENANT, INPUT)).toEqual({
+      ok: false,
+      message: 'Você não tem permissão para alterar este cliente.',
+    });
+  });
+});
+
+describe('createSupabaseClientsApi.update', () => {
+  it('altera filtrando por empresa e id', async () => {
+    const { client, calls } = fakeClient({ data: [row(1)], error: null });
+    const result = await createSupabaseClientsApi(client).update(TENANT, CLIENT_ID, INPUT);
+    expect(result.ok).toBe(true);
+    expect(calls).toEqual([
+      ['from', ['clients']],
+      ['update', [DB_ROW]],
+      ['eq', ['tenant_id', TENANT]],
+      ['eq', ['id', CLIENT_ID]],
+      ['select', ['id, full_name, phone, email, birth_date, is_active']],
+    ]);
+  });
+
+  it('nenhuma linha devolvida (RLS ou fora do recorte) não finge sucesso', async () => {
+    const { client } = fakeClient({ data: [], error: null });
+    const result = await createSupabaseClientsApi(client).update(TENANT, CLIENT_ID, INPUT);
+    expect(result.ok).toBe(false);
+  });
+
+  it('id sem forma de uuid não vai ao banco', async () => {
+    const { client, calls } = fakeClient({ data: [], error: null });
+    expect((await createSupabaseClientsApi(client).update(TENANT, 'x', INPUT)).ok).toBe(false);
+    expect(calls).toEqual([]);
+  });
+});
+
+describe('saveErrorResult', () => {
+  it.each(['23514', '22P02', '22007', '22008'])('%s pede para conferir os dados', (code) => {
+    expect(saveErrorResult({ code, message: 'clients_phone_format' })).toEqual({
+      ok: false,
+      message: 'Confira os dados do cliente.',
+    });
+  });
+
+  it('código desconhecido vira mensagem genérica sem o texto do banco', () => {
+    const result = saveErrorResult({ code: 'XX000', message: 'detalhe interno' });
+    expect(result).toEqual({
+      ok: false,
+      message: 'Não foi possível salvar o cliente. Tente de novo em instantes.',
+    });
   });
 });
