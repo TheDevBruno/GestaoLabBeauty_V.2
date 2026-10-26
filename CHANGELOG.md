@@ -153,11 +153,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
   `public.set_availability_rules` (grava a semana inteira numa transação) e
   `public.professional_availability` (regras + extras − bloqueios no fuso da empresa, até 62 dias,
   descartando a hora que não existe no horário de verão), com 510 asserções pgTAP novas.
+- Sprint 2.3, passo 3: seed com a Clinica Bela em `America/Manaus`, horário semanal de 3 profissionais
+  (21 regras) e 4 exceções em novembro de 2026, com `seed_rls.test.sql` cobrindo regras, exceções e o
+  cálculo; `src/shared/timezone.ts` (hora local ↔ UTC só com `Intl`, bordas de horário de verão iguais
+  ao Postgres) e `src/shared/availability.ts` (schemas Zod da semana e da exceção, período em UTC,
+  `tstzrange` de ida e volta), com 84 testes Vitest novos.
 
 ### Corrigido
 
 - Clientes: "Voltar para clientes" na ficha de leitura e em "Cliente não encontrado" passou a ser
   botão de 44 px (antes link de texto com 20 px de altura).
+- Testes de tela: a primeira espera de cada arquivo usa `FIRST_RENDER_WAIT` (4 s); com o paralelismo
+  padrão do Vitest, o carregamento das rotas `lazy` passava de 1 s e 2 a 9 testes falhavam de forma
+  intermitente no `npm run check`.
 
 ### Alterado
 

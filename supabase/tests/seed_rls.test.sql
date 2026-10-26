@@ -3,7 +3,7 @@
 -- existentes fica vazia e as verificações passam sem comparar nada; por isso o teste de completude
 -- exige 0 ou 12 usuários, nunca um seed pela metade.
 begin;
-select plan(5);
+select plan(7);
 
 select is(
   array(
@@ -64,6 +64,8 @@ begin
       union all select tenant_id from public.appointments
       union all select tenant_id from public.services
       union all select tenant_id from public.professional_services
+      union all select tenant_id from public.availability_rules
+      union all select tenant_id from public.availability_exceptions
     ) x
     where x.tenant_id <> r.tenant_id;
     select count(*) into v_perfis from public.profiles where id <> r.user_id;
@@ -127,6 +129,42 @@ select is(
     else array[0, 0, 0, 0, 0]::bigint[]
   end,
   'seed: clientes completos com o seed (18, 15 no Studio Ana, 1 arquivado, 3 sem telefone, 8 sem e-mail) ou ausentes'
+);
+
+-- Sprint 2.3: com o seed, 21 regras (16 no Studio Ana), 4 exceções (1 extra) e a Clinica Bela em
+-- America/Manaus; sem ele, nenhuma regra nem exceção.
+select is(
+  array[
+    (select count(*) from public.availability_rules where id::text like '5eed0000-%'),
+    (select count(*) from public.availability_rules where tenant_id = '5eed0000-0000-0000-0000-000000000001'),
+    (select count(*) from public.availability_exceptions where id::text like '5eed0000-%'),
+    (select count(*) from public.availability_exceptions where id::text like '5eed0000-%' and kind = 'extra'),
+    (select count(*) from public.tenants where id = '5eed0000-0000-0000-0000-000000000002' and timezone = 'America/Manaus')
+  ],
+  case
+    when (select count(*) from auth.users u join seed_usuario s on s.user_id = u.id) = 12
+      then array[21, 16, 4, 1, 1]::bigint[]
+    else array[0, 0, 0, 0, 0]::bigint[]
+  end,
+  'seed: disponibilidade completa com o seed (21 regras, 16 no Studio Ana, 4 exceções, 1 extra, Bela em Manaus) ou ausente'
+);
+
+-- Com o seed, a sexta 13/11/2026 do profissional 01 é folga e o sábado 21/11 vai das 09:00 às 17:00
+-- (regra até 13:00 + extra 13:00–17:00, num período só). Sem o seed, nenhum período.
+select is(
+  array[
+    (select count(*) from public.professional_availability('5eed0000-0000-0000-0000-000000000001',
+      '5eed0000-0000-0000-0003-000000000001', '2026-11-13', '2026-11-13')),
+    (select count(*) from public.professional_availability('5eed0000-0000-0000-0000-000000000001',
+      '5eed0000-0000-0000-0003-000000000001', '2026-11-21', '2026-11-21')
+      where period = tstzrange('2026-11-21 12:00+00', '2026-11-21 20:00+00'))
+  ],
+  case
+    when (select count(*) from auth.users u join seed_usuario s on s.user_id = u.id) = 12
+      then array[0, 1]::bigint[]
+    else array[0, 0]::bigint[]
+  end,
+  'seed: folga zera a sexta 13/11 e o extra emenda o sábado 21/11 (09:00–17:00)'
 );
 
 select * from finish();

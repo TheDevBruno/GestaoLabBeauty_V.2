@@ -7,7 +7,9 @@
 -- RN-027 e RN-028) e 2 agendamentos. Desde a Sprint 2.1: 3 serviços (um com intervalo, um sem, um
 -- inativo; RN-040 e RN-042) e 3 vínculos profissional × serviço (o profissional do specialist faz 2 dos
 -- 3 serviços, o outro faz 1; RN-043). Desde a Sprint 2.2: contato e nascimento nos clientes e 12 clientes
--- a mais no Studio Ana, um deles arquivado (RN-045 a RN-047).
+-- a mais no Studio Ana, um deles arquivado (RN-045 a RN-047). Desde a Sprint 2.3: Studio Ana em
+-- America/Sao_Paulo e Clinica Bela em America/Manaus (RN-048), horário semanal de 3 dos 4 profissionais
+-- (o 04 fica sem horário) e 4 exceções em datas fixas de novembro de 2026 (RN-049, RN-050).
 --
 -- Senha de teste, só local: senha-teste-labbeautypro. Não vai para .env nem para homologação/produção.
 -- Ids começam em 5eed0000 para não colidir com os ids de supabase/tests (00000000-…-00000000000a/b).
@@ -65,9 +67,10 @@ insert into public.profiles (id, full_name)
 select s.id, s.full_name from seed_usuario s
 on conflict do nothing;
 
-insert into public.tenants (id, name, slug) values
-  ('5eed0000-0000-0000-0000-000000000001', 'Studio Ana (teste)', 'studio-ana'),
-  ('5eed0000-0000-0000-0000-000000000002', 'Clinica Bela (teste)', 'clinica-bela')
+-- Fuso (Sprint 2.3): a Clinica Bela fica em Manaus (UTC−4) para o cálculo ter um fuso diferente do padrão.
+insert into public.tenants (id, name, slug, timezone) values
+  ('5eed0000-0000-0000-0000-000000000001', 'Studio Ana (teste)', 'studio-ana', 'America/Sao_Paulo'),
+  ('5eed0000-0000-0000-0000-000000000002', 'Clinica Bela (teste)', 'clinica-bela', 'America/Manaus')
 on conflict do nothing;
 
 insert into public.memberships (id, tenant_id, user_id, role)
@@ -138,6 +141,44 @@ insert into public.professional_services (tenant_id, professional_id, service_id
   ('5eed0000-0000-0000-0000-000000000002', '5eed0000-0000-0000-0003-000000000003', '5eed0000-0000-0000-0006-000000000004'),
   ('5eed0000-0000-0000-0000-000000000002', '5eed0000-0000-0000-0003-000000000003', '5eed0000-0000-0000-0006-000000000005'),
   ('5eed0000-0000-0000-0000-000000000002', '5eed0000-0000-0000-0003-000000000004', '5eed0000-0000-0000-0006-000000000004')
+on conflict do nothing;
+
+-- 8. Horário semanal (Sprint 2.3, RN-049), em hora local da empresa; dia ISO (1 = segunda … 7 = domingo).
+-- Profissional 01: segunda a sexta 09:00–12:00 e 13:00–18:00 (almoço no meio) e sábado 09:00–13:00.
+-- Profissional 02: terça a sábado 10:00–19:00. Profissional 03 (Manaus): segunda a sexta 08:00–17:00.
+-- Profissional 04: sem horário (a tela mostra "Não atende" em todos os dias).
+insert into public.availability_rules (id, tenant_id, professional_id, weekday, start_time, end_time)
+select
+  ('5eed0000-0000-0000-0007-0000000000' || lpad(row_number() over (order by r.professional_id, r.weekday, r.start_time)::text, 2, '0'))::uuid,
+  r.tenant_id, r.professional_id, r.weekday, r.start_time, r.end_time
+from (
+  select '5eed0000-0000-0000-0000-000000000001'::uuid, '5eed0000-0000-0000-0003-000000000001'::uuid, d::smallint, t.inicio, t.fim
+  from generate_series(1, 5) d
+  cross join (values ('09:00'::time, '12:00'::time), ('13:00'::time, '18:00'::time)) t (inicio, fim)
+  union all
+  select '5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0003-000000000001', 6, '09:00', '13:00'
+  union all
+  select '5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0003-000000000002', d::smallint, '10:00', '19:00'
+  from generate_series(2, 6) d
+  union all
+  select '5eed0000-0000-0000-0000-000000000002', '5eed0000-0000-0000-0003-000000000003', d::smallint, '08:00', '17:00'
+  from generate_series(1, 5) d
+) r (tenant_id, professional_id, weekday, start_time, end_time)
+on conflict do nothing;
+
+-- 9. Exceções (Sprint 2.3, RN-050), em UTC; datas fixas para o seed ser determinístico.
+-- Studio Ana (UTC−3): folga de dia inteiro na sexta 13/11, bloqueio 14:00–16:00 na quarta 18/11 e
+-- sábado 21/11 com horário extra 13:00–17:00, todos do profissional 01. Clinica Bela (UTC−4): feriado
+-- de dia inteiro na sexta 20/11 para o profissional 03.
+insert into public.availability_exceptions (id, tenant_id, professional_id, kind, period, reason) values
+  ('5eed0000-0000-0000-0008-000000000001', '5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0003-000000000001',
+   'blocked', '[2026-11-13 03:00+00,2026-11-14 03:00+00)', 'Folga'),
+  ('5eed0000-0000-0000-0008-000000000002', '5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0003-000000000001',
+   'blocked', '[2026-11-18 17:00+00,2026-11-18 19:00+00)', 'Reunião de equipe'),
+  ('5eed0000-0000-0000-0008-000000000003', '5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0003-000000000001',
+   'extra', '[2026-11-21 16:00+00,2026-11-21 20:00+00)', null),
+  ('5eed0000-0000-0000-0008-000000000004', '5eed0000-0000-0000-0000-000000000002', '5eed0000-0000-0000-0003-000000000003',
+   'blocked', '[2026-11-20 04:00+00,2026-11-21 04:00+00)', 'Feriado')
 on conflict do nothing;
 
 drop table seed_usuario;

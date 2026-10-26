@@ -99,10 +99,6 @@ liberação de recursos por plano.
       (Sprints 1.4 e 2.1). Em clientes já viraram botão (Sprint 2.2).
 - [ ] Confirmar se o specialist pode arquivar os clientes que vê (RN-046 permite; bloquear exige
       trigger).
-- [ ] Vitest intermitente no `npm run check` local: 2 a 9 testes de tela falham por tempo com o
-      paralelismo padrão (6 CPUs e Supabase no Docker); passam isolados e com `--maxWorkers=2`.
-      Decidir entre aumentar o tempo dos `findBy` iniciais nos testes ou limitar workers na
-      configuração (Sprint 2.3, passo 2).
 
 ## Próximo passo
 
@@ -117,8 +113,13 @@ Passo 2 concluído: migration `20261025160000_availability.sql` (`btree_gist`, `
 trigger de validação, `availability_rules` com exclusion de sobreposição, `availability_exceptions`,
 RLS e `GRANT` de colunas, `public.set_availability_rules` e `public.professional_availability`) e
 `availability.test.sql` com 510 asserções; pgTAP 2100 PASS, `db lint` sem erros, integração 8 passed.
-A hora local que não existe no horário de verão é descartada no cálculo (achado do passo). Próximo:
-passo 3 (seed, schemas Zod e `timezone.ts`).
+A hora local que não existe no horário de verão é descartada no cálculo (achado do passo). Passo 3
+concluído: intermitência do Vitest resolvida nos testes (`FIRST_RENDER_WAIT` na primeira espera de cada
+arquivo de tela, decisão do usuário); seed com Clinica Bela em `America/Manaus`, 21 regras e 4 exceções
+em novembro de 2026; `src/shared/timezone.ts` (conversão local ↔ UTC com `Intl`, bordas iguais ao
+Postgres) e `src/shared/availability.ts` (schemas da semana e da exceção, período em UTC e
+`tstzrange`); 693 testes Vitest, pgTAP 2102 PASS, integração 8 passed. Próximo: passo 4 (tela de
+horários: semana, prévia de 7 dias e entradas).
 
 Sprint anterior: **Sprint 2.2 — clientes** (`feat/sprint-2.2-clientes`, a partir da `main` em
 `5848ff1`, merge do PR #23). **Concluída em 2026-10-25**, PR #24 mesclado em 2026-10-25 (não é ponto

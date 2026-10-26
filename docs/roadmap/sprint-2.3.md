@@ -1,8 +1,8 @@
 # Sprint 2.3 — Disponibilidade
 
 - **Início:** 2026-10-25
-- **Status:** passos 1 e 2 concluídos (plano aprovado pelo usuário em 2026-10-25 com todas as
-  recomendações; migration e pgTAP); não é ponto de aprovação obrigatória
+- **Status:** passos 1 a 3 concluídos (plano aprovado pelo usuário em 2026-10-25 com todas as
+  recomendações; migration e pgTAP; seed, schemas e fuso); não é ponto de aprovação obrigatória
 - **Branch:** `feat/sprint-2.3-disponibilidade` (a partir da `main` em `3986ca5`, merge do PR #24)
 
 ## Objetivo
@@ -339,7 +339,7 @@ resultado próprio; uso os padrões gerais de formulário acima.
 | --- | ---------------------------------------------------------------------------------------------------------- | --------- |
 | 1   | Plano (este documento) e OK do usuário                                                                     | concluído |
 | 2   | Migration (`timezone`, `btree_gist`, regras, exceções, RLS, `set_availability_rules`, cálculo) e pgTAP     | concluído |
-| 3   | Seed, schemas Zod e `timezone.ts` com testes de borda                                                      | pendente  |
+| 3   | Seed, schemas Zod e `timezone.ts` com testes de borda                                                      | concluído |
 | 4   | Tela de horários: semana, prévia de 7 dias e entradas (profissionais e "Meus horários")                    | pendente  |
 | 5   | Exceções: lista, cadastro, edição e exclusão                                                               | pendente  |
 | 6   | Verificação (check, db:test, integração, navegador 375/768/1024/1440 px por papel, teclado) e encerramento | pendente  |
@@ -405,3 +405,36 @@ Cada passo termina com `npm run check` e `npm run db:test` verdes, commit, `docs
 --maxWorkers=2`: 609 passed. Nenhum arquivo de `src/` mudou nesta sprint até aqui; registrado como
   pendência para o usuário decidir (aumentar o tempo dos `findBy` iniciais ou limitar workers exige
   mudar testes ou configuração).
+- Commit `ae4a5c0` **sem push**: o push exige `npm run check` verde (decisão do usuário em 2026-10-25:
+  "push só com check 100% verde"); vai junto com o passo 3.
+
+### Passo 3 — Seed, schemas e fuso (2026-10-25)
+
+- **Intermitência do Vitest resolvida** (decisão do usuário: ajustar os testes, sem configuração):
+  `FIRST_RENDER_WAIT` (4 s, abaixo dos 5 s do teste) em `src/app/testing/render-app.tsx`, usado só na
+  primeira espera de cada um dos 9 arquivos de tela; as falhas eram sempre o primeiro teste do arquivo,
+  que paga o carregamento das rotas `lazy`. Três `npm run check` seguidos verdes (609 passed) antes das
+  mudanças do passo; commit próprio.
+- **Seed** (`supabase/seed.sql`, ids `5eed0000-…-0007-…` e `-0008-…`): Studio Ana em
+  `America/Sao_Paulo` e Clinica Bela em `America/Manaus`; 21 regras — profissional 01 de segunda a
+  sexta 09:00–12:00 e 13:00–18:00 e sábado 09:00–13:00, profissional 02 de terça a sábado 10:00–19:00,
+  profissional 03 (Manaus) de segunda a sexta 08:00–17:00, profissional 04 sem horário; 4 exceções em
+  novembro de 2026 — folga na sexta 13/11, bloqueio 14:00–16:00 na quarta 18/11 e extra 13:00–17:00 no
+  sábado 21/11 (profissional 01) e feriado na sexta 20/11 em Manaus (profissional 03).
+  `seed_rls.test.sql` passa a cobrir regras e exceções no isolamento por empresa, conta 21/16/4/1 e o
+  fuso de Manaus, e confere no cálculo a folga (13/11 vazio) e o extra emendado (21/11 09:00–17:00).
+  Conferido pelo PostgREST local com o owner do Studio Ana: 3 exceções (só as dele) e o período
+  `["2026-11-21 12:00:00+00","2026-11-21 20:00:00+00")`.
+- **`src/shared/timezone.ts`** (só `Intl`, sem dependência): `zonedToUtc` (hora local → UTC, `24:00`
+  como meia-noite do dia seguinte, hora inexistente e hora repetida resolvidas como o `at time zone` do
+  Postgres: o candidato mais tardio), `utcToZoned`, `isValidTimeZone`, `isIsoDate`, `addDaysIso`,
+  `daysBetweenIso` e `isoWeekday`. 34 testes nas datas do pgTAP (São Paulo, Manaus, Kathmandu, New York
+  em 2026-03-08 e 2026-11-01, 02:30 inexistente, 01:30 repetida, `24:00`).
+- **`src/shared/availability.ts`**: `weeklyRulesSchema` (hora `HH:MM` de 5 em 5, fim depois do início,
+  sem sobreposição no dia com o erro no "Início" do intervalo que começa depois, até 70 intervalos; sai no
+  formato de `p_rules`), `exceptionFormSchema` (tipo, dia inteiro, datas e horas locais, fim depois do
+  início, até 366 dias de calendário, motivo até 120 caracteres ou `null`), `exceptionPeriodUtc` (devolve
+  `null` quando a mudança de horário de verão deixa o fim antes do início), `toTstzRange` e
+  `parseTstzRange` (formato do PostgREST). 50 testes.
+- Verificação: `npm run check` 693 passed (41 arquivos, 8 ignorados), `npm run db:test` 2102 PASS,
+  `npx supabase db lint` sem erros, `npm run test:integration` 8 passed.
