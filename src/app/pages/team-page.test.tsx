@@ -10,6 +10,7 @@ import {
   pendingInvitation,
   renderAt,
   SIGNED_IN,
+  FIRST_RENDER_WAIT,
 } from '@/app/testing/render-app';
 import type { MemberRole } from '@/shared/roles';
 
@@ -36,7 +37,7 @@ async function pendingList() {
 describe('Equipe — criar convite', () => {
   it('cria, mostra o link uma vez com foco no aviso e atualiza a lista', async () => {
     const { user, invitations } = renderTeam('owner');
-    expect(await screen.findByText('Nenhum convite pendente.')).toBeTruthy();
+    expect(await screen.findByText('Nenhum convite pendente.', {}, FIRST_RENDER_WAIT)).toBeTruthy();
 
     await user.type(screen.getByLabelText('E-mail da pessoa'), '  Nova@Example.TEST ');
     await user.selectOptions(screen.getByLabelText('Papel'), 'admin');

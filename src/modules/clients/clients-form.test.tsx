@@ -9,6 +9,7 @@ import {
   membership,
   renderAt,
   SIGNED_IN,
+  FIRST_RENDER_WAIT,
 } from '@/app/testing/render-app';
 import type { MemberRole } from '@/shared/roles';
 import type { Client } from './clients-api';
@@ -50,7 +51,9 @@ describe('Novo cliente — permissão', () => {
     '%s abre o cadastro, sem "Cliente ativo"',
     async (role) => {
       renderClients('/app/clientes/novo', { role });
-      expect(await screen.findByRole('heading', { level: 1, name: 'Novo cliente' })).toBeTruthy();
+      expect(
+        await screen.findByRole('heading', { level: 1, name: 'Novo cliente' }, FIRST_RENDER_WAIT),
+      ).toBeTruthy();
       expect(await screen.findByRole('textbox', { name: 'Nome completo' })).toBeTruthy();
       expect(screen.queryByRole('checkbox', { name: 'Cliente ativo' })).toBeNull();
     },

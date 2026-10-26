@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
 import { cleanup, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createFakeAuthApi, renderAt, SIGNED_IN } from '@/app/testing/render-app';
+import {
+  createFakeAuthApi,
+  FIRST_RENDER_WAIT,
+  renderAt,
+  SIGNED_IN,
+} from '@/app/testing/render-app';
 
 const TOKEN = `tok_${'x'.repeat(39)}`;
 const STORAGE_KEY = 'labbeautypro.convite';
@@ -15,7 +20,9 @@ describe('Convite (/convite)', () => {
   it('sem token, avisa que o link é inválido', async () => {
     const { api } = createFakeAuthApi(SIGNED_IN);
     renderAt('/convite', api);
-    expect((await screen.findByRole('alert')).textContent).toContain('incompleto ou inválido');
+    expect((await screen.findByRole('alert', {}, FIRST_RENDER_WAIT)).textContent).toContain(
+      'incompleto ou inválido',
+    );
     expect(api.acceptInvitation).not.toHaveBeenCalled();
   });
 

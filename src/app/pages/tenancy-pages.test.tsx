@@ -7,6 +7,7 @@ import {
   membership,
   renderAt,
   SIGNED_IN,
+  FIRST_RENDER_WAIT,
 } from '@/app/testing/render-app';
 
 const PREF_KEY = `labbeautypro.empresa-ativa.${SIGNED_IN.userId}`;
@@ -24,7 +25,7 @@ describe('Guarda de sessão (/app/*)', () => {
       expect(`${router.state.location.pathname}${router.state.location.search}`).toBe(
         '/entrar?next=%2Fapp%2Fequipe',
       );
-    });
+    }, FIRST_RENDER_WAIT);
   });
 });
 

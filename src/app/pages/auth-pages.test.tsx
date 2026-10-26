@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
 import { cleanup, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createFakeAuthApi, renderAt, SIGNED_IN } from '@/app/testing/render-app';
+import {
+  createFakeAuthApi,
+  FIRST_RENDER_WAIT,
+  renderAt,
+  SIGNED_IN,
+} from '@/app/testing/render-app';
 
 afterEach(() => {
   cleanup();
@@ -11,7 +16,7 @@ describe('Entrar (/entrar)', () => {
   it('tem título e campos com label visível', async () => {
     const { api } = createFakeAuthApi();
     renderAt('/entrar', api);
-    expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Entrar' }, FIRST_RENDER_WAIT)).toBeTruthy();
     expect(screen.getByLabelText('E-mail').getAttribute('autocomplete')).toBe('email');
     expect(screen.getByLabelText('Senha').getAttribute('autocomplete')).toBe('current-password');
     expect(document.title).toBe('Entrar · LabBeautyPro');

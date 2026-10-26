@@ -9,6 +9,7 @@ import {
   renderAt,
   service,
   SIGNED_IN,
+  FIRST_RENDER_WAIT,
 } from '@/app/testing/render-app';
 import type { MemberRole } from '@/shared/roles';
 import type { Service } from './services-api';
@@ -58,7 +59,7 @@ describe('Serviços — permissão', () => {
     '%s vê o item "Serviços" no menu',
     async (role) => {
       renderServices('/app', { role });
-      const nav = await screen.findByRole('navigation', { name: 'Principal' });
+      const nav = await screen.findByRole('navigation', { name: 'Principal' }, FIRST_RENDER_WAIT);
       expect(await within(nav).findByRole('link', { name: 'Serviços' })).toBeTruthy();
     },
   );

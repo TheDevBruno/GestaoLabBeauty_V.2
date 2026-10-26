@@ -9,6 +9,7 @@ import {
   membership,
   renderAt,
   SIGNED_IN,
+  FIRST_RENDER_WAIT,
 } from '@/app/testing/render-app';
 import type { MemberRole } from '@/shared/roles';
 import { type Client, ClientError } from './clients-api';
@@ -65,7 +66,7 @@ describe('Clientes — permissão e menu', () => {
     '%s vê o item "Clientes" no menu',
     async (role) => {
       renderClients('/app', { role });
-      const nav = await screen.findByRole('navigation', { name: 'Principal' });
+      const nav = await screen.findByRole('navigation', { name: 'Principal' }, FIRST_RENDER_WAIT);
       expect(await within(nav).findByRole('link', { name: 'Clientes' })).toBeTruthy();
     },
   );

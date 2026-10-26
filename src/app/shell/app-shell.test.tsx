@@ -7,6 +7,7 @@ import {
   membership,
   renderAt,
   SIGNED_IN,
+  FIRST_RENDER_WAIT,
 } from '@/app/testing/render-app';
 import type { MemberRole } from '@/shared/roles';
 
@@ -47,7 +48,7 @@ async function mainNav() {
 describe('App shell — desktop', () => {
   it('mostra empresa, papel, conta e a navegação com o item atual marcado', async () => {
     renderShell('/app');
-    const nav = await mainNav();
+    const nav = await screen.findByRole('navigation', { name: 'Principal' }, FIRST_RENDER_WAIT);
     // A permissão members.manage chega depois da empresa; o item Equipe aparece em seguida.
     await within(nav).findByRole('link', { name: 'Equipe e convites' });
     const links = within(nav).getAllByRole('link');

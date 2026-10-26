@@ -422,3 +422,8 @@ export function renderAt(
 }
 
 export const SIGNED_IN: AuthSession = { userId: 'usuario-teste', email: 'ana@example.test' };
+
+// A primeira tela de cada arquivo de teste carrega as rotas `lazy` e transforma os módulos delas; com o
+// paralelismo padrão do Vitest isso passa do 1 s do findBy/waitFor. Só a primeira espera de cada arquivo
+// usa este prazo (abaixo dos 5 s do teste); as seguintes já encontram os módulos carregados.
+export const FIRST_RENDER_WAIT = { timeout: 4000 };
